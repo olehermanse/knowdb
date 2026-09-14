@@ -1,7 +1,8 @@
-// Plain JavaScript for the list modals (components/ListModal.tsx): filter
-// rows as the user types, and reset + focus the filter when a popover
-// opens. Inlined into the page by the root layout; works on the static
-// HTML without any framework code in the browser.
+// Plain JavaScript inlined by the root layout; works on the static HTML
+// without any framework code in the browser. It filters the list modals
+// (components/ListModal.tsx) as the user types, resets and focuses the
+// filter when a popover opens, and remembers the Charts/List tab choice in
+// a cookie (components/HostsSections.tsx).
 export const LIST_MODAL_SCRIPT = `
 (function () {
   function update(modal) {
@@ -25,6 +26,14 @@ export const LIST_MODAL_SCRIPT = `
           : shown + " of " + total + " " + modal.getAttribute("data-plural") + " match";
     }
   }
+  // Remember the chosen Charts/List tab across entries (see HostsSections).
+  document.addEventListener("click", function (e) {
+    var tab = e.target && e.target.closest && e.target.closest("[data-hosts-tab]");
+    if (tab) {
+      document.cookie =
+        "hosts-tab=" + tab.getAttribute("data-hosts-tab") + "; path=/; max-age=31536000; SameSite=Lax";
+    }
+  });
   document.addEventListener("input", function (e) {
     var modal = e.target && e.target.closest && e.target.closest("[data-list-modal]");
     if (modal) update(modal);

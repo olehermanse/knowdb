@@ -24,7 +24,8 @@ about the entry's hosts: when exactly one host matches it shows that host
 exactly as on the host page, and when several match it shows a "Hosts"
 heading with two tabs: Charts (the default) with the Operating systems and
 Clouds pie charts, each skipped when there is only one option, and List
-with the paginated hosts. In detail: the operating systems they run (a pie chart and ranked list), the
+with the paginated hosts. The chosen tab is remembered (in a cookie) while
+moving between entries. In detail: the operating systems they run (a pie chart and ranked list), the
 cloud providers they run on (likewise, with hosts outside any cloud as
 their own slice), the ports they listen on, and the host list itself.
 Software pages have a Versions tab as well, and every page has a Similar

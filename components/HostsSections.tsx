@@ -47,6 +47,11 @@ function describeLinkedHosts(entry: Entry): string {
 
 export type HostsTab = "charts" | "list";
 
+// Cookie remembering the last chosen tab, so the choice follows the user
+// from entry to entry. Set by the small script in the layout when a tab is
+// clicked; read by the entry page when the URL does not say otherwise.
+export const HOSTS_TAB_COOKIE = "hosts-tab";
+
 export function parseHostsTab(raw: string | string[] | undefined): HostsTab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
   return value === "charts" || value === "list" ? value : undefined;
@@ -103,6 +108,7 @@ export default function HostsSections({
             role="tab"
             aria-selected={current === "charts"}
             className={tabClass("charts")}
+            data-hosts-tab="charts"
             data-testid="charts-tab"
           >
             Charts <span className="muted">({charts})</span>
@@ -113,6 +119,7 @@ export default function HostsSections({
           role="tab"
           aria-selected={current === "list"}
           className={tabClass("list")}
+          data-hosts-tab="list"
           data-testid="list-tab"
         >
           List <span className="muted">({entry.hosts.length})</span>

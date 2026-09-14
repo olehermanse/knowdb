@@ -2029,6 +2029,35 @@ test("right side has Charts and List tabs, Charts by default", async ({ page }) 
   }
 });
 
+test("the Charts/List choice follows the user between entries", async ({
+  page,
+}) => {
+  // Choose List on one entry...
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("charts-tab")).toHaveAttribute("aria-selected", "true");
+  await page.getByTestId("list-tab").click();
+  await expect(page.getByTestId("section-list")).toBeVisible();
+
+  // ...and it is the default on the next entries, even without the parameter.
+  await page.goto("/entry/class/any");
+  await expect(page).toHaveURL("/entry/class/any");
+  await expect(page.getByTestId("list-tab")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("section-list")).toBeVisible();
+  await page.getByTestId("section-list").getByRole("link", { name: "127.0.0.1" }).first().click();
+  await expect(page).toHaveURL("/entry/ip/127.0.0.1");
+  await expect(page.getByTestId("list-tab")).toHaveAttribute("aria-selected", "true");
+
+  // The URL still wins over the remembered choice.
+  await page.goto("/entry/port/22?htab=charts");
+  await expect(page.getByTestId("charts-tab")).toHaveAttribute("aria-selected", "true");
+
+  // Choosing Charts again is remembered too.
+  await page.goto("/entry/port/22");
+  await page.getByTestId("charts-tab").click();
+  await page.goto("/entry/class/any");
+  await expect(page.getByTestId("charts-tab")).toHaveAttribute("aria-selected", "true");
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

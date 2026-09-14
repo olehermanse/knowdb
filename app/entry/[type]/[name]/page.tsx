@@ -5,7 +5,8 @@ import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
-import HostsSections, { parseHostsTab } from "@/components/HostsSections";
+import { cookies } from "next/headers";
+import HostsSections, { HOSTS_TAB_COOKIE, parseHostsTab } from "@/components/HostsSections";
 import RelatedHosts, { entryTabs, parseTab } from "@/components/RelatedHosts";
 import {
   describeEntry,
@@ -91,7 +92,9 @@ export default async function EntryPage({
   const query = await searchParams;
   const page = parsePage(query.page);
   const tab = parseTab(query.tab);
-  const htab = parseHostsTab(query.htab);
+  // The URL wins; otherwise the tab chosen last time, remembered in a cookie.
+  const htab =
+    parseHostsTab(query.htab) ?? parseHostsTab((await cookies()).get(HOSTS_TAB_COOKIE)?.value);
   const name = decodeURIComponent(encodedName);
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
