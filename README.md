@@ -85,8 +85,9 @@ users and operating systems have a description. Entry pages show the
 description when one exists, and otherwise a sentence like "No information
 available about this user". Any entry can also have a `links` list of
 external sources, each with the `title` of the page, the `source` site it
-is on, and the `url`, shown as "Read more" on the entry page like
-`"Secure Shell" on Wikipedia`. Links point to Wikipedia, official project
+is on, and the `url`, shown as "Read more" on the entry page. Wikipedia
+links read like `"Secure Shell" on Wikipedia`; other links show their
+address, like `openssh.com` or `github.com/openssh/openssh-portable`. Links point to Wikipedia, official project
 websites, source code repositories and specifications; any source works.
 Software entries can list the `ports` they typically listen on, such as
 `[5432]` for postgresql; software and port pages then show a "See also"

@@ -711,7 +711,10 @@ test("entries with links in info.json show them as external links", async ({
     links.getByRole("link", { name: '"Secure Shell" on Wikipedia', exact: true }),
   ).toBeVisible();
   for (const link of port22.links!) {
-    const label = link.source ? `"${link.title}" on ${link.source}` : link.title;
+    const label =
+      link.source === "Wikipedia"
+        ? `"${link.title}" on ${link.source}`
+        : link.url.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
     const a = links.getByRole("link", { name: label, exact: true });
     await expect(a).toHaveAttribute("href", link.url);
     await expect(a).toHaveAttribute("target", "_blank");
@@ -734,12 +737,17 @@ test("well-known entries show a logo and official links", async ({ page }) => {
   await expect(logo).toHaveAttribute("src", /cdn\.simpleicons\.org\/nginx/);
   await expect(logo).toHaveAttribute("alt", "nginx logo");
   const links = page.getByTestId("external-links");
+  // Non-Wikipedia links are shown as their bare address.
+  await expect(links.getByRole("link", { name: "nginx.org", exact: true })).toHaveAttribute(
+    "href",
+    "https://nginx.org/",
+  );
   await expect(
-    links.getByRole("link", { name: '"Official website" on nginx.org', exact: true }),
-  ).toHaveAttribute("href", "https://nginx.org/");
-  await expect(
-    links.getByRole("link", { name: '"Source code" on GitHub', exact: true }),
+    links.getByRole("link", { name: "github.com/nginx/nginx", exact: true }),
   ).toHaveAttribute("href", "https://github.com/nginx/nginx");
+  await expect(
+    links.getByRole("link", { name: '"Nginx" on Wikipedia', exact: true }),
+  ).toBeVisible();
 
   // Ports and operating systems can have logos too.
   await page.goto("/entry/port/3306");

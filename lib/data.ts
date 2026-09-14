@@ -330,9 +330,15 @@ export interface ExternalLink {
   url: string;
 }
 
-// '"Secure Shell" on Wikipedia', or just the title if the source is unknown.
+// Wikipedia links read '"Secure Shell" on Wikipedia'; any other link is
+// shown as its address without the scheme, e.g. "openssh.com" or
+// "github.com/openssh/openssh-portable".
 export function externalLinkLabel(link: ExternalLink): string {
-  return link.source ? `"${link.title}" on ${link.source}` : link.title;
+  if (link.source === "Wikipedia") return `"${link.title}" on ${link.source}`;
+  return link.url
+    .replace(/^[a-z]+:\/\//i, "")
+    .replace(/^www\./, "")
+    .replace(/\/$/, "");
 }
 
 export interface DescribedInfo {
