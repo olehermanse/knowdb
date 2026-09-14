@@ -161,7 +161,7 @@ function SimilarPanel({ entry }: { entry: Entry }) {
   return (
     <>
       <p className="muted" data-testid="similar-description">
-        Other {TYPE_LABELS[entry.type].toLowerCase()} with names starting like {entry.name}:
+        Other {TYPE_LABELS[entry.type].toLowerCase()} with similar names:
       </p>
       <ul className="entry-list" data-testid="similar">
         {similar.map(({ entry: e, common }) => (

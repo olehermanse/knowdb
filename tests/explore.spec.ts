@@ -1720,7 +1720,7 @@ test("similar tab lists same-type entries sharing a name prefix", async ({
   await expect(tab).toHaveText(`Similar (${expected.length})`);
   await openTab(page, "similar");
   await expect(page.getByTestId("similar-description")).toContainText(
-    "Other classes with names starting like ubuntu_22:",
+    "Other classes with similar names:",
   );
   const items = page.getByTestId("similar-item");
   await expect(items).toHaveCount(expected.length);
@@ -1733,6 +1733,9 @@ test("similar tab lists same-type entries sharing a name prefix", async ({
 
   // Software: apt and apt-get are similar; so are postfix and postgresql.
   await page.goto("/entry/software/apt?tab=similar");
+  await expect(page.getByTestId("similar-description")).toHaveText(
+    "Other software with similar names:",
+  );
   await expect(page.getByTestId("similar-item").getByRole("link")).toContainText(["apt-get"]);
   await page.goto("/entry/software/postfix?tab=similar");
   await expect(
