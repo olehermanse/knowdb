@@ -182,9 +182,15 @@ test("entries are two-way linked: host -> port -> host", async ({ page }) => {
   await expect(page).toHaveURL("/entry/port/22");
   await expect(page.getByTestId("entry-description")).toContainText("SSH");
 
-  // Port 22 links back to every host, including the one we came from.
+  // Port 22 links back to every host, 50 per page, including the one we
+  // came from (hosts are listed in host key order).
   const linkedHosts = page.getByTestId("linked-hosts").locator("li");
-  await expect(linkedHosts).toHaveCount(hosts.length);
+  await expect(linkedHosts).toHaveCount(Math.min(50, hosts.length));
+  const sortedIds = hosts.map((h) => h.id).sort();
+  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
+  if (ourPage > 1) {
+    await page.getByTestId("pagination").getByRole("link", { name: String(ourPage) }).click();
+  }
   await page
     .getByTestId("linked-hosts")
     .getByRole("link", { name: someHost.hostname, exact: true })
@@ -954,6 +960,67 @@ test("every page has a prototype and AI disclaimer at the bottom", async ({
     const footer = await disclaimer.boundingBox();
     expect(footer!.y).toBeGreaterThanOrEqual(main!.y + main!.height);
   }
+});
+
+test("host lists are paginated 50 at a time", async ({ page }) => {
+  // Every host listens on port 22, and there are more than 50 hosts.
+  expect(hosts.length).toBeGreaterThan(50);
+  const total = hosts.length;
+  const lastPage = Math.ceil(total / 50);
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${total})`);
+  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(50);
+  await expect(page.getByTestId("pagination-summary")).toHaveText(
+    `Showing 1–50 of ${total} hosts`,
+  );
+  const pagination = page.getByTestId("pagination");
+  await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveCount(0);
+
+  await pagination.getByRole("link", { name: "Next →" }).click();
+  await expect(page).toHaveURL(/\/entry\/port\/22\?page=2$/);
+  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
+    Math.min(50, total - 50),
+  );
+  await expect(page.getByTestId("pagination-summary")).toHaveText(
+    `Showing 51–${Math.min(100, total)} of ${total} hosts`,
+  );
+  await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveAttribute(
+    "href",
+    "/entry/port/22",
+  );
+  // The two pages show different hosts.
+  const firstOnPage2 = await page
+    .getByTestId("linked-hosts")
+    .locator("li")
+    .first()
+    .textContent();
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("linked-hosts").locator("li").first()).not.toHaveText(
+    firstOnPage2!,
+  );
+
+  // Out-of-range pages are clamped to the last page.
+  await page.goto("/entry/port/22?page=999");
+  await expect(page.getByTestId("pagination").locator("[aria-current=page]")).toHaveText(
+    String(lastPage),
+  );
+
+  // Short lists have no pagination.
+  await page.goto(groupHref("Windows"));
+  await expect(page.getByTestId("pagination")).toHaveCount(0);
+});
+
+test("filtered host search results are paginated", async ({ page }) => {
+  await page.goto("/search?q=port:22");
+  await expect(page.getByTestId("host-item")).toHaveCount(50);
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `${hosts.length} hosts matching port 22`,
+  );
+  await page.getByTestId("pagination").getByRole("link", { name: "Next →" }).click();
+  await expect(page).toHaveURL(/\/search\?q=port%3A22&page=2$/);
+  await expect(page.getByTestId("host-item")).toHaveCount(
+    Math.min(50, hosts.length - 50),
+  );
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

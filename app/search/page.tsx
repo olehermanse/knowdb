@@ -1,4 +1,5 @@
 import EntryLink from "@/components/EntryLink";
+import HostList, { parsePage } from "@/components/HostList";
 import HostListItem from "@/components/HostListItem";
 import SearchForm from "@/components/SearchForm";
 import {
@@ -15,6 +16,7 @@ export default async function SearchPage({
   const params = await searchParams;
   const raw = params.q;
   const query = (Array.isArray(raw) ? raw[0] : raw ?? "").trim();
+  const page = parsePage(params.page);
   const parsed = parseSearchQuery(query);
   const filtered = parsed.filters.length > 0;
   const hostResults = filtered ? searchHosts(parsed) : [];
@@ -46,11 +48,14 @@ export default async function SearchPage({
         </p>
       )}
       {hostResults.length > 0 && (
-        <ul className="entry-list" data-testid="search-results">
-          {hostResults.map((host) => (
-            <HostListItem key={host.id} host={host} />
-          ))}
-        </ul>
+        <HostList
+          hosts={hostResults}
+          page={page}
+          testId="search-results"
+          hrefForPage={(n) =>
+            `/search?q=${encodeURIComponent(query)}${n > 1 ? `&page=${n}` : ""}`
+          }
+        />
       )}
       {results.length > 0 && (
         <ul className="entry-list" data-testid="search-results">

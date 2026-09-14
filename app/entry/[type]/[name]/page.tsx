@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
-import HostListItem from "@/components/HostListItem";
+import HostList, { parsePage } from "@/components/HostList";
 import OperatingSystems, { hasOsSection } from "@/components/OperatingSystems";
 import {
   AGGREGATING_TYPES,
@@ -210,7 +210,10 @@ function describeLinkedHosts(entry: Entry): string {
   }
 }
 
-function LinkedHosts({ entry }: { entry: Entry }) {
+function LinkedHosts({ entry, page }: { entry: Entry; page: number }) {
+  const hosts = entry.hosts
+    .map((hostkey) => getHost(hostkey))
+    .filter((host): host is Host => host !== undefined);
   return (
     <>
       <h2 data-testid="hosts-heading">
@@ -219,20 +222,21 @@ function LinkedHosts({ entry }: { entry: Entry }) {
       <p className="muted" data-testid="hosts-description">
         {describeLinkedHosts(entry)}
       </p>
-      <ul className="entry-list" data-testid="linked-hosts">
-        {entry.hosts.map((hostkey) => {
-          const host = getHost(hostkey);
-          return host ? <HostListItem key={hostkey} host={host} /> : null;
-        })}
-      </ul>
+      <HostList
+        hosts={hosts}
+        page={page}
+        hrefForPage={(n) => `${entryHref(entry)}${n > 1 ? `?page=${n}` : ""}`}
+      />
     </>
   );
 }
 
 export default async function EntryPage({
   params,
+  searchParams,
 }: PageProps<"/entry/[type]/[name]">) {
   const { type, name: encodedName } = await params;
+  const page = parsePage((await searchParams).page);
   const name = decodeURIComponent(encodedName);
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
@@ -284,7 +288,11 @@ export default async function EntryPage({
       {group && <GroupRules group={group} />}
       {hasOsSection(type) && <OperatingSystems entry={entry} />}
       {AGGREGATING_TYPES.includes(type) && <AggregatedPorts entry={entry} />}
-      {host ? <HostDetails host={host} /> : <LinkedHosts entry={entry} />}
+      {host ? (
+        <HostDetails host={host} />
+      ) : (
+        <LinkedHosts entry={entry} page={page} />
+      )}
     </>
   );
 }

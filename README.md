@@ -5,6 +5,9 @@ based on the data reported from your hosts.
 Click on a host to see information about it, see that port 22 is open,
 read what port 22 is for, see other hosts with port 22 open, and so on.
 
+Lists of hosts show at most 50 hosts at a time, with pagination links
+below the list.
+
 ## Searching
 
 The search bar at the top of every page searches "anything": hostnames,

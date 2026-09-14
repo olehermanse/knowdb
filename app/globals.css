@@ -292,3 +292,24 @@ a,
   flex-shrink: 0;
   transform: translateY(0.1rem);
 }
+
+/* Pagination under long host lists. */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.pagination-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.pagination-current {
+  font-weight: 700;
+}
