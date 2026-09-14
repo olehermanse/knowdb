@@ -7,6 +7,7 @@ export interface Host {
   id: string;
   hostname: string;
   ips: string[];
+  macs: string[];
   "ports-listening": number[];
   software: string[];
   "local-users": string[];
@@ -17,6 +18,7 @@ export type EntryType =
   | "hostname"
   | "os"
   | "ip"
+  | "mac"
   | "port"
   | "software"
   | "user"
@@ -93,6 +95,7 @@ function buildIndex() {
     link("hostname", host.hostname, host.id);
     link("os", host.os, host.id);
     for (const ip of host.ips) link("ip", ip, host.id);
+    for (const mac of host.macs) link("mac", mac, host.id);
     for (const port of host["ports-listening"]) link("port", String(port), host.id);
     for (const sw of host.software) link("software", sw, host.id);
     for (const user of host["local-users"]) link("user", user, host.id);
@@ -245,6 +248,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "hostname",
   "os",
   "ip",
+  "mac",
   "port",
   "software",
   "user",
@@ -287,6 +291,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   hostname: "The configured name of a host.",
   os: "An operating system.",
   ip: "An IP address (IPv4 or IPv6).",
+  mac: "A MAC address, the hardware address of a network interface.",
   port: "A network port a host is listening on.",
   software: "A software package installed on a host.",
   user: "A local user account present on a host.",

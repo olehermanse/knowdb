@@ -89,6 +89,7 @@ The relevant information from a host looks like this:
   "id": "SHA=31bcb32950d8b91ffdfca85bca71364ec8f67c93246e3617c3a49af58363c4a1",
   "hostname": "production-hub",
   "ips": ["124.56.78.77", "127.0.0.1"],
+  "macs": ["00:50:56:a1:b2:c3"],
   "ports-listening": [22, 80, 443, 5308],
   "software": ["apache", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
   "local-users": ["root", "nickanderson"]
@@ -104,6 +105,9 @@ Some guidelines for generating random hosts:
 - `ips` should be valid IPv4 or IPv6 IP addresses.
   Between 1 and 10 of them.
   Nice to not be completely random, i.e. most of them should start with he digits for AWS or similar.
+- `macs` should be valid, unique MAC addresses in lowercase colon notation.
+  Between 1 and 3 of them, most hosts having just one.
+  Use a few believable vendor prefixes (VMware, Intel, Dell, cloud-style locally administered addresses) rather than fully random bytes.
 - `ports-listening` should not be completely random - 22 and 5308 should be present on all hosts.
   Other ports for NTP, DNS, webserver etc. can be added.
   Should make sense wrt the name, so a webserver would have 443 and 80 listening, for example.

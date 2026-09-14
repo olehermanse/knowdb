@@ -78,6 +78,10 @@ HOSTNAME_IDENTIFIERS = [
 IPV4_PREFIXES = ["3.120", "13.48", "18.130", "34.240", "52.28", "54.93", "10.0", "172.31"]
 IPV6_PREFIX = "2a05:d014"
 
+# MAC address prefixes (OUIs) so addresses look like real hardware and
+# cloud NICs: VMware, Xen/AWS-style locally administered, Intel, Dell.
+MAC_PREFIXES = ["00:50:56", "02:42:ac", "0a:58:0a", "06:1f:3b", "00:1b:21", "d4:be:d9"]
+
 # Ports by role keyword found in the hostname.
 ROLE_PORTS = {
     "webserver": [80, 443],
@@ -170,6 +174,23 @@ def generate_ips():
     return sorted(ips)
 
 
+def generate_mac():
+    prefix = random.choice(MAC_PREFIXES)
+    return f"{prefix}:{random.randint(0, 255):02x}:{random.randint(0, 255):02x}:{random.randint(0, 255):02x}"
+
+
+def generate_macs(used):
+    # One network interface per host is normal, a few have more.
+    count = random.choices([1, 2, 3], weights=[70, 25, 5])[0]
+    macs = set()
+    while len(macs) < count:
+        mac = generate_mac()
+        if mac not in used:
+            used.add(mac)
+            macs.add(mac)
+    return sorted(macs)
+
+
 def role_of(hostname):
     for role in ROLE_PORTS:
         if role in hostname:
@@ -211,7 +232,7 @@ def generate_users(os_name, hostname):
     return sorted(set(users))
 
 
-def generate_host(used_hostnames):
+def generate_host(used_hostnames, used_macs):
     os_name = random.choices(
         OPERATING_SYSTEMS, weights=list(OPERATING_SYSTEM_WEIGHTS.values())
     )[0]
@@ -221,6 +242,7 @@ def generate_host(used_hostnames):
         "id": generate_id(),
         "hostname": hostname,
         "ips": generate_ips(),
+        "macs": generate_macs(used_macs),
         "ports-listening": generate_ports(hostname),
         "software": generate_software(os_name, hostname),
         "local-users": generate_users(os_name, hostname),
@@ -229,7 +251,8 @@ def generate_host(used_hostnames):
 
 def main():
     used_hostnames = set()
-    hosts = [generate_host(used_hostnames) for _ in range(NUM_HOSTS)]
+    used_macs = set()
+    hosts = [generate_host(used_hostnames, used_macs) for _ in range(NUM_HOSTS)]
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(hosts, f, indent=2)

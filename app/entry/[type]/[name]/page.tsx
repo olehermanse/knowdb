@@ -45,6 +45,12 @@ function HostDetails({ host }: { host: Host }) {
           <EntryLink key={ip} type="ip" name={ip} />
         ))}
       </dd>
+      <dt>MAC addresses</dt>
+      <dd className="inline-links">
+        {host.macs.map((mac) => (
+          <EntryLink key={mac} type="mac" name={mac} />
+        ))}
+      </dd>
       <dt>Listening ports</dt>
       <dd className="inline-links">
         {host["ports-listening"].map((port) => (
@@ -157,6 +163,8 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts running ${entry.name}.`;
     case "ip":
       return `Hosts with the IP address ${entry.name}.`;
+    case "mac":
+      return `Hosts with a network interface with the MAC address ${entry.name}.`;
     case "port":
       return `Hosts listening on port ${entry.name}.`;
     case "software":

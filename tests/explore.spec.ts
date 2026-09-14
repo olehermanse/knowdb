@@ -68,7 +68,17 @@ test("front page shows 10 random entries", async ({ page }) => {
 test("front page always shows at least one entry of each type", async ({
   page,
 }) => {
-  const allTypes = ["host", "hostname", "os", "ip", "port", "software", "user", "group"];
+  const allTypes = [
+    "host",
+    "hostname",
+    "os",
+    "ip",
+    "mac",
+    "port",
+    "software",
+    "user",
+    "group",
+  ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
@@ -455,6 +465,41 @@ test("host lists show abbreviated ID, OS and IP addresses", async ({
       `/entry/ip/${encodeURIComponent(ip)}`,
     );
   }
+});
+
+test("MAC addresses are linked both ways", async ({ page }) => {
+  expect(someHost.macs.length).toBeGreaterThan(0);
+  const mac = someHost.macs[0];
+  expect(mac).toMatch(/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/);
+
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const details = page.getByTestId("host-details");
+  await expect(details).toContainText("MAC addresses");
+  for (const m of someHost.macs) {
+    await expect(details.getByRole("link", { name: m, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/mac/${encodeURIComponent(m)}`,
+    );
+  }
+
+  await details.getByRole("link", { name: mac, exact: true }).click();
+  await expect(page).toHaveURL(`/entry/mac/${encodeURIComponent(mac)}`);
+  await expect(page.getByTestId("entry-name")).toHaveText(mac);
+  await expect(page.getByTestId("entry-description")).toContainText(
+    "MAC address",
+  );
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    `Hosts with a network interface with the MAC address ${mac}.`,
+  );
+  const owners = hosts.filter((h) => h.macs.includes(mac));
+  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
+    owners.length,
+  );
+  await expect(
+    page
+      .getByTestId("linked-hosts")
+      .getByRole("link", { name: someHost.hostname, exact: true }),
+  ).toBeVisible();
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {
