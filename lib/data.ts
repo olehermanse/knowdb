@@ -11,6 +11,8 @@ export interface Host {
   macs: string[];
   "ports-listening": number[];
   software: string[];
+  // Running systemd services (unit names); empty on Windows.
+  services: string[];
   // Version of each installed software, keyed by software name.
   "software-versions": Record<string, string>;
   "local-users": string[];
@@ -59,7 +61,9 @@ export type EntryType =
   // A specific version of a piece of software, named "<software> <version>".
   | "version"
   // A cloud provider hosts run in (AWS, Azure, ...).
-  | "cloud";
+  | "cloud"
+  // A running systemd service, e.g. "sshd".
+  | "service";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -130,7 +134,7 @@ export function normalizeName(name: string): string {
 }
 
 // Entry types whose names are worth matching against each other.
-const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud"];
+const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service"];
 
 function buildIndex() {
   const hostsByKey = new Map<string, Host>();
@@ -162,6 +166,7 @@ function buildIndex() {
     for (const ip of host.ips) link("ip", ip, host.id);
     for (const mac of host.macs) link("mac", mac, host.id);
     for (const port of host["ports-listening"]) link("port", String(port), host.id);
+    for (const svc of host.services ?? []) link("service", svc, host.id);
     for (const sw of host.software) {
       link("software", sw, host.id);
       const version = host["software-versions"]?.[sw];
@@ -397,6 +402,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "class",
   "version",
   "cloud",
+  "service",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -413,6 +419,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   class: "Classes",
   version: "Versions",
   cloud: "Clouds",
+  service: "Services",
 };
 
 // All entries of one type, sorted by name (numerically where names are
@@ -527,6 +534,12 @@ interface Info {
   "ip-ranges": IpRangeInfo[];
   classes: Record<string, DescribedInfo>;
   "cloud-providers": Record<string, DescribedInfo>;
+  services: Record<string, ServiceInfo>;
+}
+
+export interface ServiceInfo extends DescribedInfo {
+  // The software this service belongs to, e.g. "openssh" for sshd.
+  software?: string;
 }
 
 
@@ -585,6 +598,10 @@ export function getIpInfo(address: string): DescribedInfo | undefined {
   return info["ip-ranges"].find((range) => inCidr(address, range.cidr));
 }
 
+export function getServiceInfo(name: string): ServiceInfo | undefined {
+  return info.services[name];
+}
+
 export function getCloudProviderInfo(name: string): DescribedInfo | undefined {
   return info["cloud-providers"][name];
 }
@@ -639,6 +656,8 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getClassInfo(entry.name);
     case "cloud":
       return getCloudProviderInfo(entry.name);
+    case "service":
+      return getServiceInfo(entry.name);
     case "version":
       // Versions share the software's description, links and logo.
       return getSoftwareInfo(parseVersionEntryName(entry.name).software);
@@ -659,7 +678,13 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
   const related: EntryRef[] = [];
   if (entry.type === "version") {
     related.push({ type: "software", name: parseVersionEntryName(entry.name).software });
+  } else if (entry.type === "service") {
+    const software = getServiceInfo(entry.name)?.software;
+    if (software) related.push({ type: "software", name: software });
   } else if (entry.type === "software") {
+    for (const [name, svc] of Object.entries(info.services)) {
+      if (svc.software === entry.name) related.push({ type: "service", name });
+    }
     for (const port of getSoftwareInfo(entry.name)?.ports ?? []) {
       related.push({ type: "port", name: String(port) });
     }
@@ -699,6 +724,7 @@ export const NO_USER_INFO = "No information available about this user.";
 export const NO_OS_INFO = "No information available about this operating system.";
 export const NO_CLASS_INFO = "No information available about this class.";
 export const NO_CLOUD_INFO = "No information available about this cloud provider.";
+export const NO_SERVICE_INFO = "No information available about this service.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -713,6 +739,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   class: "A CFEngine class reported by hosts, describing something true about them.",
   version: "A specific version of a piece of software.",
   cloud: "A cloud provider that hosts run in.",
+  service: "A systemd service running on hosts.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -743,6 +770,9 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "cloud") {
     return getCloudProviderInfo(entry.name)?.description ?? NO_CLOUD_INFO;
+  }
+  if (entry.type === "service") {
+    return getServiceInfo(entry.name)?.description ?? NO_SERVICE_INFO;
   }
   if (entry.type === "version") {
     const { software, version } = parseVersionEntryName(entry.name);
@@ -826,6 +856,8 @@ export function summarizeEntry(entry: Entry): string {
     case "version":
       // Version pages are kept short: the software page has the numbers.
       return "";
+    case "service":
+      return `${entry.name} is running on ${hosts} in your infrastructure, across ${oses()}.`;
     case "os":
       return `In your infrastructure, you have ${entry.name} installed on ${hosts}, and these hosts are listening to ${ports()}.`;
     case "port":

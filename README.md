@@ -182,6 +182,16 @@ for each operating system from `data/classes.json` and adds
 `policy_server` and `am_policy_hub` on hubs. Common classes are described
 in `data/info.json` under `classes`.
 
+## Services
+
+Linux hosts report their running systemd services in `services` (unit
+names such as `sshd`, `cron`, `nginx`); Windows hosts have none. Services
+are their own entry type, much like software: a service page lists the
+hosts running it with their operating systems, clouds and ports, and a host
+page shows its running services. Common services are described in
+`data/info.json` under `services`, where a service can name the software it
+belongs to (`sshd` belongs to `openssh`), which links the two in "See also".
+
 ## Software versions
 
 Each host reports the version of every installed piece of software in
@@ -222,6 +232,7 @@ The relevant information from a host looks like this:
   "ports-listening": [22, 80, 443, 5308],
   "software": ["apache", "cfengine", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
   "software-versions": {"apache": "2.4.62", "cfengine": "3.27.0", "dpkg": "1.22.6"},
+  "services": ["apache2", "cf-execd", "cf-serverd", "cron", "ssh", "systemd-journald"],
   "local-users": ["root", "nickanderson"],
   "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"],
   "online": true,
@@ -248,6 +259,7 @@ Some guidelines for generating random hosts:
   Should make sense wrt the name, so a webserver would have 443 and 80 listening, for example.
 - `software` should also be based on name - all Ubuntu should have dpkg, apt and apt-get, RHEL should have yum, rpm, dnf, and so on.
 - `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
+- `services` should be the running systemd units: a few base units on every Linux host, distribution-specific ones (`systemd-networkd` on Ubuntu, `NetworkManager` and `firewalld` on RHEL-like systems), and one per installed daemon using the distribution's unit name (`ssh` on Debian-like, `sshd` on RHEL-like). Windows hosts have none.
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.

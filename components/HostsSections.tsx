@@ -27,6 +27,8 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts listening on port ${entry.name}:`;
     case "software":
       return `Hosts with ${entry.name} installed:`;
+    case "service":
+      return `Hosts running the service ${entry.name}:`;
     case "user":
       return `Hosts with a local user named ${entry.name}:`;
     case "group":

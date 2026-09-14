@@ -7,6 +7,8 @@ function sectionText(entry: Entry): string {
   switch (entry.type) {
     case "software":
       return `The hosts with ${entry.name} installed run in these clouds:`;
+    case "service":
+      return `The hosts running ${entry.name} run in these clouds:`;
     case "version":
       return `The hosts with ${entry.name} run in these clouds:`;
     case "os":

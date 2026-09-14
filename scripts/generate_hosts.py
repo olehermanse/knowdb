@@ -130,6 +130,32 @@ CLOUD_PROVIDERS = [("AWS", 40), ("", 25), ("Azure", 12), ("GCP", 10), ("Hetzner"
 # Installed on every host, Linux and Windows alike.
 UNIVERSAL_SOFTWARE = ["cfengine"]
 
+# Running systemd services. Every Linux host runs a few base units; the
+# rest follow from the installed software, with unit names differing
+# between Debian-like and RHEL-like distributions. Windows has no systemd.
+BASE_SERVICES = ["systemd-journald", "systemd-logind", "dbus", "cf-execd", "cf-serverd", "cf-monitord"]
+DEBIAN_LIKE_SERVICES = ["systemd-networkd", "systemd-resolved", "unattended-upgrades"]
+RHEL_LIKE_SERVICES = ["NetworkManager", "firewalld", "auditd"]
+SUSE_SERVICES = ["wicked", "firewalld"]
+SOFTWARE_SERVICES = {
+    # software: (debian-like unit, rhel/suse-like unit)
+    "openssh": ("ssh", "sshd"),
+    "cron": ("cron", "crond"),
+    "rsyslog": ("rsyslog", "rsyslog"),
+    "chrony": ("chrony", "chronyd"),
+    "apache": ("apache2", "httpd"),
+    "nginx": ("nginx", "nginx"),
+    "haproxy": ("haproxy", "haproxy"),
+    "squid": ("squid", "squid"),
+    "mysql": ("mysql", "mysqld"),
+    "postgresql": ("postgresql", "postgresql"),
+    "postfix": ("postfix", "postfix"),
+    "dovecot": ("dovecot", "dovecot"),
+    "bind": ("named", "named"),
+    "grafana": ("grafana-server", "grafana-server"),
+    "prometheus": ("prometheus", "prometheus"),
+}
+
 # Believable versions per software, with weights so that most hosts share
 # the same few versions (the current release dominates, older ones linger).
 SOFTWARE_VERSIONS = {
@@ -273,6 +299,24 @@ def generate_software(os_name, hostname):
     return sorted(set(software + UNIVERSAL_SOFTWARE))
 
 
+def generate_services(os_name, software):
+    if os_name.startswith("Windows"):
+        return []
+    debian_like = os_name.startswith(("Ubuntu", "Debian"))
+    services = list(BASE_SERVICES)
+    if debian_like:
+        services += DEBIAN_LIKE_SERVICES
+    elif os_name.startswith("SUSE"):
+        services += SUSE_SERVICES
+    else:
+        services += RHEL_LIKE_SERVICES
+    for name in software:
+        units = SOFTWARE_SERVICES.get(name)
+        if units:
+            services.append(units[0] if debian_like else units[1])
+    return sorted(set(services))
+
+
 def generate_software_versions(software):
     versions = {}
     for name in software:
@@ -348,6 +392,7 @@ def generate_host(used_hostnames, used_macs):
         "macs": generate_macs(used_macs),
         "ports-listening": generate_ports(hostname),
         "software": software,
+        "services": generate_services(os_name, software),
         "software-versions": generate_software_versions(software),
         "local-users": generate_users(os_name, hostname),
         "classes": generate_classes(os_name, hostname),

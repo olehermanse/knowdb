@@ -102,12 +102,12 @@ async function expectAggregatedPorts(
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
 
-test("front page shows 12 random entries", async ({ page }) => {
+test("front page shows 13 random entries", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Or pick one of the randomly selected entries below:")).toBeVisible();
   const items = page.getByTestId("entry-list").locator("li");
-  await expect(items).toHaveCount(12);
-  await expect(items.locator("a.entry-link")).toHaveCount(12);
+  await expect(items).toHaveCount(13);
+  await expect(items.locator("a.entry-link")).toHaveCount(13);
 });
 
 test("front page always shows at least one entry of each type", async ({
@@ -126,12 +126,13 @@ test("front page always shows at least one entry of each type", async ({
     "class",
     "version",
     "cloud",
+    "service",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
     const badges = page.getByTestId("entry-list").locator(".type-badge");
-    await expect(badges).toHaveCount(12);
+    await expect(badges).toHaveCount(13);
     const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
     for (const type of allTypes) {
       expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
@@ -1290,10 +1291,18 @@ test("software and ports link to each other with See also", async ({
   // Software with several ports lists them all; a port used by several
   // programs lists them all (apache and nginx both serve port 80).
   await page.goto("/entry/software/apache");
-  await expect(page.getByTestId("see-also").getByRole("link")).toHaveText([
-    "port 80 (http)",
-    "port 443 (https)",
-  ]);
+  const apacheSeeAlso = page.getByTestId("see-also");
+  await expect(apacheSeeAlso.getByRole("link", { name: "port 80 (http)", exact: true })).toBeVisible();
+  await expect(apacheSeeAlso.getByRole("link", { name: "port 443 (https)", exact: true })).toBeVisible();
+  // ...followed by its service units present in the data (apache2, httpd).
+  const apacheUnits = new Set(
+    hosts.flatMap((h) => (h as unknown as { services: string[] }).services).filter((u) => u === "apache2" || u === "httpd"),
+  );
+  for (const unit of apacheUnits) {
+    await expect(
+      page.getByTestId("see-also").getByRole("link", { name: `${unit} (service)`, exact: true }),
+    ).toBeVisible();
+  }
   await page.goto("/entry/port/80");
   const port80 = page.getByTestId("see-also");
   await expect(port80).toContainText("apache (software)");
@@ -1760,7 +1769,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(12);
+  await expect(buttons).toHaveCount(13);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -1929,7 +1938,7 @@ test("host page has two columns with software and classes below", async ({
     "MAC addresses",
     "Listening ports",
   ]);
-  await expect(wide.locator("dt")).toHaveText(["Software", "Classes"]);
+  await expect(wide.locator("dt")).toHaveText(["Software", "Services", "Classes"]);
 
   const l = (await left.boundingBox())!;
   const r = (await right.boundingBox())!;
@@ -2296,6 +2305,73 @@ test("host pages have a comments section, host previews do not", async ({ page }
     await expect(page.getByTestId("comment-card")).toHaveCount(examples.length);
   }
   await expect(page.getByTestId("comment-form")).toBeVisible();
+});
+
+type WithServices = { services: string[] };
+const servicesOf = (h: Host) => (h as unknown as WithServices).services;
+
+test("hosts run systemd services which are entries like software", async ({ page }) => {
+  // Every Linux host runs the CFEngine daemons; Windows hosts have no systemd.
+  const linux = hosts.filter((h) => !h.os.startsWith("Windows"));
+  const windows = hosts.filter((h) => h.os.startsWith("Windows"));
+  expect(linux.every((h) => servicesOf(h).includes("cf-execd"))).toBe(true);
+  expect(windows.every((h) => servicesOf(h).length === 0)).toBe(true);
+
+  // Host page: a "N running" button opening the list, like software.
+  const host = linux[0];
+  await page.goto(`/entry/host/${encodeURIComponent(host.id)}`);
+  await expect(page.getByTestId("services-modal-open")).toHaveText(
+    `${servicesOf(host).length} running`,
+  );
+  await page.getByTestId("services-modal-open").click();
+  const list = page.getByTestId("services-modal-list");
+  await expect(list.getByRole("link")).toHaveText(servicesOf(host));
+  await expect(list.getByRole("link", { name: "cf-execd", exact: true })).toHaveAttribute(
+    "href",
+    "/entry/service/cf-execd",
+  );
+  await page.keyboard.press("Escape");
+  if (windows.length > 0) {
+    await page.goto(`/entry/host/${encodeURIComponent(windows[0].id)}`);
+    await expect(page.getByTestId("host-services")).toHaveText("None (no systemd)");
+  }
+
+  // Service page: description, summary, hosts, and See also to its software.
+  const running = hosts.filter((h) => servicesOf(h).includes("cf-serverd"));
+  await page.goto("/entry/service/cf-serverd");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    (info.services as Record<string, { description: string }>)["cf-serverd"].description,
+  );
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `cf-serverd is running on ${pluralize(running.length, "host")} in your infrastructure, across ${pluralize(distinctOs(running), "operating system")}.`,
+  );
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${running.length})`);
+  await expect(
+    page.getByTestId("see-also").getByRole("link", { name: "cfengine (software)", exact: true }),
+  ).toBeVisible();
+  await openTab(page, "hosts");
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    "Hosts running the service cf-serverd:",
+  );
+
+  // Software links back to its services, and unit names differ by family.
+  await page.goto("/entry/software/openssh");
+  const seeAlso = page.getByTestId("see-also");
+  const sshUnits = new Set(hosts.flatMap(servicesOf).filter((u) => u === "ssh" || u === "sshd"));
+  expect(sshUnits.size).toBeGreaterThan(0);
+  for (const unit of sshUnits) {
+    await expect(
+      seeAlso.getByRole("link", { name: `${unit} (service)`, exact: true }),
+    ).toHaveAttribute("href", `/entry/service/${unit}`);
+  }
+
+  // Services work as search filters and appear in the front page buttons.
+  await page.goto(`/search?q=${encodeURIComponent("service:cf-execd port:22")}`);
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `${linux.length} hosts matching service cf-execd, port 22`,
+  );
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-service")).toContainText("Services");
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

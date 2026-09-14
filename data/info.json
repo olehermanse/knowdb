@@ -1,5 +1,5 @@
 {
-  "_comment": "Hard coded descriptions of well-known ports, software, user accounts, operating systems, and special IP addresses (exact addresses under ips, CIDR ranges under ip-ranges, first match wins). Software entries may list the ports they typically listen on under ports; the frontend links software and ports both ways from it. Operating systems may have a color (hex) used for host avatars. classes describes common CFEngine classes. cloud-providers describes cloud providers hosts may run on. Entries may have a list of external links ({title, source, url}), shown as '\"title\" on source'; entries may also have a logo (URL of an SVG or PNG); keep it short, 0-5 links, usually 1 or 2. Edit freely; the frontend reads this file at build time.",
+  "_comment": "Hard coded descriptions of well-known ports, software, user accounts, operating systems, and special IP addresses (exact addresses under ips, CIDR ranges under ip-ranges, first match wins). Software entries may list the ports they typically listen on under ports; the frontend links software and ports both ways from it. Operating systems may have a color (hex) used for host avatars. classes describes common CFEngine classes. cloud-providers describes cloud providers hosts may run in. services describes running systemd services; a service may name the software it belongs to. Entries may have a list of external links ({title, source, url}), shown as '\"title\" on source'; entries may also have a logo (URL of an SVG or PNG); keep it short, 0-5 links, usually 1 or 2. Edit freely; the frontend reads this file at build time.",
   "ports": {
     "20": { "name": "ftp-data", "description": "FTP data transfer channel." },
     "21": { "name": "ftp", "description": "FTP (File Transfer Protocol) control channel, unencrypted file transfer.", "links": [{"title": "File Transfer Protocol", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"}] },
@@ -314,5 +314,40 @@
     "Vultr": { "description": "Vultr, a cloud provider with many small data centers worldwide.", "links": [{"title": "www.vultr.com", "source": "www.vultr.com", "url": "https://www.vultr.com/"}], "logo": "https://cdn.simpleicons.org/vultr" },
     "Oracle Cloud": { "description": "Oracle Cloud Infrastructure, Oracle's public cloud.", "links": [{"title": "Oracle Cloud", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Oracle_Cloud"}, {"title": "www.oracle.com/cloud", "source": "www.oracle.com", "url": "https://www.oracle.com/cloud/"}] },
     "Linode": { "description": "Linode (Akamai Connected Cloud), a cloud provider now owned by Akamai.", "links": [{"title": "Linode", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Linode"}, {"title": "www.linode.com", "source": "www.linode.com", "url": "https://www.linode.com/"}] }
+  },
+  "services": {
+    "systemd-journald": { "description": "Collects and stores log messages from the kernel, services and applications." },
+    "systemd-logind": { "description": "Tracks user logins and sessions." },
+    "dbus": { "description": "The D-Bus message bus, used by services and desktop components to talk to each other." },
+    "cf-execd": { "description": "CFEngine scheduler daemon: runs the agent periodically and mails reports.", "software": "cfengine" },
+    "cf-serverd": { "description": "CFEngine server daemon: serves policy and files to other hosts, listening on port 5308.", "software": "cfengine" },
+    "cf-monitord": { "description": "CFEngine monitoring daemon: samples system metrics and sets classes from them.", "software": "cfengine" },
+    "systemd-networkd": { "description": "Network configuration manager used by default on Ubuntu servers." },
+    "systemd-resolved": { "description": "Local DNS stub resolver on Ubuntu." },
+    "unattended-upgrades": { "description": "Installs security updates automatically on Debian-like systems." },
+    "NetworkManager": { "description": "Network configuration manager used by default on RHEL and Fedora." },
+    "firewalld": { "description": "Firewall management daemon on RHEL, Fedora and SUSE.", "software": "firewalld" },
+    "auditd": { "description": "Linux audit daemon, records security-relevant events." },
+    "wicked": { "description": "Network configuration manager on SUSE Linux Enterprise." },
+    "ssh": { "description": "OpenSSH server unit on Debian-like systems.", "software": "openssh" },
+    "sshd": { "description": "OpenSSH server unit on RHEL-like and SUSE systems.", "software": "openssh" },
+    "cron": { "description": "Cron scheduler unit on Debian-like systems.", "software": "cron" },
+    "crond": { "description": "Cron scheduler unit on RHEL-like systems.", "software": "cron" },
+    "rsyslog": { "description": "System logging daemon.", "software": "rsyslog" },
+    "chrony": { "description": "Time synchronization unit on Debian-like systems.", "software": "chrony" },
+    "chronyd": { "description": "Time synchronization unit on RHEL-like systems.", "software": "chrony" },
+    "apache2": { "description": "Apache HTTP Server unit on Debian-like systems.", "software": "apache" },
+    "httpd": { "description": "Apache HTTP Server unit on RHEL-like systems.", "software": "apache" },
+    "nginx": { "description": "nginx web server.", "software": "nginx" },
+    "haproxy": { "description": "HAProxy load balancer.", "software": "haproxy" },
+    "squid": { "description": "Squid caching proxy.", "software": "squid" },
+    "mysql": { "description": "MySQL server unit on Debian-like systems.", "software": "mysql" },
+    "mysqld": { "description": "MySQL server unit on RHEL-like systems.", "software": "mysql" },
+    "postgresql": { "description": "PostgreSQL database server.", "software": "postgresql" },
+    "postfix": { "description": "Postfix mail server.", "software": "postfix" },
+    "dovecot": { "description": "Dovecot IMAP and POP3 server.", "software": "dovecot" },
+    "named": { "description": "BIND DNS server.", "software": "bind" },
+    "grafana-server": { "description": "Grafana dashboards.", "software": "grafana" },
+    "prometheus": { "description": "Prometheus monitoring server.", "software": "prometheus" }
   }
 }

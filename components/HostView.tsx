@@ -107,6 +107,26 @@ function HostDetails({ host }: { host: Host }) {
             })}
           />
         </dd>
+        <dt>Services</dt>
+        <dd data-testid="host-services">
+          {host.services.length === 0 ? (
+            <span className="muted">None (no systemd)</span>
+          ) : (
+            <ListModal
+              title={`Services running on ${host.hostname}`}
+              singular="service"
+              plural="services"
+              verb="running"
+              testId="services-modal"
+              rows={host.services.map((svc) => ({
+                key: svc,
+                type: "service",
+                label: svc,
+                href: entryHref({ type: "service", name: svc }),
+              }))}
+            />
+          )}
+        </dd>
         <dt>Classes</dt>
         <dd data-testid="host-classes">
           <ListModal

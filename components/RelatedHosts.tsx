@@ -198,6 +198,8 @@ function portsDescription(entry: Entry): string {
   switch (entry.type) {
     case "software":
       return `The ${entry.name} hosts are listening to these ports:`;
+    case "service":
+      return `The hosts running ${entry.name} are listening to these ports:`;
     case "version":
       return `The hosts with ${entry.name} are listening to these ports:`;
     case "os":
