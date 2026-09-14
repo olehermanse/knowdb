@@ -118,6 +118,17 @@ under `match`, at least one of the substrings matches:
 
 Edit the file to add or change groups; the frontend reads it at build time.
 
+## Classes
+
+Hosts report CFEngine classes: strings like `linux`, `ubuntu_22` or
+`policy_server` describing something true about the host. Classes work
+like groups in the UI (a class page lists its hosts, operating systems and
+ports, and a host page lists its classes), but they come from the hosts
+themselves rather than from `groups.json`. The generator reads the classes
+for each operating system from `data/classes.json` and adds
+`policy_server` and `am_policy_hub` on hubs. Common classes are described
+in `data/info.json` under `classes`.
+
 ## Host data format
 
 The relevant information from a host looks like this:
@@ -131,7 +142,8 @@ The relevant information from a host looks like this:
   "macs": ["00:50:56:a1:b2:c3"],
   "ports-listening": [22, 80, 443, 5308],
   "software": ["apache", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
-  "local-users": ["root", "nickanderson"]
+  "local-users": ["root", "nickanderson"],
+  "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"]
 }
 ```
 
@@ -151,5 +163,6 @@ Some guidelines for generating random hosts:
   Other ports for NTP, DNS, webserver etc. can be added.
   Should make sense wrt the name, so a webserver would have 443 and 80 listening, for example.
 - `software` should also be based on name - all Ubuntu should have dpkg, apt and apt-get, RHEL should have yum, rpm, dnf, and so on.
+- `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
 - `local-users` should include root on all Linux machines, and Administrator on Windows.
   Make sure to include some common system / application users for things like email software, printing, etc.

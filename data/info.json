@@ -1,5 +1,5 @@
 {
-  "_comment": "Hard coded descriptions of well-known ports, software, user accounts, operating systems, and special IP addresses (exact addresses under ips, CIDR ranges under ip-ranges, first match wins). Software entries may list the ports they typically listen on under ports; the frontend links software and ports both ways from it. Operating systems may have a color (hex) used for host avatars. Entries may have a list of external links ({title, source, url}), shown as '\"title\" on source'; entries may also have a logo (URL of an SVG or PNG); keep it short, 0-5 links, usually 1 or 2. Edit freely; the frontend reads this file at build time.",
+  "_comment": "Hard coded descriptions of well-known ports, software, user accounts, operating systems, and special IP addresses (exact addresses under ips, CIDR ranges under ip-ranges, first match wins). Software entries may list the ports they typically listen on under ports; the frontend links software and ports both ways from it. Operating systems may have a color (hex) used for host avatars. classes describes common CFEngine classes. Entries may have a list of external links ({title, source, url}), shown as '\"title\" on source'; entries may also have a logo (URL of an SVG or PNG); keep it short, 0-5 links, usually 1 or 2. Edit freely; the frontend reads this file at build time.",
   "ports": {
     "20": { "name": "ftp-data", "description": "FTP data transfer channel." },
     "21": { "name": "ftp", "description": "FTP (File Transfer Protocol) control channel, unencrypted file transfer.", "links": [{"title": "File Transfer Protocol", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"}] },
@@ -274,5 +274,33 @@
     { "cidr": "ff00::/8", "description": "IPv6 multicast address.", "links": [{"title": "Multicast address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Multicast_address"}] },
     { "cidr": "2001:db8::/32", "description": "Reserved for documentation and examples (RFC 3849); should never appear on a real network.", "links": [{"title": "Reserved IP addresses", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Reserved_IP_addresses"}] },
     { "cidr": "::ffff:0:0/96", "description": "IPv4-mapped IPv6 address, representing an IPv4 address inside an IPv6 socket.", "links": [{"title": "IPv6 address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/IPv6_address"}] }
-  ]
+  ],
+  "classes": {
+    "any": { "description": "Always defined on every CFEngine host." },
+    "cfengine": { "description": "Defined on every host running CFEngine." },
+    "cfengine_3": { "description": "The CFEngine major version is 3." },
+    "cfengine_3_27": { "description": "The CFEngine version is 3.27." },
+    "enterprise_edition": { "description": "The host runs CFEngine Enterprise (as opposed to community_edition)." },
+    "community_edition": { "description": "The host runs CFEngine Community." },
+    "linux": { "description": "The host runs Linux." },
+    "windows": { "description": "The host runs Windows." },
+    "WinServer": { "description": "The host runs a Windows Server edition." },
+    "x86_64": { "description": "The CPU architecture is 64-bit x86." },
+    "64_bit": { "description": "The operating system is 64-bit." },
+    "systemd": { "description": "The host uses systemd as its init system." },
+    "specific_linux_os": { "description": "A specific Linux distribution was detected (as opposed to a generic Linux)." },
+    "ubuntu": { "description": "The host runs Ubuntu." },
+    "debian": { "description": "The host runs Debian, or an Ubuntu derivative which also sets this class." },
+    "debian_derived": { "description": "The host runs a Debian derivative such as Ubuntu." },
+    "redhat": { "description": "The host runs Red Hat Enterprise Linux or a RHEL rebuild." },
+    "redhat_derived": { "description": "The host runs a distribution derived from Red Hat (CentOS, Fedora, ...)." },
+    "rhel": { "description": "The host runs Red Hat Enterprise Linux." },
+    "centos": { "description": "The host runs CentOS." },
+    "fedora": { "description": "The host runs Fedora." },
+    "suse": { "description": "The host runs SUSE Linux." },
+    "suse_derived": { "description": "The host runs a SUSE derivative." },
+    "sles": { "description": "The host runs SUSE Linux Enterprise Server." },
+    "policy_server": { "description": "The host is the CFEngine policy server (hub) for its infrastructure." },
+    "am_policy_hub": { "description": "The host is the CFEngine policy hub, defined alongside policy_server." }
+  }
 }

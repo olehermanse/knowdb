@@ -86,6 +86,7 @@ test("front page always shows at least one entry of each type", async ({
     "software",
     "user",
     "group",
+    "class",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
@@ -371,13 +372,24 @@ test("operating systems beyond the palette fold into an Other slice", async ({
 test("group with a single operating system shows a sentence instead", async ({
   page,
 }) => {
-  const name = groupWithOsCount((n) => n === 1);
-  const expected = osCounts(hostsInGroup(name));
-  await page.goto(groupHref(name));
+  // Prefer a group; fall back to a class (they work the same way), since
+  // e.g. the "ubuntu_24" class always has exactly one operating system.
+  const group = groups.find((g) => osCounts(hostsInGroup(g.name)).length === 1);
+  const cls = [...new Set(hosts.flatMap((h) => h.classes))].find(
+    (c) => osCounts(hosts.filter((h) => h.classes.includes(c))).length === 1,
+  );
+  const subject = group ? "group" : "class";
+  const name = group?.name ?? cls!;
+  expect(name).toBeTruthy();
+  const selected = group
+    ? hostsInGroup(group.name)
+    : hosts.filter((h) => h.classes.includes(name));
+  const expected = osCounts(selected);
+  await page.goto(group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
   await expect(page.getByTestId("os-list")).toHaveCount(0);
   await expect(page.getByTestId("os-summary")).toHaveText(
-    `This group has only 1 operating system: ${expected[0][0]} (${hostsLabel(expected[0][1])}).`,
+    `This ${subject} has only 1 operating system: ${expected[0][0]} (${hostsLabel(expected[0][1])}).`,
   );
   await expect(
     page.getByTestId("os-summary").getByRole("link", { name: expected[0][0] }),
@@ -903,12 +915,39 @@ test("the summary sentence sits between description and read more links", async 
   expect(summary!.y).toBeLessThan(links!.y);
 
   // Hosts get a plain-language summary: OS, environment and likely role.
-  const mailHost = hosts.find((h) => /^staging\d*-mail-/.test(h.hostname));
-  test.skip(!mailHost, "no staging mail host in the generated data");
-  await page.goto(`/entry/host/${encodeURIComponent(mailHost!.id)}`);
-  const article = /^[aeiou]/i.test(mailHost!.os) ? "an" : "a";
+  const envWords: Record<string, string> = {
+    production: "production",
+    staging: "staging",
+    testing: "testing",
+    dev: "development",
+  };
+  const roleWords: Record<string, string> = {
+    mail: "a mail server",
+    webserver: "a web server",
+    db: "a database server",
+    dns: "a DNS server",
+    ntp: "an NTP server",
+    lb: "a load balancer",
+    proxy: "a proxy server",
+    firewall: "a firewall",
+    hub: "a CFEngine hub",
+    monitor: "a monitoring server",
+    backup: "a backup server",
+    client: "a client machine",
+  };
+  const described = hosts
+    .map((h) => {
+      const [prefix, ...rest] = h.hostname.split("-");
+      const env = envWords[prefix.replace(/\d+$/, "")];
+      const role = rest.map((w) => roleWords[w]).find(Boolean);
+      return env && role ? { host: h, env, role } : undefined;
+    })
+    .find(Boolean)!;
+  expect(described).toBeTruthy();
+  await page.goto(`/entry/host/${encodeURIComponent(described.host.id)}`);
+  const article = /^[aeiou]/i.test(described.host.os) ? "an" : "a";
   await expect(page.getByTestId("entry-summary")).toHaveText(
-    `This is ${article} ${mailHost!.os} host in the staging environment. It looks like a mail server.`,
+    `This is ${article} ${described.host.os} host in the ${described.env} environment. It looks like ${described.role}.`,
   );
 });
 
@@ -1111,6 +1150,58 @@ test("hosts have pixel avatars coloured by operating system", async ({
   // Two different hosts get different patterns (with overwhelming odds).
   const otherCells = await cellsOf(page.getByTestId("host-avatar"));
   expect(otherCells).not.toEqual(cells);
+});
+
+test("hosts have classes which work like groups", async ({ page }) => {
+  expect(someHost.classes.length).toBeGreaterThan(0);
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const classes = page.getByTestId("host-classes");
+  await expect(classes.getByRole("link")).toHaveText(someHost.classes);
+  await expect(classes.getByRole("link", { name: "any", exact: true })).toHaveAttribute(
+    "href",
+    "/entry/class/any",
+  );
+
+  // "any" is set on every host; the class page looks like a group page.
+  await classes.getByRole("link", { name: "any", exact: true }).click();
+  await expect(page).toHaveURL("/entry/class/any");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    (info.classes as Record<string, { description: string }>)["any"].description,
+  );
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `This class is set on ${hosts.length} hosts in your infrastructure, running ${pluralize(distinctOs(hosts), "operating system")} and listening to ${pluralize(distinctPorts(hosts), "different port")}.`,
+  );
+  await expect(page.getByTestId("os-heading")).toBeVisible();
+  await expect(page.getByTestId("ports-heading")).toBeVisible();
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hosts.length})`);
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    "Hosts with the class any set.",
+  );
+
+  // A distribution class only lists hosts of that distribution.
+  const ubuntuHosts = hosts.filter((h) => h.classes.includes("ubuntu"));
+  expect(ubuntuHosts.length).toBeGreaterThan(0);
+  expect(ubuntuHosts.every((h) => h.os.startsWith("Ubuntu"))).toBe(true);
+  await page.goto("/entry/class/ubuntu");
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${ubuntuHosts.length})`);
+
+  // Classes can be used as search filters like any other type.
+  await page.goto(`/search?q=${encodeURIComponent("class:ubuntu port:22")}`);
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `${ubuntuHosts.length} hosts matching class ubuntu, port 22`,
+  );
+
+  // Hubs get policy server classes; unknown classes get a fallback text.
+  const hub = hosts.find((h) => h.hostname.includes("-hub-"));
+  if (hub) expect(hub.classes).toContain("policy_server");
+  const undocumented = [...new Set(hosts.flatMap((h) => h.classes))].find(
+    (c) => !(info.classes as Record<string, unknown>)[c],
+  );
+  test.skip(!undocumented, "every class in the data is described");
+  await page.goto(`/entry/class/${encodeURIComponent(undocumented!)}`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    "No information available about this class.",
+  );
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

@@ -5,6 +5,7 @@ import { aggregateOs, Entry, EntryType } from "@/lib/data";
 // how to refer to the entry in the section text.
 export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
   group: "group",
+  class: "class",
   software: "software",
   port: "port",
   user: "local user",

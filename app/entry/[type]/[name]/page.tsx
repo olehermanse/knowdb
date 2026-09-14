@@ -83,6 +83,12 @@ function HostDetails({ host }: { host: Host }) {
           <EntryLink key={user} type="user" name={user} />
         ))}
       </dd>
+      <dt>Classes</dt>
+      <dd className="inline-links" data-testid="host-classes">
+        {host.classes.map((cls) => (
+          <EntryLink key={cls} type="class" name={cls} />
+        ))}
+      </dd>
       <dt>Groups</dt>
       <dd className="inline-links" data-testid="host-groups">
         {groups.length === 0 && <span className="muted">None</span>}
@@ -225,6 +231,8 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts with a local user named ${entry.name}.`;
     case "group":
       return `Hosts in the group ${entry.name}.`;
+    case "class":
+      return `Hosts with the class ${entry.name} set.`;
     default:
       return `Hosts linked to ${entry.name}.`;
   }

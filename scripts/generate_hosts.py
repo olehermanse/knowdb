@@ -11,6 +11,11 @@ from pathlib import Path
 
 NUM_HOSTS = 100
 OUTPUT_PATH = Path(__file__).parent.parent / "tmp" / "hosts.json"
+CLASSES_PATH = Path(__file__).parent.parent / "data" / "classes.json"
+
+# CFEngine hard classes per operating system, from data/classes.json.
+with open(CLASSES_PATH) as _f:
+    OS_CLASSES = {k: v for k, v in json.load(_f).items() if not k.startswith("_")}
 
 # Operating systems with relative weights, so the distribution is not
 # uniform: a few platforms are very common, most are less common, and some
@@ -238,6 +243,13 @@ def generate_users(os_name, hostname):
     return sorted(set(users))
 
 
+def generate_classes(os_name, hostname):
+    classes = list(OS_CLASSES.get(os_name, ["any", "cfengine"]))
+    if role_of(hostname) == "hub":
+        classes += ["policy_server", "am_policy_hub"]
+    return classes
+
+
 def generate_host(used_hostnames, used_macs):
     os_name = random.choices(
         OPERATING_SYSTEMS, weights=list(OPERATING_SYSTEM_WEIGHTS.values())
@@ -252,6 +264,7 @@ def generate_host(used_hostnames, used_macs):
         "ports-listening": generate_ports(hostname),
         "software": generate_software(os_name, hostname),
         "local-users": generate_users(os_name, hostname),
+        "classes": generate_classes(os_name, hostname),
     }
 
 

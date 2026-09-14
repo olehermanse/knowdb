@@ -11,6 +11,8 @@ export interface Host {
   "ports-listening": number[];
   software: string[];
   "local-users": string[];
+  // CFEngine classes reported by the host, e.g. "linux", "ubuntu_22".
+  classes: string[];
 }
 
 export type EntryType =
@@ -22,7 +24,8 @@ export type EntryType =
   | "port"
   | "software"
   | "user"
-  | "group";
+  | "group"
+  | "class";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -99,6 +102,7 @@ function buildIndex() {
     for (const port of host["ports-listening"]) link("port", String(port), host.id);
     for (const sw of host.software) link("software", sw, host.id);
     for (const user of host["local-users"]) link("user", user, host.id);
+    for (const cls of host.classes ?? []) link("class", cls, host.id);
     const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
     for (const name of hostGroups) link("group", name, host.id);
     groupsByHost.set(host.id, hostGroups);
@@ -174,7 +178,7 @@ export function aggregateOs(hostkeys: string[]): OsCount[] {
 }
 
 // Entry types whose pages aggregate information about their linked hosts.
-export const AGGREGATING_TYPES: EntryType[] = ["group", "software", "os"];
+export const AGGREGATING_TYPES: EntryType[] = ["group", "class", "software", "os"];
 
 export function allEntries(): EntryRef[] {
   return [...entries.values()].map(({ type, name }) => ({ type, name }));
@@ -253,6 +257,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "software",
   "user",
   "group",
+  "class",
 ];
 
 export function isEntryType(value: string): value is EntryType {
@@ -308,6 +313,7 @@ interface Info {
   os: Record<string, OsInfo>;
   ips: Record<string, DescribedInfo>;
   "ip-ranges": IpRangeInfo[];
+  classes: Record<string, DescribedInfo>;
 }
 
 const info = infoJson as Info;
@@ -367,6 +373,10 @@ export function getIpInfo(address: string): DescribedInfo | undefined {
   return info["ip-ranges"].find((range) => inCidr(address, range.cidr));
 }
 
+export function getClassInfo(name: string): DescribedInfo | undefined {
+  return info.classes[name];
+}
+
 export function getUserInfo(name: string): DescribedInfo | undefined {
   return info.users[name];
 }
@@ -408,6 +418,8 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getOsInfo(entry.name);
     case "ip":
       return getIpInfo(entry.name);
+    case "class":
+      return getClassInfo(entry.name);
     default:
       return undefined;
   }
@@ -447,6 +459,7 @@ export function seeAlsoLabel(ref: EntryRef): string {
 
 export const NO_USER_INFO = "No information available about this user.";
 export const NO_OS_INFO = "No information available about this operating system.";
+export const NO_CLASS_INFO = "No information available about this class.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -458,6 +471,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   software: "A software package installed on a host.",
   user: "A local user account present on a host.",
   group: "A group of hosts, defined in groups.json.",
+  class: "A CFEngine class reported by hosts, describing something true about them.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -482,6 +496,9 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "ip") {
     const known = getIpInfo(entry.name);
     if (known) return known.description;
+  }
+  if (entry.type === "class") {
+    return getClassInfo(entry.name)?.description ?? NO_CLASS_INFO;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
@@ -552,6 +569,8 @@ export function summarizeEntry(entry: Entry): string {
       return `The user ${entry.name} exists on ${hosts} in your infrastructure, across ${oses()}.`;
     case "group":
       return `This group has ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
+    case "class":
+      return `This class is set on ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
     case "ip":
       return `This IP address is used by ${hosts} in your infrastructure.`;
     case "mac":
