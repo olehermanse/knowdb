@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const PAGE_SIZE = 50;
+export const PAGE_SIZE = 10;
 
 // Parse a ?page= query value into a page number (1-based), defaulting to 1.
 export function parsePage(raw: string | string[] | undefined): number {

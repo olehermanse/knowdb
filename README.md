@@ -33,14 +33,14 @@ hidden on OS pages, the clouds tab on cloud pages and the ports tab on
 port pages. An IP address, MAC address or hostname belonging to a single
 host shows only the Hosts and Similar tabs.
 
-Lists of hosts show at most 50 hosts at a time, with pagination links
+Lists of hosts show at most 10 hosts at a time, with pagination links
 below the list.
 
 ## Front page
 
 The front page has a button for each entry type (hosts, ports, software,
 ...) with its count. A button leads to the search page listing everything
-of that type, 50 at a time. Below the buttons is a random sample of
+of that type, 10 at a time. Below the buttons is a random sample of
 entries with at least one of every type.
 
 ## Searching

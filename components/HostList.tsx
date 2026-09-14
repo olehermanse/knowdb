@@ -4,7 +4,7 @@ import { Host } from "@/lib/data";
 
 export { PAGE_SIZE as HOSTS_PER_PAGE, parsePage } from "@/components/Pagination";
 
-// A list of hosts, 50 at a time with pagination links below.
+// A list of hosts, a page at a time (see PAGE_SIZE) with pagination links below.
 export default function HostList({
   hosts,
   page,

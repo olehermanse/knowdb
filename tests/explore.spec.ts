@@ -21,6 +21,8 @@ function inGroup(host: Host, group: Group) {
   );
 }
 const groupHref = (name: string) => `/entry/group/${encodeURIComponent(name)}`;
+// Lists are paginated this many items at a time (components/Pagination.tsx).
+const PAGE_SIZE = 10;
 
 // Related hosts are shown in tabs; open one by clicking its tab.
 async function openTab(
@@ -236,13 +238,13 @@ test("entries are two-way linked: host -> port -> host", async ({ page }) => {
   await expect(page).toHaveURL("/entry/port/22");
   await expect(page.getByTestId("entry-description")).toContainText("SSH");
 
-  // Port 22 links back to every host, 50 per page, including the one we
+  // Port 22 links back to every host, a page at a time, including the one we
   // came from (hosts are listed in host key order).
   await openTab(page, "hosts");
   const linkedHosts = page.getByTestId("linked-hosts").locator("li");
-  await expect(linkedHosts).toHaveCount(Math.min(50, hosts.length));
+  await expect(linkedHosts).toHaveCount(Math.min(PAGE_SIZE, hosts.length));
   const sortedIds = hosts.map((h) => h.id).sort();
-  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
+  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / PAGE_SIZE) + 1;
   if (ourPage > 1) {
     await page.getByTestId("pagination").getByRole("link", { name: String(ourPage) }).click();
   }
@@ -302,14 +304,12 @@ test("group page lists matching hosts and its rules", async ({ page }) => {
   const expected = hosts.filter((h) => inGroup(h, group));
   expect(expected.length).toBeGreaterThan(0);
   const linked = page.getByTestId("linked-hosts").locator("li");
-  await expect(linked).toHaveCount(expected.length);
-  for (const host of expected.slice(0, 3)) {
-    await expect(
-      page.getByTestId("linked-hosts").getByRole("link", {
-        name: host.hostname,
-        exact: true,
-      }),
-    ).toBeVisible();
+  await expect(linked).toHaveCount(Math.min(PAGE_SIZE, expected.length));
+  // Everything on the first page is a member of the group.
+  const shown = await linked.locator(".host-summary > div:first-child > a").allTextContents();
+  expect(shown.length).toBeGreaterThan(0);
+  for (const hostname of shown) {
+    expect(expected.map((h) => h.hostname)).toContain(hostname);
   }
 });
 
@@ -322,6 +322,12 @@ test("groups are two-way linked: host -> group -> host", async ({ page }) => {
     .click();
   await expect(page).toHaveURL(groupHref("Ubuntu"));
   await openTab(page, "hosts");
+  // Hosts are listed a page at a time in host key order; go to our host's page.
+  const ubuntuIds = hostsInGroup("Ubuntu").map((h) => h.id).sort();
+  const ubuntuPage = Math.floor(ubuntuIds.indexOf(ubuntuHost.id) / PAGE_SIZE) + 1;
+  if (ubuntuPage > 1) {
+    await page.getByTestId("pagination").getByRole("link", { name: String(ubuntuPage) }).click();
+  }
   await page
     .getByTestId("linked-hosts")
     .getByRole("link", { name: ubuntuHost.hostname, exact: true })
@@ -629,7 +635,10 @@ test("search filters with quoted values and free text", async ({ page }) => {
     (h) => h.os === os && h["ports-listening"].includes(22),
   );
   await page.goto(`/search?q=${encodeURIComponent(`os:"${os}" port:22`)}`);
-  await expect(page.getByTestId("host-item")).toHaveCount(expected.length);
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, expected.length));
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `${expected.length} ${expected.length === 1 ? "host" : "hosts"} matching`,
+  );
 
   // Free text narrows by hostname.
   const word = someHost.hostname.split("-")[0];
@@ -638,7 +647,7 @@ test("search filters with quoted values and free text", async ({ page }) => {
     `with “${word}” in the hostname`,
   );
   await expect(page.getByTestId("host-item")).toHaveCount(
-    hosts.filter((h) => h.os === os && h.hostname.includes(word)).length,
+    Math.min(PAGE_SIZE, hosts.filter((h) => h.os === os && h.hostname.includes(word)).length),
   );
 
   // Unknown filter values match nothing.
@@ -658,9 +667,9 @@ test("port and host pages do not aggregate ports", async ({ page }) => {
 test("host lists show abbreviated ID, OS and IP addresses", async ({
   page,
 }) => {
-  // Hosts are listed 50 per page in host key order; go to our host's page.
+  // Hosts are listed a page at a time in host key order; go to our host's page.
   const sortedIds = hosts.map((h) => h.id).sort();
-  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
+  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / PAGE_SIZE) + 1;
   await page.goto(`/entry/port/22?htab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
   const item = page
     .getByTestId("linked-hosts")
@@ -1118,16 +1127,16 @@ test("every page has a prototype and AI disclaimer at the bottom", async ({
   }
 });
 
-test("host lists are paginated 50 at a time", async ({ page }) => {
-  // Every host listens on port 22, and there are more than 50 hosts.
-  expect(hosts.length).toBeGreaterThan(50);
+test("host lists are paginated 10 at a time", async ({ page }) => {
+  // Every host listens on port 22, and there are more than a page of hosts.
+  expect(hosts.length).toBeGreaterThan(PAGE_SIZE);
   const total = hosts.length;
-  const lastPage = Math.ceil(total / 50);
+  const lastPage = Math.ceil(total / PAGE_SIZE);
   await page.goto("/entry/port/22?htab=hosts");
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${total})`);
-  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(50);
+  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(PAGE_SIZE);
   await expect(page.getByTestId("pagination-summary")).toHaveText(
-    `Showing 1–50 of ${total} hosts`,
+    `Showing 1–${PAGE_SIZE} of ${total} hosts`,
   );
   const pagination = page.getByTestId("pagination");
   await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveCount(0);
@@ -1135,10 +1144,10 @@ test("host lists are paginated 50 at a time", async ({ page }) => {
   await pagination.getByRole("link", { name: "Next →" }).click();
   await expect(page).toHaveURL(/\/entry\/port\/22\?page=2$/);
   await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
-    Math.min(50, total - 50),
+    Math.min(PAGE_SIZE, total - PAGE_SIZE),
   );
   await expect(page.getByTestId("pagination-summary")).toHaveText(
-    `Showing 51–${Math.min(100, total)} of ${total} hosts`,
+    `Showing ${PAGE_SIZE + 1}–${Math.min(2 * PAGE_SIZE, total)} of ${total} hosts`,
   );
   await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveAttribute(
     "href",
@@ -1168,14 +1177,14 @@ test("host lists are paginated 50 at a time", async ({ page }) => {
 
 test("filtered host search results are paginated", async ({ page }) => {
   await page.goto("/search?q=port:22");
-  await expect(page.getByTestId("host-item")).toHaveCount(50);
+  await expect(page.getByTestId("host-item")).toHaveCount(PAGE_SIZE);
   await expect(page.getByTestId("search-summary")).toContainText(
     `${hosts.length} hosts matching port 22`,
   );
   await page.getByTestId("pagination").getByRole("link", { name: "Next →" }).click();
   await expect(page).toHaveURL(/\/search\?q=port%3A22&page=2$/);
   await expect(page.getByTestId("host-item")).toHaveCount(
-    Math.min(50, hosts.length - 50),
+    Math.min(PAGE_SIZE, hosts.length - PAGE_SIZE),
   );
 });
 
@@ -1246,7 +1255,7 @@ test("hosts have pixel avatars coloured by operating system", async ({
   }
   // Stable: the same host gets the same pattern in a list.
   const sortedIds = hosts.map((h) => h.id).sort();
-  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
+  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / PAGE_SIZE) + 1;
   await page.goto(`/entry/port/22?htab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
   const item = page.getByTestId("host-item").filter({
     has: page.getByRole("link", { name: someHost.hostname, exact: true }),
@@ -1695,27 +1704,29 @@ test("front page buttons list everything of a type", async ({ page }) => {
     `${allPorts.length} ports in your infrastructure.`,
   );
   const items = page.getByTestId("search-results").locator("li");
-  await expect(items).toHaveCount(allPorts.length);
+  await expect(items).toHaveCount(Math.min(PAGE_SIZE, allPorts.length));
   await expect(items.first().getByRole("link")).toHaveText(String(allPorts[0]));
   await expect(items.first().locator(".type-badge")).toHaveText("port");
-  await expect(page.getByTestId("pagination")).toHaveCount(0);
+  await expect(page.getByTestId("pagination")).toHaveCount(allPorts.length > PAGE_SIZE ? 1 : 0);
 
-  // Hosts: paginated 50 at a time, sorted by hostname.
+  // Hosts: paginated a page at a time, sorted by hostname.
   await page.goto("/");
   await expect(page.getByTestId("type-button-host")).toHaveText(`Hosts (${hosts.length})`);
   await page.getByTestId("type-button-host").click();
   await expect(page).toHaveURL("/search?type=host");
-  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(50, hosts.length));
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, hosts.length));
   const byName = [...hosts].sort((a, b) => a.hostname.localeCompare(b.hostname));
   await expect(
     page.getByTestId("host-item").first().getByRole("link", { name: byName[0].hostname }),
   ).toBeVisible();
   await expect(page.getByTestId("pagination-summary")).toHaveText(
-    `Showing 1–50 of ${hosts.length} hosts`,
+    `Showing 1–${PAGE_SIZE} of ${hosts.length} hosts`,
   );
   await page.getByTestId("pagination").getByRole("link", { name: "Next →" }).click();
   await expect(page).toHaveURL("/search?type=host&page=2");
-  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(50, hosts.length - 50));
+  await expect(page.getByTestId("host-item")).toHaveCount(
+    Math.min(PAGE_SIZE, hosts.length - PAGE_SIZE),
+  );
 
   // Unknown types fall back to the plain search page.
   await page.goto("/search?type=banana");
