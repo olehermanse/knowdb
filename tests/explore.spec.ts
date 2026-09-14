@@ -1777,6 +1777,21 @@ test("similar tab lists same-type entries sharing a name prefix", async ({
   ).toBeVisible();
 });
 
+test("similar sentence keeps IP and MAC capitalised", async ({ page }) => {
+  // MAC addresses share vendor prefixes, so there is always something similar.
+  const mac = someHost.macs[0];
+  const macSimilar = hosts.flatMap((h) => h.macs).filter((m) => m !== mac && m.slice(0, 3) === mac.slice(0, 3));
+  if (macSimilar.length > 0) {
+    await page.goto(`/entry/mac/${encodeURIComponent(mac)}?tab=similar`);
+    await expect(page.getByTestId("similar-description")).toHaveText("Other similar MAC addresses:");
+  }
+  const ip = hosts.flatMap((h) => h.ips).find((a) => a.startsWith("10."));
+  if (ip) {
+    await page.goto(`/entry/ip/${encodeURIComponent(ip)}?tab=similar`);
+    await expect(page.getByTestId("similar-description")).toHaveText("Other similar IP addresses:");
+  }
+});
+
 test("similar tab is disabled when nothing is similar", async ({ page }) => {
   // No other port starts with "22".
   const ports = [...new Set(hosts.flatMap((h) => h["ports-listening"]))].map(String);
