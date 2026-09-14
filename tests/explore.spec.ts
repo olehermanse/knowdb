@@ -421,7 +421,7 @@ test("operating systems section is reused on software, port and user pages", asy
 }) => {
   const cases: [string, (h: Host) => boolean, string][] = [
     [
-      "/entry/software/dpkg",
+      "/entry/software/dpkg?tab=os",
       (h) => h.software.includes("dpkg"),
       "Operating systems of the hosts with this software, most hosts first.",
     ],
@@ -1267,23 +1267,37 @@ test("software has versions which are entries of their own", async ({
   await expect(page.getByTestId("versions-heading")).toHaveText(
     `Versions (${versions.size})`,
   );
+  // The versions tab is the first tab on software pages, and only there.
+  await expect(page.getByTestId("tab-versions")).toBeVisible();
   const items = page.getByTestId("version-item");
   await expect(items).toHaveCount(versions.size);
-  // Most hosts first, each version linking to its own entry.
+  // Most hosts first, one card per version linking to its own entry, with
+  // the host count linking to a search for those hosts.
   const ranked = [...versions.entries()].sort((a, b) => b[1] - a[1]);
   const [topVersion, topCount] = ranked[0];
-  await expect(items.first()).toContainText(topVersion);
-  await expect(items.first()).toContainText(`${topCount} hosts`);
-  await expect(items.first().getByRole("link")).toHaveAttribute(
+  const first = items.first();
+  await expect(first.locator(".type-badge")).toHaveText("version");
+  // Named like in search results: "cfengine 3.27.0", with the description.
+  await expect(
+    first.getByRole("link", { name: `cfengine ${topVersion}`, exact: true }),
+  ).toHaveAttribute("href", `/entry/version/${encodeURIComponent(`cfengine ${topVersion}`)}`);
+  await expect(first).toContainText(`Version ${topVersion} of cfengine.`);
+  await expect(first.getByTestId("version-hosts-link")).toHaveText(`${topCount} hosts`);
+  await expect(first.getByTestId("version-hosts-link")).toHaveAttribute(
     "href",
-    `/entry/version/${encodeURIComponent(`cfengine ${topVersion}`)}`,
+    `/search?q=${encodeURIComponent(`version:"cfengine ${topVersion}"`)}`,
   );
   await expect(page.getByTestId("entry-summary")).toContainText(
     `in ${versions.size} different versions`,
   );
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("versions-heading")).toHaveCount(0);
+  await page.goto(groupHref("Windows"));
+  await expect(page.getByTestId("versions-heading")).toHaveCount(0);
 
   // The version page links back to the software and lists its hosts.
-  await items.first().getByRole("link").click();
+  await page.goto("/entry/software/cfengine");
+  await items.first().getByRole("link", { name: `cfengine ${topVersion}`, exact: true }).click();
   await expect(page.getByTestId("entry-name")).toHaveText(`cfengine ${topVersion}`);
   await expect(page.getByTestId("entry-description")).toContainText(
     `Version ${topVersion} of cfengine.`,

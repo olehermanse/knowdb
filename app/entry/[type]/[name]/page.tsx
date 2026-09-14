@@ -25,7 +25,6 @@ import {
   summarizeEntry,
   uniqueHostForHostname,
   versionEntryName,
-  aggregateVersions,
 } from "@/lib/data";
 
 // "22 (ssh)" for well-known ports, just the number otherwise.
@@ -135,36 +134,6 @@ function GroupRules({ group }: { group: Group }) {
   );
 }
 
-function hostsLabel(n: number): string {
-  return `${n} ${n === 1 ? "host" : "hosts"}`;
-}
-
-// Versions of a piece of software across its hosts, most hosts first.
-function Versions({ entry }: { entry: Entry }) {
-  const versions = aggregateVersions(entry.name, entry.hosts);
-  if (versions.length === 0) return null;
-  return (
-    <>
-      <h2 data-testid="versions-heading">
-        Versions <span className="muted">({versions.length})</span>
-      </h2>
-      <p className="muted">Versions of {entry.name} installed on the hosts:</p>
-      <div className="inline-links" data-testid="versions">
-        {versions.map(({ version, hosts }) => (
-          <span key={version} data-testid="version-item">
-            <EntryLink
-              type="version"
-              name={versionEntryName(entry.name, version)}
-              label={version}
-            />{" "}
-            <span className="muted">({hostsLabel(hosts)})</span>
-          </span>
-        ))}
-      </div>
-    </>
-  );
-}
-
 // Related entries, e.g. the port a piece of software listens on.
 function SeeAlso({ entry }: { entry: Entry }) {
   const related = getSeeAlso(entry);
@@ -265,7 +234,6 @@ export default async function EntryPage({
       <p data-testid="entry-summary">{summarizeEntry(entry)}</p>
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
-      {type === "software" && <Versions entry={entry} />}
       {host ? (
         <HostDetails host={host} />
       ) : (

@@ -13,9 +13,10 @@ green or gray dot in the avatar's bottom right corner shows whether the
 host is online.
 
 Every entry page except a host's shows the hosts related to the entry in
-three tabs: the operating systems they run (a pie chart and ranked list),
-the ports they listen on, and the host list itself. The operating systems
-tab is hidden on OS pages and the ports tab on port pages.
+tabs: the operating systems they run (a pie chart and ranked list), the
+ports they listen on, and the host list itself. Software pages have a
+Versions tab as well. The operating systems tab is hidden on OS pages and
+the ports tab on port pages.
 
 Lists of hosts show at most 50 hosts at a time, with pagination links
 below the list.
@@ -144,8 +145,9 @@ in `data/info.json` under `classes`.
 
 Each host reports the version of every installed piece of software in
 `software-versions`. Versions are their own entry type, named like
-`apache 2.4.62`: a software page lists its versions with host counts, and a
-version page links back to the software and lists the hosts on it.
+`apache 2.4.62`: a software page has a Versions tab listing its versions
+with host counts, and a version page links back to the software and lists
+the hosts on it.
 `cfengine` is installed on every host.
 
 ## Host data format

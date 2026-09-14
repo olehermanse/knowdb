@@ -6,6 +6,8 @@ import OperatingSystems from "@/components/OperatingSystems";
 import {
   aggregateOs,
   aggregatePorts,
+  aggregateVersions,
+  describeEntry,
   Entry,
   entryHref,
   filterSearchHref,
@@ -13,23 +15,27 @@ import {
   getPortInfo,
   Host,
   parseVersionEntryName,
+  versionEntryName,
 } from "@/lib/data";
 
 // The hosts related to an entry, in three tabs: the operating systems they
 // run (pie chart), the ports they listen on, and the paginated host list.
 // The operating systems tab is hidden on OS pages and the ports tab on
 // port pages, where it would only repeat the entry itself.
-export type Tab = "os" | "ports" | "hosts";
-const TAB_ORDER: Tab[] = ["os", "ports", "hosts"];
+export type Tab = "versions" | "os" | "ports" | "hosts";
+const TAB_ORDER: Tab[] = ["versions", "os", "ports", "hosts"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
   return (TAB_ORDER as string[]).includes(value ?? "") ? (value as Tab) : undefined;
 }
 
+// The versions tab exists only for software; the operating systems tab is
+// hidden on OS pages and the ports tab on port pages.
 export function visibleTabs(entry: Entry): Tab[] {
   return TAB_ORDER.filter(
     (tab) =>
+      !(tab === "versions" && entry.type !== "software") &&
       !(tab === "os" && entry.type === "os") &&
       !(tab === "ports" && entry.type === "port"),
   );
@@ -90,6 +96,41 @@ function AggregatedPort({
         </div>
       </div>
     </li>
+  );
+}
+
+// Versions of a piece of software, one card per version, most hosts first.
+function VersionsPanel({ entry }: { entry: Entry }) {
+  const versions = aggregateVersions(entry.name, entry.hosts);
+  return (
+    <>
+      <p className="muted" data-testid="versions-description">
+        Versions of {entry.name} installed on the hosts:
+      </p>
+      {versions.length === 0 && <p className="muted">None</p>}
+      <ul className="entry-list" data-testid="versions">
+        {versions.map(({ version, hosts }) => {
+          const name = versionEntryName(entry.name, version);
+          const searchHref = filterSearchHref([{ type: "version", name }]);
+          return (
+            <li key={version} className="host-item" data-testid="version-item">
+              <span className="type-badge">version</span>
+              <div className="host-summary">
+                <div>
+                  <EntryLink type="version" name={name} />
+                </div>
+                <div className="muted host-facts">
+                  <Link href={searchHref} className="entry-link" data-testid="version-hosts-link">
+                    {hostsLabel(hosts)}
+                  </Link>
+                  <span>{describeEntry({ type: "version", name })}</span>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 
@@ -172,16 +213,19 @@ export default function RelatedHosts({
   const tabs = visibleTabs(entry);
   const current = tab && tabs.includes(tab) ? tab : tabs[0];
   const counts: Record<Tab, number> = {
+    versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     os: aggregateOs(entry.hosts).length,
     ports: aggregatePorts(entry.hosts).length,
     hosts: entry.hosts.length,
   };
   const labels: Record<Tab, string> = {
+    versions: "Versions",
     os: "Operating systems",
     ports: "Ports",
     hosts: "Hosts",
   };
   const testIds: Record<Tab, string> = {
+    versions: "versions-heading",
     os: "os-heading",
     ports: "ports-heading",
     hosts: "hosts-heading",
@@ -203,6 +247,7 @@ export default function RelatedHosts({
         ))}
       </nav>
       <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
+        {current === "versions" && <VersionsPanel entry={entry} />}
         {current === "os" && <OperatingSystems entry={entry} />}
         {current === "ports" && <PortsPanel entry={entry} />}
         {current === "hosts" && <HostsPanel entry={entry} page={page} />}
