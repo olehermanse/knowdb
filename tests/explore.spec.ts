@@ -940,6 +940,22 @@ test("host summary covers environments and roles from hostnames", async ({
   expect(picked.size).toBeGreaterThan(0);
 });
 
+test("every page has a prototype and AI disclaimer at the bottom", async ({
+  page,
+}) => {
+  for (const url of ["/", "/entry/port/22", "/search?q=ssh"]) {
+    await page.goto(url);
+    const disclaimer = page.getByTestId("disclaimer");
+    await expect(disclaimer).toContainText("prototype");
+    await expect(disclaimer).toContainText("AI generated");
+    await expect(disclaimer).toContainText("may contain mistakes");
+    // It sits below the main content.
+    const main = await page.locator("main").boundingBox();
+    const footer = await disclaimer.boundingBox();
+    expect(footer!.y).toBeGreaterThanOrEqual(main!.y + main!.height);
+  }
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

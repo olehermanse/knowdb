@@ -88,10 +88,26 @@ body {
   font-size: 1.2rem;
 }
 
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .site-main {
   max-width: 56rem;
+  width: 100%;
   margin: 0 auto;
   padding: 1.5rem;
+  flex: 1;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 h1 {

@@ -17,6 +17,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SearchForm />
         </header>
         <main className="site-main">{children}</main>
+        <footer className="site-footer" data-testid="disclaimer">
+          KnowDB is a prototype. Descriptions, links and other information
+          shown here are AI generated and may contain mistakes.
+        </footer>
       </body>
     </html>
   );
