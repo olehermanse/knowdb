@@ -88,8 +88,6 @@ export const LIST_MODAL_SCRIPT = `
     for (var i = 0; i < sections.length; i++) {
       var stored = loadComments(sections[i]);
       for (var j = 0; j < stored.length; j++) appendComment(sections[i], stored[j]);
-      var input = sections[i].querySelector("input[name=author]");
-      if (input && !input.value) input.value = localStorage.getItem("knowdb-comment-author") || "";
     }
   }
   document.addEventListener("submit", function (e) {
@@ -99,12 +97,12 @@ export const LIST_MODAL_SCRIPT = `
     var section = form.closest("[data-comments]");
     var text = form.querySelector("textarea[name=text]").value.trim();
     if (!text) return;
-    var author = form.querySelector("input[name=author]").value.trim() || "Anonymous";
+    // Demo: no login, so the author is Alice or Bob at random.
+    var author = Math.random() < 0.5 ? "Alice" : "Bob";
     var comment = { author: author, time: new Date().toISOString(), text: text };
     var stored = loadComments(section);
     stored.push(comment);
     localStorage.setItem(commentStorageKey(section), JSON.stringify(stored));
-    localStorage.setItem("knowdb-comment-author", author);
     appendComment(section, comment);
     form.querySelector("textarea[name=text]").value = "";
   });

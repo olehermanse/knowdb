@@ -46,8 +46,9 @@ has a Comments section at the bottom; the host preview on the right of
 other entries has none. Each comment is a small card with the author, the
 time and the text. Example comments live in `data/comments.json`, keyed by
 `<type>:<name>`. The form at the bottom lets you post a comment, but this
-is demo only: there is no backend, and comments you write are kept in your
-browser's local storage and shown together with the examples.
+is demo only: there is no backend or login, comments are posted as Alice or
+Bob at random, and they are kept in your browser's local storage and shown
+together with the examples.
 
 ## Front page
 

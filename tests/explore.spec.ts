@@ -2242,13 +2242,13 @@ test("entries have a Comments tab with example comments", async ({ page }) => {
 
 test("posting a comment stores it in the browser only", async ({ page }) => {
   await page.goto("/entry/port/5308?tab=comments");
-  await page.getByTestId("comment-author").fill("Tester");
+  await expect(page.getByTestId("comment-author")).toHaveCount(0);
   await page.getByTestId("comment-text").fill("Should this really be open on Windows hosts?");
   await page.getByTestId("comment-submit").click();
   // Still on the same page (no navigation), the comment appears at once.
   await expect(page).toHaveURL(/\/entry\/port\/5308/);
   const card = page.getByTestId("comment-card").last();
-  await expect(card.getByTestId("comment-card-author")).toHaveText("Tester");
+  await expect(card.getByTestId("comment-card-author")).toHaveText(/^(Alice|Bob)$/);
   await expect(card.getByTestId("comment-card-text")).toHaveText(
     "Should this really be open on Windows hosts?",
   );
@@ -2262,7 +2262,9 @@ test("posting a comment stores it in the browser only", async ({ page }) => {
   await expect(page.getByTestId("comment-card").last().getByTestId("comment-card-text")).toHaveText(
     "Should this really be open on Windows hosts?",
   );
-  await expect(page.getByTestId("comment-author")).toHaveValue("Tester");
+  await expect(
+    page.getByTestId("comment-card").last().getByTestId("comment-card-author"),
+  ).toHaveText(/^(Alice|Bob)$/);
   await page.goto("/entry/port/22?tab=comments");
   await expect(page.getByTestId("comment-card")).toHaveCount(
     (exampleComments["port:22"] as unknown[]).length,

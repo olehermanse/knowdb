@@ -38,10 +38,6 @@ export default function Comments({ entry, heading }: { entry: EntryRef; heading?
       </div>
       <form className="comment-form" data-comment-form data-testid="comment-form">
         <label>
-          <span className="muted">Name</span>
-          <input type="text" name="author" placeholder="Your name" data-testid="comment-author" />
-        </label>
-        <label>
           <span className="muted">Comment</span>
           <textarea name="text" rows={3} required placeholder="Write a comment…" data-testid="comment-text" />
         </label>
@@ -49,7 +45,9 @@ export default function Comments({ entry, heading }: { entry: EntryRef; heading?
           <button type="submit" className="list-modal-button" data-testid="comment-submit">
             Post comment
           </button>
-          <span className="muted comment-form-note">Stored in this browser only (demo).</span>
+          <span className="muted comment-form-note">
+            Posted as Alice or Bob, stored in this browser only (demo).
+          </span>
         </div>
       </form>
     </section>
