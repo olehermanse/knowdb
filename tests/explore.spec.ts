@@ -84,6 +84,7 @@ const someHost = hosts[0];
 
 test("front page shows 12 random entries", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByText("Or pick one of the randomly selected entries below:")).toBeVisible();
   const items = page.getByTestId("entry-list").locator("li");
   await expect(items).toHaveCount(12);
   await expect(items.locator("a.entry-link")).toHaveCount(12);

@@ -45,10 +45,7 @@ export default function Home() {
       <h1>Explore your infrastructure</h1>
       <p className="muted">Browse everything of one type:</p>
       <TypeButtons />
-      <p className="muted">
-        Or start from a random sample of entries. Click any entry to see what
-        it is and how it is connected to everything else.
-      </p>
+      <p className="muted">Or pick one of the randomly selected entries below:</p>
       <Suspense fallback={<p className="muted">Loading entries…</p>}>
         <RandomEntries />
       </Suspense>
