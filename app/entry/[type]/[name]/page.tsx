@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
-import Timestamp from "@/components/Timestamp";
+import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import HostsSections from "@/components/HostsSections";
 import RelatedHosts, { entryTabs, parseTab } from "@/components/RelatedHosts";
@@ -148,6 +148,7 @@ export default async function EntryPage({
             )}
           </h1>
         </div>
+        {seen && <SeenLine seen={seen} testId="entry" />}
       </header>
       <div className="entry-split">
         <div className="entry-pane entry-pane-left" data-testid="entry-pane">
@@ -156,12 +157,6 @@ export default async function EntryPage({
             {describeEntry(entry)}
           </p>
           {summary && <p data-testid="entry-summary">{summary}</p>}
-          {seen && (
-            <p className="muted" data-testid="entry-seen">
-              First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
-              <Timestamp iso={seen.last} testId="entry-last-seen" />.
-            </p>
-          )}
           <ExternalLinks entry={entry} />
           {group && <GroupRules group={group} />}
           <RelatedHosts entry={entry} tabs={entryTabs(entry)} tab={tab} testId="entry-tabs" />

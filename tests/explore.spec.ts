@@ -1842,8 +1842,6 @@ test("host page has two columns with software and classes below", async ({
     "Hostname",
     "Operating system",
     "Cloud provider",
-    "First seen",
-    "Last seen",
     "Local users",
     "Groups",
   ]);
@@ -1927,6 +1925,15 @@ test("hosts show first and last seen as relative times with full tooltips", asyn
   await expect(lastSeen).toHaveAttribute("datetime", last);
   await expect(lastSeen).toHaveAttribute("title", fullTime(last));
   await expect(lastSeen).toHaveText(/ago$|just now/);
+  // One sentence beneath the title, above the summary, in small faded text.
+  const seenLine = page.getByTestId("host-seen");
+  await expect(seenLine).toHaveText(/^First seen .*, last seen .*\.$/);
+  await expect(seenLine).toHaveClass(/muted/);
+  const title = (await page.getByTestId("entry-name").boundingBox())!;
+  const seenBox = (await seenLine.boundingBox())!;
+  const summaryBox = (await page.getByTestId("entry-summary").boundingBox())!;
+  expect(seenBox.y).toBeGreaterThan(title.y);
+  expect(seenBox.y).toBeLessThan(summaryBox.y);
 
   // Online hosts were seen after offline ones in the generated data.
   const online = hosts.filter((h) => h.online).map((h) => seenOf(h)["last-seen"]);
@@ -1936,8 +1943,8 @@ test("hosts show first and last seen as relative times with full tooltips", asyn
   // Host cards in lists show the last seen time too.
   await page.goto("/entry/port/22?htab=hosts");
   const firstCard = page.getByTestId("host-item").first();
-  await expect(firstCard).toContainText("Last seen:");
-  await expect(firstCard.locator("time")).toHaveAttribute("title", /UTC$/);
+  await expect(firstCard).toContainText(/First seen .* ago, last seen .*\./);
+  await expect(firstCard.locator("time").first()).toHaveAttribute("title", /UTC$/);
 });
 
 test("other entries derive first and last seen from their hosts", async ({
@@ -1947,7 +1954,13 @@ test("other entries derive first and last seen from their hosts", async ({
   const firsts = hosts.map((h) => seenOf(h)["first-seen"]).sort();
   const lasts = hosts.map((h) => seenOf(h)["last-seen"]).sort();
   await page.goto("/entry/port/22");
-  await expect(page.getByTestId("entry-seen")).toContainText("First seen");
+  await expect(page.getByTestId("entry-seen")).toHaveText(/^First seen .*, last seen .*\.$/);
+  // Right beneath the title and before See also.
+  const titleBox = (await page.getByTestId("entry-name").boundingBox())!;
+  const seenBox = (await page.getByTestId("entry-seen").boundingBox())!;
+  const seeAlsoBox = (await page.getByTestId("see-also").boundingBox())!;
+  expect(seenBox.y).toBeGreaterThan(titleBox.y);
+  expect(seenBox.y).toBeLessThan(seeAlsoBox.y);
   await expect(page.getByTestId("entry-first-seen")).toHaveAttribute("datetime", firsts[0]);
   await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
     "datetime",
