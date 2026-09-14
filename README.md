@@ -61,7 +61,10 @@ python3 scripts/generate_hosts.py && cp tmp/hosts.json data/hosts.json
 ## Descriptions of ports and software
 
 `data/info.json` is a hand-written file with descriptions of well-known
-ports, software, local user accounts and operating systems. Each port has
+ports, software, local user accounts, operating systems and special IP
+addresses. IP addresses are described either exactly (`127.0.0.1`) or by
+CIDR range (`10.0.0.0/8` for private networks); the first matching range
+wins. Each port has
 a short common name (like `ssh` for port 22) and a description; software,
 users and operating systems have a description. Entry pages show the
 description when one exists, and otherwise a sentence like "No information

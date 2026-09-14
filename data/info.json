@@ -1,5 +1,5 @@
 {
-  "_comment": "Hard coded descriptions of well-known ports, software, user accounts and operating systems. Entries may have a list of external links ({title, source, url}), shown as '\"title\" on source'; entries may also have a logo (URL of an SVG or PNG); keep it short, 0-5 links, usually 1 or 2. Edit freely; the frontend reads this file at build time.",
+  "_comment": "Hard coded descriptions of well-known ports, software, user accounts, operating systems, and special IP addresses (exact addresses under ips, CIDR ranges under ip-ranges, first match wins). Entries may have a list of external links ({title, source, url}), shown as '\"title\" on source'; entries may also have a logo (URL of an SVG or PNG); keep it short, 0-5 links, usually 1 or 2. Edit freely; the frontend reads this file at build time.",
   "ports": {
     "20": { "name": "ftp-data", "description": "FTP data transfer channel." },
     "21": { "name": "ftp", "description": "FTP (File Transfer Protocol) control channel, unencrypted file transfer.", "links": [{"title": "File Transfer Protocol", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/File_Transfer_Protocol"}] },
@@ -243,5 +243,34 @@
     "Windows 2019": { "description": "Windows Server 2019, released November 2018; extended support ends January 2029.", "links": [{"title": "Windows Server 2019", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Windows_Server_2019"}, {"title": "Official website", "source": "microsoft.com", "url": "https://www.microsoft.com/windows-server"}] },
     "Windows 2022": { "description": "Windows Server 2022, released August 2021; extended support ends October 2031.", "links": [{"title": "Windows Server 2022", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Windows_Server_2022"}, {"title": "Official website", "source": "microsoft.com", "url": "https://www.microsoft.com/windows-server"}] },
     "Windows 2025": { "description": "Windows Server 2025, released November 2024.", "links": [{"title": "Windows Server 2025", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Windows_Server_2025"}, {"title": "Official website", "source": "microsoft.com", "url": "https://www.microsoft.com/windows-server"}] }
-  }
+  },
+  "ips": {
+    "127.0.0.1": { "description": "The IPv4 loopback address (localhost). Traffic to it never leaves the host; every host has it.", "links": [{"title": "Localhost", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Localhost"}] },
+    "::1": { "description": "The IPv6 loopback address (localhost). Traffic to it never leaves the host.", "links": [{"title": "Localhost", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Localhost"}] },
+    "0.0.0.0": { "description": "The IPv4 unspecified address. As a listening address it means all interfaces; it is never a real destination.", "links": [{"title": "0.0.0.0", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/0.0.0.0"}] },
+    "::": { "description": "The IPv6 unspecified address. As a listening address it means all interfaces.", "links": [{"title": "IPv6 address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/IPv6_address"}] },
+    "255.255.255.255": { "description": "The IPv4 limited broadcast address, reaching every host on the local network segment.", "links": [{"title": "Broadcast address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Broadcast_address"}] },
+    "169.254.169.254": { "description": "Link-local address used by cloud providers (AWS, Azure, GCP) for the instance metadata service.", "links": [{"title": "Link-local address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Link-local_address"}] },
+    "8.8.8.8": { "description": "Google Public DNS resolver.", "links": [{"title": "Google Public DNS", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Google_Public_DNS"}] },
+    "8.8.4.4": { "description": "Google Public DNS resolver (secondary).", "links": [{"title": "Google Public DNS", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Google_Public_DNS"}] },
+    "1.1.1.1": { "description": "Cloudflare public DNS resolver.", "links": [{"title": "1.1.1.1", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/1.1.1.1"}] },
+    "9.9.9.9": { "description": "Quad9 public DNS resolver with malware blocking.", "links": [{"title": "Quad9", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Quad9"}] }
+  },
+  "ip-ranges": [
+    { "cidr": "127.0.0.0/8", "description": "Loopback range: any address in it refers to the host itself.", "links": [{"title": "Localhost", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Localhost"}] },
+    { "cidr": "10.0.0.0/8", "description": "Private network address (RFC 1918), not routable on the public internet. Common in offices and clouds.", "links": [{"title": "Private network", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Private_network"}] },
+    { "cidr": "172.16.0.0/12", "description": "Private network address (RFC 1918), not routable on the public internet. Used by default for AWS VPCs and Docker networks.", "links": [{"title": "Private network", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Private_network"}] },
+    { "cidr": "192.168.0.0/16", "description": "Private network address (RFC 1918), not routable on the public internet. Typical for home and small office networks.", "links": [{"title": "Private network", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Private_network"}] },
+    { "cidr": "100.64.0.0/10", "description": "Shared address space for carrier-grade NAT (RFC 6598).", "links": [{"title": "Carrier-grade NAT", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Carrier-grade_NAT"}] },
+    { "cidr": "169.254.0.0/16", "description": "IPv4 link-local address (RFC 3927), self-assigned when no DHCP server answers, and used for cloud metadata services.", "links": [{"title": "Link-local address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Link-local_address"}] },
+    { "cidr": "192.0.2.0/24", "description": "Reserved for documentation and examples (RFC 5737); should never appear on a real network.", "links": [{"title": "Reserved IP addresses", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Reserved_IP_addresses"}] },
+    { "cidr": "198.51.100.0/24", "description": "Reserved for documentation and examples (RFC 5737); should never appear on a real network.", "links": [{"title": "Reserved IP addresses", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Reserved_IP_addresses"}] },
+    { "cidr": "203.0.113.0/24", "description": "Reserved for documentation and examples (RFC 5737); should never appear on a real network.", "links": [{"title": "Reserved IP addresses", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Reserved_IP_addresses"}] },
+    { "cidr": "224.0.0.0/4", "description": "IPv4 multicast address.", "links": [{"title": "Multicast address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Multicast_address"}] },
+    { "cidr": "fe80::/10", "description": "IPv6 link-local address, automatically configured on every interface and valid only on the local link.", "links": [{"title": "Link-local address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Link-local_address"}] },
+    { "cidr": "fc00::/7", "description": "IPv6 unique local address (RFC 4193), the IPv6 equivalent of a private network address.", "links": [{"title": "Unique local address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Unique_local_address"}] },
+    { "cidr": "ff00::/8", "description": "IPv6 multicast address.", "links": [{"title": "Multicast address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Multicast_address"}] },
+    { "cidr": "2001:db8::/32", "description": "Reserved for documentation and examples (RFC 3849); should never appear on a real network.", "links": [{"title": "Reserved IP addresses", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Reserved_IP_addresses"}] },
+    { "cidr": "::ffff:0:0/96", "description": "IPv4-mapped IPv6 address, representing an IPv4 address inside an IPv6 socket.", "links": [{"title": "IPv6 address", "source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/IPv6_address"}] }
+  ]
 }

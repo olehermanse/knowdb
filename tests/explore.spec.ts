@@ -715,11 +715,50 @@ test("well-known entries show a logo and official links", async ({ page }) => {
   await expect(page.getByTestId("entry-logo")).toHaveCount(0);
 });
 
+test("special IP addresses are described exactly or by range", async ({
+  page,
+}) => {
+  // Every host has the loopback address.
+  await page.goto("/entry/ip/127.0.0.1");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    (info.ips as Record<string, { description: string }>)["127.0.0.1"].description,
+  );
+  await expect(
+    page
+      .getByTestId("external-links")
+      .getByRole("link", { name: '"Localhost" on Wikipedia', exact: true }),
+  ).toHaveAttribute("href", "https://en.wikipedia.org/wiki/Localhost");
+
+  // Private addresses are described by their range.
+  const privateIp = hosts.flatMap((h) => h.ips).find((ip) => ip.startsWith("10."));
+  test.skip(!privateIp, "no 10.x.x.x address in the generated data");
+  await page.goto(`/entry/ip/${encodeURIComponent(privateIp!)}`);
+  await expect(page.getByTestId("entry-description")).toContainText(
+    "Private network address (RFC 1918)",
+  );
+  await expect(
+    page
+      .getByTestId("external-links")
+      .getByRole("link", { name: '"Private network" on Wikipedia', exact: true }),
+  ).toBeVisible();
+
+  // Public addresses keep the generic description and have no links.
+  const publicIp = hosts
+    .flatMap((h) => h.ips)
+    .find((ip) => /^(3|13|18|34|52|54)\./.test(ip));
+  test.skip(!publicIp, "no public IPv4 address in the generated data");
+  await page.goto(`/entry/ip/${encodeURIComponent(publicIp!)}`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    "An IP address (IPv4 or IPv6).",
+  );
+  await expect(page.getByTestId("external-links")).toHaveCount(0);
+});
+
 test("entries without links show no links section", async ({ page }) => {
-  // Hosts and IP addresses have no hard coded information at all.
+  // Hosts and MAC addresses have no hard coded information at all.
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await expect(page.getByTestId("external-links")).toHaveCount(0);
-  await page.goto(`/entry/ip/${encodeURIComponent(someHost.ips[0])}`);
+  await page.goto(`/entry/mac/${encodeURIComponent(someHost.macs[0])}`);
   await expect(page.getByTestId("external-links")).toHaveCount(0);
 
   // A described entry without links has none either.

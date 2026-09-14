@@ -288,11 +288,18 @@ export interface PortInfo extends DescribedInfo {
 
 export type SoftwareInfo = DescribedInfo;
 
+export interface IpRangeInfo extends DescribedInfo {
+  // CIDR notation, e.g. "10.0.0.0/8" or "fe80::/10".
+  cidr: string;
+}
+
 interface Info {
   ports: Record<string, PortInfo>;
   software: Record<string, SoftwareInfo>;
   users: Record<string, DescribedInfo>;
   os: Record<string, DescribedInfo>;
+  ips: Record<string, DescribedInfo>;
+  "ip-ranges": IpRangeInfo[];
 }
 
 const info = infoJson as Info;
@@ -303,6 +310,53 @@ export function getPortInfo(port: string | number): PortInfo | undefined {
 
 export function getSoftwareInfo(name: string): SoftwareInfo | undefined {
   return info.software[name];
+}
+
+// Parse an IP address into a (version, integer) pair, or undefined.
+function parseIp(address: string): { bits: number; value: bigint } | undefined {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(address)) {
+    const parts = address.split(".").map(Number);
+    if (parts.some((n) => n > 255)) return undefined;
+    return { bits: 32, value: parts.reduce((acc, n) => (acc << BigInt(8)) + BigInt(n), BigInt(0)) };
+  }
+  if (!address.includes(":")) return undefined;
+  // IPv6, possibly with an embedded IPv4 tail like ::ffff:10.0.0.1.
+  let text = address.toLowerCase();
+  const v4tail = /:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(text);
+  if (v4tail) {
+    const v4 = parseIp(v4tail[1]);
+    if (!v4) return undefined;
+    const hi = (v4.value >> BigInt(16)).toString(16);
+    const lo = (v4.value & BigInt(0xffff)).toString(16);
+    text = text.slice(0, v4tail.index) + `:${hi}:${lo}`;
+  }
+  const halves = text.split("::");
+  if (halves.length > 2) return undefined;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (missing < 0 || (halves.length === 1 && missing !== 0)) return undefined;
+  const groups = [...head, ...Array(missing).fill("0"), ...tail];
+  if (groups.some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return undefined;
+  return { bits: 128, value: groups.reduce((acc, g) => (acc << BigInt(16)) + BigInt(parseInt(g, 16)), BigInt(0)) };
+}
+
+function inCidr(address: string, cidr: string): boolean {
+  const [base, prefixText] = cidr.split("/");
+  const ip = parseIp(address);
+  const net = parseIp(base);
+  const prefix = Number(prefixText);
+  if (!ip || !net || ip.bits !== net.bits || Number.isNaN(prefix)) return false;
+  const shift = BigInt(ip.bits - prefix);
+  return ip.value >> shift === net.value >> shift;
+}
+
+// Information about an IP address: an exact entry in info.json, or the
+// first CIDR range in info.json containing it.
+export function getIpInfo(address: string): DescribedInfo | undefined {
+  const exact = info.ips[address];
+  if (exact) return exact;
+  return info["ip-ranges"].find((range) => inCidr(address, range.cidr));
 }
 
 export function getUserInfo(name: string): DescribedInfo | undefined {
@@ -316,18 +370,7 @@ export function getOsInfo(name: string): DescribedInfo | undefined {
 // External links for an entry, from info.json. Empty for entry types
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
-  switch (entry.type) {
-    case "port":
-      return getPortInfo(entry.name)?.links ?? [];
-    case "software":
-      return getSoftwareInfo(entry.name)?.links ?? [];
-    case "user":
-      return getUserInfo(entry.name)?.links ?? [];
-    case "os":
-      return getOsInfo(entry.name)?.links ?? [];
-    default:
-      return [];
-  }
+  return infoFor(entry)?.links ?? [];
 }
 
 function infoFor(entry: EntryRef): DescribedInfo | undefined {
@@ -340,6 +383,8 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getUserInfo(entry.name);
     case "os":
       return getOsInfo(entry.name);
+    case "ip":
+      return getIpInfo(entry.name);
     default:
       return undefined;
   }
@@ -383,6 +428,10 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "os") {
     return getOsInfo(entry.name)?.description ?? NO_OS_INFO;
+  }
+  if (entry.type === "ip") {
+    const known = getIpInfo(entry.name);
+    if (known) return known.description;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
