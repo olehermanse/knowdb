@@ -25,10 +25,20 @@ const groupHref = (name: string) => `/entry/group/${encodeURIComponent(name)}`;
 const PAGE_SIZE = 10;
 
 // Related hosts are shown in tabs; open one by clicking its tab.
+// The right side has sections, not tabs: "opening" one just checks it is there.
+const SECTIONS: Record<string, string> = {
+  os: "section-os",
+  clouds: "section-clouds",
+  hosts: "section-list",
+};
 async function openTab(
   page: import("@playwright/test").Page,
   tab: "os" | "clouds" | "ports" | "hosts" | "similar",
 ) {
+  if (SECTIONS[tab]) {
+    await expect(page.getByTestId(SECTIONS[tab])).toBeVisible();
+    return;
+  }
   await page.getByTestId(`${tab}-heading`).click();
   await expect(page.getByTestId(`tab-${tab}`)).toBeVisible();
 }
@@ -196,7 +206,7 @@ test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
     const leftTabs = page.getByTestId("entry-tabs").getByRole("tab");
     await expect(leftTabs).toHaveCount(1);
     await expect(leftTabs.first()).toContainText("Similar");
-    await expect(page.getByTestId("hosts-tabs")).toHaveCount(0);
+    await expect(page.getByTestId("hosts-sections")).toHaveCount(0);
     await expect(page.getByTestId("os-heading")).toHaveCount(0);
     await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
     await expect(page.getByTestId("ports-heading")).toHaveCount(0);
@@ -403,13 +413,16 @@ test("group page shows an operating system pie chart and ranked list", async ({
     await expect(items.nth(i)).toContainText(hostsLabel(n));
   }
 
-  // On the right side, the hosts tab comes before the operating systems tab,
-  // and the ports tab lives on the left side.
+  // On the right, the Hosts heading sits above the operating systems
+  // section; the ports tab lives on the left side, below the title.
   const osBox = (await page.getByTestId("os-heading").boundingBox())!;
   const hostsBox = (await page.getByTestId("hosts-heading").boundingBox())!;
   const portsBox = (await page.getByTestId("ports-heading").boundingBox())!;
-  expect(hostsBox.x).toBeLessThan(osBox.x);
+  const titleBox = (await page.getByTestId("entry-header").boundingBox())!;
+  expect(hostsBox.y).toBeLessThan(osBox.y);
   expect(portsBox.x).toBeLessThan(hostsBox.x);
+  expect(hostsBox.y).toBeGreaterThan(titleBox.y + titleBox.height - 1);
+  expect(titleBox.x).toBeLessThan(hostsBox.x);
 });
 
 test("operating systems beyond the palette fold into an Other slice", async ({
@@ -435,11 +448,9 @@ test("operating systems beyond the palette fold into an Other slice", async ({
   await expect(items.first()).not.toContainText("(in Other)");
 });
 
-test("group with a single operating system shows a sentence instead", async ({
+test("the operating systems section is skipped with a single operating system", async ({
   page,
 }) => {
-  // Prefer a group; fall back to a class (they work the same way), since
-  // e.g. the "ubuntu_24" class always has exactly one operating system.
   const group = groups.find(
     (g) => hostsInGroup(g.name).length > 1 && osCounts(hostsInGroup(g.name)).length === 1,
   );
@@ -447,28 +458,14 @@ test("group with a single operating system shows a sentence instead", async ({
     const hs = hosts.filter((h) => h.classes.includes(c));
     return hs.length > 1 && osCounts(hs).length === 1;
   });
-  const subject = group ? "group" : "class";
   const name = group?.name ?? cls!;
   expect(name).toBeTruthy();
-  const selected = group
-    ? hostsInGroup(group.name)
-    : hosts.filter((h) => h.classes.includes(name));
-  const expected = osCounts(selected);
-  await page.goto(
-    `${group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`}?htab=os`,
-  );
+  await page.goto(group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`);
+  await expect(page.getByTestId("hosts-heading")).toBeVisible();
+  await expect(page.getByTestId("section-list")).toBeVisible();
+  await expect(page.getByTestId("section-os")).toHaveCount(0);
+  await expect(page.getByTestId("os-heading")).toHaveCount(0);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
-  await expect(page.getByTestId("os-list")).toHaveCount(0);
-  const [os, n] = expected[0];
-  const relation = subject === "group" ? "in this group" : "with this class";
-  await expect(page.getByTestId("os-summary")).toHaveText(
-    n === 1 ? `The only host ${relation} runs ${os}.` : `All ${n} hosts ${relation} run ${os}.`,
-  );
-  // One short sentence only: no intro sentence, no chart.
-  await expect(page.getByTestId("os-section").locator("p")).toHaveCount(1);
-  await expect(
-    page.getByTestId("os-summary").getByRole("link", { name: expected[0][0] }),
-  ).toHaveAttribute("href", `/entry/os/${encodeURIComponent(expected[0][0])}`);
 });
 
 test("operating systems section is reused on software, port and user pages", async ({
@@ -515,7 +512,7 @@ test("operating systems tab is hidden on OS and host pages", async ({
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await expect(page.getByTestId("os-heading")).toHaveCount(0);
   await expect(page.getByTestId("entry-tabs")).toHaveCount(0);
-  await expect(page.getByTestId("hosts-tabs")).toHaveCount(0);
+  await expect(page.getByTestId("hosts-sections")).toHaveCount(0);
   // Ports tab is hidden on port pages, but the other two remain.
   await page.goto("/entry/port/22");
   await expect(page.getByTestId("ports-heading")).toHaveCount(0);
@@ -1651,11 +1648,14 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
     }
   }
 
-  // Shown on group and OS pages, hidden on cloud pages and host pages.
+  // Shown on group and OS pages (with several providers), hidden on cloud
+  // pages and host pages.
+  const winProviders = new Set(hostsInGroup("Windows").map(providerOf)).size;
   await page.goto(groupHref("Windows"));
-  await expect(page.getByTestId("clouds-heading")).toBeVisible();
+  await expect(page.getByTestId("clouds-heading")).toHaveCount(winProviders > 1 ? 1 : 0);
+  const osProviders = new Set(hosts.filter((h) => h.os === someHost.os).map(providerOf)).size;
   await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}`);
-  await expect(page.getByTestId("clouds-heading")).toBeVisible();
+  await expect(page.getByTestId("clouds-heading")).toHaveCount(osProviders > 1 ? 1 : 0);
   await page.goto("/entry/cloud/AWS");
   await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
   await expect(page.getByTestId("os-heading")).toBeVisible();
@@ -1669,15 +1669,11 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
     ([, hs]) => hs.length > 1 && new Set(hs.map(providerOf)).size === 1,
   );
   if (uniform) {
-    const [cls, hs] = uniform;
-    const provider = providerOf(hs[0]);
-    await page.goto(`/entry/class/${encodeURIComponent(cls)}?htab=clouds`);
-    const subject =
-      hs.length === 1 ? "The only host with this class runs" : `All ${hs.length} hosts with this class run`;
-    await expect(page.getByTestId("cloud-summary")).toHaveText(
-      provider ? `${subject} on ${provider}.` : `${subject} in your own data center.`,
-    );
-    await expect(page.getByTestId("cloud-section").locator("p")).toHaveCount(1);
+    const [cls] = uniform;
+    await page.goto(`/entry/class/${encodeURIComponent(cls)}`);
+    await expect(page.getByTestId("hosts-heading")).toBeVisible();
+    await expect(page.getByTestId("section-clouds")).toHaveCount(0);
+    await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
   }
 });
 
@@ -1733,10 +1729,9 @@ test("front page buttons list everything of a type", async ({ page }) => {
   await expect(page.getByTestId("search-hint")).toBeVisible();
 });
 
-test("a version on a single operating system gets one plain sentence", async ({
+test("a version on a single operating system has no operating systems section", async ({
   page,
 }) => {
-  // Find a software version whose hosts all run the same OS.
   const byVersion = new Map<string, Host[]>();
   for (const h of hosts) {
     const versions = h["software-versions"] as unknown as Record<string, string>;
@@ -1748,19 +1743,11 @@ test("a version on a single operating system gets one plain sentence", async ({
   const single = [...byVersion.entries()].find(
     ([, hs]) => hs.length > 1 && new Set(hs.map((h) => h.os)).size === 1,
   );
-  test.skip(!single, "every software version spans several operating systems");
-  const [name, hs] = single!;
-  await page.goto(`/entry/version/${encodeURIComponent(name)}?htab=os`);
-  const summary = page.getByTestId("os-summary");
-  await expect(summary).toHaveText(
-    `The ${name} software version is only installed on ${hs[0].os} (${hs.length} ${hs.length === 1 ? "host" : "hosts"}).`,
-  );
-  await expect(summary.getByRole("link", { name: hs[0].os })).toHaveAttribute(
-    "href",
-    `/entry/os/${encodeURIComponent(hs[0].os)}`,
-  );
-  // No separate intro sentence or chart.
-  await expect(page.getByTestId("os-section").locator("p")).toHaveCount(1);
+  test.skip(!single, "every multi-host software version spans several operating systems");
+  const [name] = single!;
+  await page.goto(`/entry/version/${encodeURIComponent(name)}`);
+  await expect(page.getByTestId("hosts-heading")).toBeVisible();
+  await expect(page.getByTestId("section-os")).toHaveCount(0);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
 });
 
@@ -1838,7 +1825,7 @@ test("similar tab is disabled when nothing is similar", async ({ page }) => {
   await expect(tab.getByRole("link")).toHaveCount(0);
   // Asking for the disabled tab falls back to the first tab.
   await page.goto("/entry/port/22?tab=similar");
-  await expect(page.getByTestId("tab-hosts")).toBeVisible();
+  await expect(page.getByTestId("section-list")).toBeVisible();
   await expect(page.getByTestId("similar")).toHaveCount(0);
 });
 

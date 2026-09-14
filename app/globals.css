@@ -560,3 +560,17 @@ a,
     grid-template-columns: 1fr;
   }
 }
+
+/* Sections about an entry's hosts on the right. */
+.hosts-sections h2 {
+  margin-top: 0;
+}
+
+.hosts-sections h3 {
+  font-size: 1.05rem;
+  margin: 1.5rem 0 0.25rem;
+}
+
+.entry-pane-left > :first-child {
+  margin-top: 0;
+}

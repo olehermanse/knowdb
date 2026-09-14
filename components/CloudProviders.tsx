@@ -1,6 +1,5 @@
-import EntryLink from "@/components/EntryLink";
 import PieChart, { PieItem } from "@/components/PieChart";
-import { aggregateClouds, Entry, hostsSubject } from "@/lib/data";
+import { aggregateClouds, Entry } from "@/lib/data";
 
 export const NO_CLOUD_LABEL = "None";
 
@@ -28,24 +27,6 @@ export default function CloudProviders({ entry }: { entry: Entry }) {
     hosts: c.hosts,
     link: c.cloud ? { type: "cloud", name: c.cloud } : undefined,
   }));
-  // A single provider (or none at all) gets one short sentence.
-  if (counts.length === 1) {
-    const only = counts[0];
-    return (
-      <section data-testid="cloud-section">
-        <p data-testid="cloud-summary">
-          {only.cloud ? (
-            <>
-              {hostsSubject(entry, only.hosts, "run")} on{" "}
-              <EntryLink type="cloud" name={only.cloud} />.
-            </>
-          ) : (
-            <>{hostsSubject(entry, only.hosts, "run")} in your own data center.</>
-          )}
-        </p>
-      </section>
-    );
-  }
   return (
     <section data-testid="cloud-section">
       <p className="muted">{sectionText(entry)}</p>

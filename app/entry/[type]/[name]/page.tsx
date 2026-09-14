@@ -5,7 +5,8 @@ import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
 import Timestamp from "@/components/Timestamp";
 import { parsePage } from "@/components/HostList";
-import RelatedHosts, { leftTabs, parseTab, rightTabs } from "@/components/RelatedHosts";
+import HostsSections from "@/components/HostsSections";
+import RelatedHosts, { entryTabs, parseTab } from "@/components/RelatedHosts";
 import {
   describeEntry,
   Entry,
@@ -90,7 +91,6 @@ export default async function EntryPage({
   const query = await searchParams;
   const page = parsePage(query.page);
   const tab = parseTab(query.tab);
-  const htab = parseTab(query.htab);
   const name = decodeURIComponent(encodedName);
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
@@ -115,15 +115,14 @@ export default async function EntryPage({
     );
   }
 
-  // Everything else splits in two: the entry's own information on the left,
-  // its host(s) on the right. A single matching host is shown as the host
-  // view itself; several hosts get the hosts, operating systems and clouds
-  // tabs.
-  const tabQuery = { tab, htab };
+  // Everything else: the title above, then two panes. The entry's own
+  // information and tabs on the left; its host(s) on the right. A single
+  // matching host is shown as the host view itself; several hosts get the
+  // Hosts sections.
   const singleHost = entry.hosts.length === 1 ? getHost(entry.hosts[0]) : undefined;
   return (
-    <div className="entry-split">
-      <div className="entry-pane entry-pane-left" data-testid="entry-pane">
+    <>
+      <header className="entry-header" data-testid="entry-header">
         <p>
           <span className="type-badge">{entry.type}</span>
         </p>
@@ -149,46 +148,36 @@ export default async function EntryPage({
             )}
           </h1>
         </div>
-        <SeeAlso entry={entry} />
-        <p className="muted" data-testid="entry-description">
-          {describeEntry(entry)}
-        </p>
-        {summary && <p data-testid="entry-summary">{summary}</p>}
-        {seen && (
-          <p className="muted" data-testid="entry-seen">
-            First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
-            <Timestamp iso={seen.last} testId="entry-last-seen" />.
+      </header>
+      <div className="entry-split">
+        <div className="entry-pane entry-pane-left" data-testid="entry-pane">
+          <SeeAlso entry={entry} />
+          <p className="muted" data-testid="entry-description">
+            {describeEntry(entry)}
           </p>
-        )}
-        <ExternalLinks entry={entry} />
-        {group && <GroupRules group={group} />}
-        <RelatedHosts
-          entry={entry}
-          tabs={leftTabs(entry)}
-          param="tab"
-          query={tabQuery}
-          page={page}
-          testId="entry-tabs"
-        />
+          {summary && <p data-testid="entry-summary">{summary}</p>}
+          {seen && (
+            <p className="muted" data-testid="entry-seen">
+              First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
+              <Timestamp iso={seen.last} testId="entry-last-seen" />.
+            </p>
+          )}
+          <ExternalLinks entry={entry} />
+          {group && <GroupRules group={group} />}
+          <RelatedHosts entry={entry} tabs={entryTabs(entry)} tab={tab} testId="entry-tabs" />
+        </div>
+        <aside className="entry-pane entry-pane-right" data-testid="hosts-pane">
+          {singleHost ? (
+            <HostView host={singleHost} embedded />
+          ) : entry.hosts.length > 1 ? (
+            <HostsSections entry={entry} page={page} />
+          ) : (
+            <p className="muted" data-testid="no-hosts">
+              No hosts in your infrastructure have this {entry.type}.
+            </p>
+          )}
+        </aside>
       </div>
-      <aside className="entry-pane entry-pane-right" data-testid="hosts-pane">
-        {singleHost ? (
-          <HostView host={singleHost} embedded />
-        ) : entry.hosts.length > 1 ? (
-          <RelatedHosts
-            entry={entry}
-            tabs={rightTabs(entry)}
-            param="htab"
-            query={tabQuery}
-            page={page}
-            testId="hosts-tabs"
-          />
-        ) : (
-          <p className="muted" data-testid="no-hosts">
-            No hosts in your infrastructure have this {entry.type}.
-          </p>
-        )}
-      </aside>
-    </div>
+    </>
   );
 }
