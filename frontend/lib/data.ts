@@ -89,7 +89,19 @@ export function randomEntries(count: number): EntryRef[] {
   return all.slice(0, count);
 }
 
+// If a hostname belongs to exactly one host, return that host's key so
+// links to the hostname can go straight to the host.
+export function uniqueHostForHostname(hostname: string): string | undefined {
+  const entry = entries.get(entryKey("hostname", hostname));
+  if (entry && entry.hosts.size === 1) return [...entry.hosts][0];
+  return undefined;
+}
+
 export function entryHref(ref: EntryRef): string {
+  if (ref.type === "hostname") {
+    const hostkey = uniqueHostForHostname(ref.name);
+    if (hostkey) return entryHref({ type: "host", name: hostkey });
+  }
   return `/entry/${ref.type}/${encodeURIComponent(ref.name)}`;
 }
 

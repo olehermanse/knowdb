@@ -1,12 +1,14 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import {
   describeEntry,
   Entry,
+  entryHref,
   getEntry,
   getHost,
   Host,
   isEntryType,
+  uniqueHostForHostname,
 } from "@/lib/data";
 
 function HostDetails({ host }: { host: Host }) {
@@ -80,6 +82,12 @@ export default async function EntryPage({
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
   if (!entry) notFound();
+
+  // A hostname with exactly one host is the same thing as that host.
+  if (type === "hostname") {
+    const hostkey = uniqueHostForHostname(name);
+    if (hostkey) redirect(entryHref({ type: "host", name: hostkey }));
+  }
 
   const host = type === "host" ? getHost(name) : undefined;
 

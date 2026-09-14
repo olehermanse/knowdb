@@ -51,6 +51,28 @@ test("host page shows clickable details", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("clicking a unique hostname goes directly to the host", async ({
+  page,
+}) => {
+  // Hostnames in the generated data are unique, so every hostname link
+  // should resolve straight to its host instead of an intermediate page.
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const hostnameLink = page
+    .getByTestId("host-details")
+    .getByRole("link", { name: someHost.hostname, exact: true });
+  await expect(hostnameLink).toHaveAttribute(
+    "href",
+    `/entry/host/${encodeURIComponent(someHost.id)}`,
+  );
+
+  // Visiting the hostname entry directly redirects to the host as well.
+  await page.goto(`/entry/hostname/${encodeURIComponent(someHost.hostname)}`);
+  await expect(page).toHaveURL(
+    `/entry/host/${encodeURIComponent(someHost.id)}`,
+  );
+  await expect(page.getByTestId("entry-name")).toContainText(someHost.id);
+});
+
 test("entries are two-way linked: host -> port -> host", async ({ page }) => {
   // From a host, click port 22.
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
