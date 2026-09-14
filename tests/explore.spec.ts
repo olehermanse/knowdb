@@ -22,6 +22,38 @@ function inGroup(host: Host, group: Group) {
 }
 const groupHref = (name: string) => `/entry/group/${encodeURIComponent(name)}`;
 
+// Expected "22 (ssh, 50 hosts)" labels for a set of hosts, ascending by port.
+function expectedPortLabels(selected: Host[]): string[] {
+  const counts = new Map<number, number>();
+  for (const host of selected) {
+    for (const port of new Set(host["ports-listening"])) {
+      counts.set(port, (counts.get(port) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([port, n]) => {
+      const known = info.ports[String(port) as keyof typeof info.ports];
+      const count = `${n} ${n === 1 ? "host" : "hosts"}`;
+      return known ? `${port} (${known.name}, ${count})` : `${port} (${count})`;
+    });
+}
+
+async function expectAggregatedPorts(
+  page: import("@playwright/test").Page,
+  selected: Host[],
+) {
+  const labels = expectedPortLabels(selected);
+  expect(labels.length).toBeGreaterThan(1);
+  const links = page.getByTestId("aggregated-ports").locator("a");
+  await expect(links).toHaveText(labels);
+  // Every host listens on 22, so the first entry counts all selected hosts.
+  await expect(links.first()).toHaveText(
+    `22 (ssh, ${selected.length} hosts)`,
+  );
+  await expect(links.first()).toHaveAttribute("href", "/entry/port/22");
+}
+
 // Every generated host listens on ports 22 and 5308, so these entries are
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
@@ -206,6 +238,43 @@ test("every group in groups.json has an entry page", async ({ page }) => {
     expect(response!.status(), group.name).toBe(200);
     await expect(page.getByTestId("entry-name")).toHaveText(group.name);
   }
+});
+
+test("group page aggregates listening ports of its hosts", async ({
+  page,
+}) => {
+  const group = groups.find((g) => g.name === "Windows")!;
+  await page.goto(groupHref(group.name));
+  await expectAggregatedPorts(
+    page,
+    hosts.filter((h) => inGroup(h, group)),
+  );
+});
+
+test("software page aggregates listening ports of its hosts", async ({
+  page,
+}) => {
+  await page.goto("/entry/software/dpkg");
+  await expectAggregatedPorts(
+    page,
+    hosts.filter((h) => h.software.includes("dpkg")),
+  );
+});
+
+test("os page aggregates listening ports of its hosts", async ({ page }) => {
+  const os = someHost.os;
+  await page.goto(`/entry/os/${encodeURIComponent(os)}`);
+  await expectAggregatedPorts(
+    page,
+    hosts.filter((h) => h.os === os),
+  );
+});
+
+test("port and host pages do not aggregate ports", async ({ page }) => {
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("aggregated-ports")).toHaveCount(0);
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("aggregated-ports")).toHaveCount(0);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

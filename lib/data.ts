@@ -129,6 +129,30 @@ export function getHostGroups(hostkey: string): string[] {
   return groupsByHost.get(hostkey) ?? [];
 }
 
+export interface PortCount {
+  port: number;
+  // Number of the given hosts listening on this port.
+  hosts: number;
+}
+
+// Aggregate the listening ports of a set of hosts, ascending by port number.
+export function aggregatePorts(hostkeys: string[]): PortCount[] {
+  const counts = new Map<number, number>();
+  for (const hostkey of hostkeys) {
+    const host = hostsByKey.get(hostkey);
+    if (!host) continue;
+    for (const port of new Set(host["ports-listening"])) {
+      counts.set(port, (counts.get(port) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([port, hosts]) => ({ port, hosts }))
+    .sort((a, b) => a.port - b.port);
+}
+
+// Entry types whose pages aggregate information about their linked hosts.
+export const AGGREGATING_TYPES: EntryType[] = ["group", "software", "os"];
+
 export function allEntries(): EntryRef[] {
   return [...entries.values()].map(({ type, name }) => ({ type, name }));
 }

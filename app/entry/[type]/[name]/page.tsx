@@ -2,6 +2,8 @@ import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import {
+  AGGREGATING_TYPES,
+  aggregatePorts,
   describeEntry,
   Entry,
   entryHref,
@@ -96,6 +98,39 @@ function GroupRules({ group }: { group: Group }) {
   );
 }
 
+// "22 (ssh, 50 hosts)", or "8080 (50 hosts)" for ports without a known name.
+function aggregatedPortLabel(port: number, hosts: number): string {
+  const info = getPortInfo(port);
+  const count = `${hosts} ${hosts === 1 ? "host" : "hosts"}`;
+  return info ? `${port} (${info.name}, ${count})` : `${port} (${count})`;
+}
+
+function AggregatedPorts({ entry }: { entry: Entry }) {
+  const ports = aggregatePorts(entry.hosts);
+  return (
+    <>
+      <h2>
+        Listening ports <span className="muted">({ports.length})</span>
+      </h2>
+      <p className="muted">
+        Ports the linked hosts are listening on, with the number of hosts
+        listening on each.
+      </p>
+      <div className="inline-links" data-testid="aggregated-ports">
+        {ports.length === 0 && <span className="muted">None</span>}
+        {ports.map(({ port, hosts }) => (
+          <EntryLink
+            key={port}
+            type="port"
+            name={String(port)}
+            label={aggregatedPortLabel(port, hosts)}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
 function LinkedHosts({ entry }: { entry: Entry }) {
   return (
     <>
@@ -157,6 +192,7 @@ export default async function EntryPage({
         {describeEntry(entry)}
       </p>
       {group && <GroupRules group={group} />}
+      {AGGREGATING_TYPES.includes(type) && <AggregatedPorts entry={entry} />}
       {host ? <HostDetails host={host} /> : <LinkedHosts entry={entry} />}
     </>
   );
