@@ -34,87 +34,95 @@ function portLabel(port: number): string {
 function HostDetails({ host }: { host: Host }) {
   const groups = getHostGroups(host.id);
   return (
-    <dl className="host-details" data-testid="host-details">
-      <dt>Hostname</dt>
-      <dd>
-        <EntryLink type="hostname" name={host.hostname} />
-      </dd>
-      <dt>Operating system</dt>
-      <dd>
-        <EntryLink type="os" name={host.os} />
-      </dd>
-      <dt>IP addresses</dt>
-      <dd className="inline-links">
-        {host.ips.map((ip) => (
-          <EntryLink key={ip} type="ip" name={ip} />
-        ))}
-      </dd>
-      <dt>MAC addresses</dt>
-      <dd className="inline-links">
-        {host.macs.map((mac) => (
-          <EntryLink key={mac} type="mac" name={mac} />
-        ))}
-      </dd>
-      <dt>Listening ports</dt>
-      <dd className="inline-links">
-        {host["ports-listening"].map((port) => (
-          <EntryLink
-            key={port}
-            type="port"
-            name={String(port)}
-            label={portLabel(port)}
-          />
-        ))}
-      </dd>
-      <dt>Software</dt>
-      <dd className="inline-links" data-testid="host-software">
-        {host.software.map((sw) => {
-          const version = host["software-versions"]?.[sw];
-          return (
-            <span key={sw} className="software-with-version">
-              <EntryLink type="software" name={sw} />
-              {version && (
-                <>
-                  {" "}
-                  <EntryLink
-                    type="version"
-                    name={versionEntryName(sw, version)}
-                    label={version}
-                  />
-                </>
-              )}
-            </span>
-          );
-        })}
-      </dd>
-      <dt>Local users</dt>
-      <dd className="inline-links">
-        {host["local-users"].map((user) => (
-          <EntryLink key={user} type="user" name={user} />
-        ))}
-      </dd>
-      <dt>Cloud provider</dt>
-      <dd className="inline-links" data-testid="host-cloud">
-        {host["cloud-provider"] ? (
-          <EntryLink type="cloud" name={host["cloud-provider"]} />
-        ) : (
-          <span className="muted">None</span>
-        )}
-      </dd>
-      <dt>Classes</dt>
-      <dd className="inline-links" data-testid="host-classes">
-        {host.classes.map((cls) => (
-          <EntryLink key={cls} type="class" name={cls} />
-        ))}
-      </dd>
-      <dt>Groups</dt>
-      <dd className="inline-links" data-testid="host-groups">
-        {groups.length === 0 && <span className="muted">None</span>}
-        {groups.map((group) => (
-          <EntryLink key={group} type="group" name={group} />
-        ))}
-      </dd>
-    </dl>
+    <div data-testid="host-details">
+      <div className="host-columns">
+        <dl className="host-details" data-testid="host-details-left">
+          <dt>Hostname</dt>
+          <dd>
+            <EntryLink type="hostname" name={host.hostname} />
+          </dd>
+          <dt>Operating system</dt>
+          <dd>
+            <EntryLink type="os" name={host.os} />
+          </dd>
+          <dt>Cloud provider</dt>
+          <dd className="inline-links" data-testid="host-cloud">
+            {host["cloud-provider"] ? (
+              <EntryLink type="cloud" name={host["cloud-provider"]} />
+            ) : (
+              <span className="muted">None</span>
+            )}
+          </dd>
+          <dt>Local users</dt>
+          <dd className="inline-links">
+            {host["local-users"].map((user) => (
+              <EntryLink key={user} type="user" name={user} />
+            ))}
+          </dd>
+          <dt>Groups</dt>
+          <dd className="inline-links" data-testid="host-groups">
+            {groups.length === 0 && <span className="muted">None</span>}
+            {groups.map((group) => (
+              <EntryLink key={group} type="group" name={group} />
+            ))}
+          </dd>
+        </dl>
+        <dl className="host-details" data-testid="host-details-right">
+          <dt>IP addresses</dt>
+          <dd className="inline-links">
+            {host.ips.map((ip) => (
+              <EntryLink key={ip} type="ip" name={ip} />
+            ))}
+          </dd>
+          <dt>MAC addresses</dt>
+          <dd className="inline-links">
+            {host.macs.map((mac) => (
+              <EntryLink key={mac} type="mac" name={mac} />
+            ))}
+          </dd>
+          <dt>Listening ports</dt>
+          <dd className="inline-links">
+            {host["ports-listening"].map((port) => (
+              <EntryLink
+                key={port}
+                type="port"
+                name={String(port)}
+                label={portLabel(port)}
+              />
+            ))}
+          </dd>
+        </dl>
+      </div>
+      <dl className="host-details host-details-wide" data-testid="host-details-wide">
+          <dt>Software</dt>
+          <dd className="inline-links" data-testid="host-software">
+            {host.software.map((sw) => {
+              const version = host["software-versions"]?.[sw];
+              return (
+                <span key={sw} className="software-with-version">
+                  <EntryLink type="software" name={sw} />
+                  {version && (
+                    <>
+                      {" "}
+                      <EntryLink
+                        type="version"
+                        name={versionEntryName(sw, version)}
+                        label={version}
+                      />
+                    </>
+                  )}
+                </span>
+              );
+            })}
+          </dd>
+          <dt>Classes</dt>
+          <dd className="inline-links" data-testid="host-classes">
+            {host.classes.map((cls) => (
+              <EntryLink key={cls} type="class" name={cls} />
+            ))}
+          </dd>
+      </dl>
+    </div>
   );
 }
 

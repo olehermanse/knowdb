@@ -431,3 +431,21 @@ a,
 .type-button:hover {
   border-color: var(--badge-fg);
 }
+
+/* Host page: two columns, then full-width sections below. */
+.host-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 2.5rem;
+  align-items: start;
+}
+
+.host-details-wide {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 40rem) {
+  .host-columns {
+    grid-template-columns: 1fr;
+  }
+}

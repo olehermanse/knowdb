@@ -1809,6 +1809,38 @@ test("similar tab is disabled when nothing is similar", async ({ page }) => {
   await expect(page.getByTestId("similar")).toHaveCount(0);
 });
 
+test("host page has two columns with software and classes below", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const left = page.getByTestId("host-details-left");
+  const right = page.getByTestId("host-details-right");
+  const wide = page.getByTestId("host-details-wide");
+  await expect(left.locator("dt")).toHaveText([
+    "Hostname",
+    "Operating system",
+    "Cloud provider",
+    "Local users",
+    "Groups",
+  ]);
+  await expect(right.locator("dt")).toHaveText([
+    "IP addresses",
+    "MAC addresses",
+    "Listening ports",
+  ]);
+  await expect(wide.locator("dt")).toHaveText(["Software", "Classes"]);
+
+  const l = (await left.boundingBox())!;
+  const r = (await right.boundingBox())!;
+  const w = (await wide.boundingBox())!;
+  // Side by side at the same height; the wide section below both.
+  expect(r.x).toBeGreaterThan(l.x + l.width - 1);
+  expect(Math.abs(r.y - l.y)).toBeLessThan(2);
+  expect(w.y).toBeGreaterThanOrEqual(Math.max(l.y + l.height, r.y + r.height) - 1);
+  expect(w.width).toBeGreaterThan(l.width * 1.5);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");
