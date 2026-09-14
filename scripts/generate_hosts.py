@@ -10,7 +10,7 @@ import secrets
 from pathlib import Path
 
 NUM_HOSTS = 100
-OUTPUT_PATH = Path(__file__).parent / "tmp" / "hosts.json"
+OUTPUT_PATH = Path(__file__).parent.parent / "tmp" / "hosts.json"
 
 OPERATING_SYSTEMS = [
     "Ubuntu 24",

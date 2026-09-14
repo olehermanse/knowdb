@@ -1,3 +1,58 @@
+# KnowDB
+
+A prototype for exploring your infrastructure in a Wikipedia-like manner,
+based on the data reported from your hosts.
+Click on a host to see information about it, see that port 22 is open,
+read what port 22 is for, see other hosts with port 22 open, and so on.
+
+## Running the frontend
+
+The frontend is a Next.js app in the `frontend/` directory.
+
+### With the npm dev server
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open http://localhost:3000.
+
+### With Docker
+
+```bash
+cd frontend
+docker build -t knowdb-frontend .
+docker run --rm -p 3000:3000 knowdb-frontend
+```
+
+Then open http://localhost:3000.
+
+### Running the tests
+
+The frontend has Playwright tests (the test runner starts the dev server for you):
+
+```bash
+cd frontend
+npm install
+npx playwright install chromium
+npm test
+```
+
+## Generating host data
+
+`scripts/generate_hosts.py` generates 100 random hosts and writes them to
+`tmp/hosts.json`. The frontend reads a committed copy of this data from
+`frontend/data/hosts.json`:
+
+```bash
+python3 scripts/generate_hosts.py
+cp tmp/hosts.json frontend/data/hosts.json
+```
+
+## Host data format
+
 The relevant information from a host looks like this:
 
 ```json
