@@ -451,3 +451,69 @@ export function summarizeEntry(entry: Entry): string {
     }
   }
 }
+
+// Structured search: a query can contain filters like `port:22` or
+// `group:"production Linux"`; hosts matching every filter are returned.
+// Any remaining free text narrows the hosts by hostname or host key.
+export interface SearchFilter {
+  type: EntryType;
+  name: string;
+}
+
+export interface ParsedQuery {
+  filters: SearchFilter[];
+  text: string;
+}
+
+export function parseSearchQuery(query: string): ParsedQuery {
+  const filters: SearchFilter[] = [];
+  const rest: string[] = [];
+  const token = /(\S+?):(?:"([^"]*)"|(\S+))|"([^"]*)"|(\S+)/g;
+  for (const m of query.matchAll(token)) {
+    const [, type, quoted, bare, quotedText, word] = m;
+    if (type !== undefined && isEntryType(type)) {
+      filters.push({ type, name: quoted ?? bare ?? "" });
+    } else {
+      rest.push(m[0].startsWith('"') ? (quotedText ?? "") : (word ?? m[0]));
+    }
+  }
+  return { filters, text: rest.join(" ").trim() };
+}
+
+function quoteFilterValue(name: string): string {
+  return /[\s"]/.test(name) ? `"${name.replace(/"/g, "")}"` : name;
+}
+
+// The search URL for hosts matching all of the given filters.
+export function filterSearchHref(filters: SearchFilter[]): string {
+  const q = filters.map((f) => `${f.type}:${quoteFilterValue(f.name)}`).join(" ");
+  return `/search?q=${encodeURIComponent(q)}`;
+}
+
+// Hosts matching every filter, sorted by hostname. Unknown filter values
+// match nothing.
+export function searchHosts(parsed: ParsedQuery): Host[] {
+  let keys: Set<string> | undefined;
+  for (const filter of parsed.filters) {
+    const entry = entries.get(entryKey(filter.type, filter.name));
+    const found = entry ? entry.hosts : new Set<string>();
+    keys = keys ? new Set([...keys].filter((k) => found.has(k))) : new Set(found);
+  }
+  const text = parsed.text.toLowerCase();
+  const hosts = [...(keys ?? hostsByKey.keys())]
+    .map((k) => hostsByKey.get(k)!)
+    .filter(
+      (h) =>
+        !text ||
+        h.hostname.toLowerCase().includes(text) ||
+        h.id.toLowerCase().includes(text),
+    );
+  return hosts.sort((a, b) => a.hostname.localeCompare(b.hostname));
+}
+
+// "port 22 in group Windows" for a summary sentence.
+export function describeFilters(filters: SearchFilter[]): string {
+  return filters
+    .map((f) => (f.type === "port" ? `port ${f.name}` : `${f.type} ${f.name}`))
+    .join(", ");
+}

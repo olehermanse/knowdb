@@ -13,6 +13,11 @@ groups, IP and MAC addresses, and words from descriptions. Results show
 the type of each entry, its name and description, and hosts are shown
 with their OS and IP addresses.
 
+A query can also contain filters like `port:22 group:Windows` or
+`os:"Ubuntu 24"` (quote values with spaces). Then only hosts matching all
+filters are listed. The "N hosts" links next to aggregated ports on group,
+software and OS pages use this to show exactly those hosts.
+
 ## Running the frontend
 
 The frontend is a Next.js app living at the top level of this repository,

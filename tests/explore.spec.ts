@@ -45,13 +45,21 @@ async function expectAggregatedPorts(
 ) {
   const labels = expectedPortLabels(selected);
   expect(labels.length).toBeGreaterThan(1);
-  const links = page.getByTestId("aggregated-ports").locator("a");
-  await expect(links).toHaveText(labels);
+  const items = page.getByTestId("aggregated-port");
+  await expect(items).toHaveText(labels, { useInnerText: true });
   // Every host listens on 22, so the first entry counts all selected hosts.
-  await expect(links.first()).toHaveText(
-    `22 (ssh, ${selected.length} hosts)`,
+  const first = items.first();
+  await expect(first).toHaveText(`22 (ssh, ${selected.length} hosts)`, {
+    useInnerText: true,
+  });
+  await expect(first.getByRole("link", { name: "22", exact: true })).toHaveAttribute(
+    "href",
+    "/entry/port/22",
   );
-  await expect(links.first()).toHaveAttribute("href", "/entry/port/22");
+  await expect(first.getByTestId("port-hosts-link")).toHaveAttribute(
+    "href",
+    /\/search\?q=port%3A22/,
+  );
 }
 
 // Every generated host listens on ports 22 and 5308, so these entries are
@@ -466,6 +474,68 @@ test("hosts and ports sections have short headings and descriptions", async ({
     "The hosts are listening to these ports:",
   );
   await expect(page.getByText("Listening ports")).toHaveCount(0);
+});
+
+test("the number of hosts on a port links to a search of those hosts", async ({
+  page,
+}) => {
+  const group = groups.find((g) => g.name === "Windows")!;
+  const selected = hosts.filter((h) => inGroup(h, group));
+  // Pick a port that not every Windows host listens on, if there is one.
+  const counts = new Map<number, number>();
+  for (const h of selected)
+    for (const p of h["ports-listening"]) counts.set(p, (counts.get(p) ?? 0) + 1);
+  const [port, n] =
+    [...counts.entries()].find(([, c]) => c < selected.length) ??
+    [...counts.entries()][0];
+  const expected = selected.filter((h) => h["ports-listening"].includes(port));
+  expect(expected.length).toBe(n);
+
+  await page.goto(groupHref(group.name));
+  const item = page
+    .getByTestId("aggregated-port")
+    .filter({ has: page.getByRole("link", { name: String(port), exact: true }) });
+  await item.getByTestId("port-hosts-link").click();
+
+  await expect(page).toHaveURL(/\/search\?q=port%3A/);
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue(
+    `port:${port} group:Windows`,
+  );
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${n} ${n === 1 ? "host" : "hosts"} matching port ${port}, group Windows.`,
+  );
+  const items = page.getByTestId("host-item");
+  await expect(items).toHaveCount(expected.length);
+  for (const h of expected) {
+    await expect(
+      items.getByRole("link", { name: h.hostname, exact: true }),
+    ).toBeVisible();
+  }
+});
+
+test("search filters with quoted values and free text", async ({ page }) => {
+  const os = someHost.os;
+  const expected = hosts.filter(
+    (h) => h.os === os && h["ports-listening"].includes(22),
+  );
+  await page.goto(`/search?q=${encodeURIComponent(`os:"${os}" port:22`)}`);
+  await expect(page.getByTestId("host-item")).toHaveCount(expected.length);
+
+  // Free text narrows by hostname.
+  const word = someHost.hostname.split("-")[0];
+  await page.goto(`/search?q=${encodeURIComponent(`os:"${os}" ${word}`)}`);
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `with “${word}” in the hostname`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(
+    hosts.filter((h) => h.os === os && h.hostname.includes(word)).length,
+  );
+
+  // Unknown filter values match nothing.
+  await page.goto("/search?q=port:1");
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    "0 hosts matching port 1.",
+  );
 });
 
 test("port and host pages do not aggregate ports", async ({ page }) => {

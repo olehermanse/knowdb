@@ -1,7 +1,13 @@
 import EntryLink from "@/components/EntryLink";
 import HostListItem from "@/components/HostListItem";
 import SearchForm from "@/components/SearchForm";
-import { getHost, searchEntries } from "@/lib/data";
+import {
+  describeFilters,
+  getHost,
+  parseSearchQuery,
+  searchEntries,
+  searchHosts,
+} from "@/lib/data";
 
 export default async function SearchPage({
   searchParams,
@@ -9,7 +15,10 @@ export default async function SearchPage({
   const params = await searchParams;
   const raw = params.q;
   const query = (Array.isArray(raw) ? raw[0] : raw ?? "").trim();
-  const results = query ? searchEntries(query) : [];
+  const parsed = parseSearchQuery(query);
+  const filtered = parsed.filters.length > 0;
+  const hostResults = filtered ? searchHosts(parsed) : [];
+  const results = query && !filtered ? searchEntries(query) : [];
 
   return (
     <>
@@ -18,15 +27,30 @@ export default async function SearchPage({
       {!query && (
         <p className="muted" data-testid="search-hint">
           Search for anything: a hostname, port number, software, user,
-          operating system, group, or words from a description.
+          operating system, group, or words from a description. Use filters
+          like <code>port:22 group:Windows</code> to list only the hosts
+          matching all of them.
         </p>
       )}
-      {query && (
+      {query && filtered && (
+        <p className="muted" data-testid="search-summary">
+          {`${hostResults.length} ${hostResults.length === 1 ? "host" : "hosts"} matching ${describeFilters(parsed.filters)}`}
+          {parsed.text && ` with “${parsed.text}” in the hostname`}.
+        </p>
+      )}
+      {query && !filtered && (
         <p className="muted" data-testid="search-summary">
           {results.length === 0
             ? `No results for “${query}”.`
             : `${results.length} ${results.length === 1 ? "result" : "results"} for “${query}”.`}
         </p>
+      )}
+      {hostResults.length > 0 && (
+        <ul className="entry-list" data-testid="search-results">
+          {hostResults.map((host) => (
+            <HostListItem key={host.id} host={host} />
+          ))}
+        </ul>
       )}
       {results.length > 0 && (
         <ul className="entry-list" data-testid="search-results">

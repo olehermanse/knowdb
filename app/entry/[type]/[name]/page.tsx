@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostListItem from "@/components/HostListItem";
@@ -10,6 +11,7 @@ import {
   Entry,
   entryHref,
   externalLinkLabel,
+  filterSearchHref,
   getEntry,
   getEntryLinks,
   getGroup,
@@ -109,11 +111,38 @@ function GroupRules({ group }: { group: Group }) {
   );
 }
 
-// "22 (ssh, 50 hosts)", or "8080 (50 hosts)" for ports without a known name.
-function aggregatedPortLabel(port: number, hosts: number): string {
+function hostsLabel(n: number): string {
+  return `${n} ${n === 1 ? "host" : "hosts"}`;
+}
+
+// "22 (ssh, 50 hosts)": the port number links to the port, the number of
+// hosts links to a search for exactly those hosts.
+function AggregatedPort({
+  entry,
+  port,
+  hosts,
+}: {
+  entry: Entry;
+  port: number;
+  hosts: number;
+}) {
   const info = getPortInfo(port);
-  const count = `${hosts} ${hosts === 1 ? "host" : "hosts"}`;
-  return info ? `${port} (${info.name}, ${count})` : `${port} (${count})`;
+  const searchHref = filterSearchHref([
+    { type: "port", name: String(port) },
+    { type: entry.type, name: entry.name },
+  ]);
+  return (
+    <span className="aggregated-port" data-testid="aggregated-port">
+      <EntryLink type="port" name={String(port)} />{" "}
+      <span className="muted">
+        ({info && <>{info.name}, </>}
+        <Link href={searchHref} className="entry-link" data-testid="port-hosts-link">
+          {hostsLabel(hosts)}
+        </Link>
+        )
+      </span>
+    </span>
+  );
 }
 
 function AggregatedPorts({ entry }: { entry: Entry }) {
@@ -129,12 +158,7 @@ function AggregatedPorts({ entry }: { entry: Entry }) {
       <div className="inline-links" data-testid="aggregated-ports">
         {ports.length === 0 && <span className="muted">None</span>}
         {ports.map(({ port, hosts }) => (
-          <EntryLink
-            key={port}
-            type="port"
-            name={String(port)}
-            label={aggregatedPortLabel(port, hosts)}
-          />
+          <AggregatedPort key={port} entry={entry} port={port} hosts={hosts} />
         ))}
       </div>
     </>
