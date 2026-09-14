@@ -6,3 +6,9 @@ playwright-report
 Dockerfile
 .dockerignore
 README.md
+.git
+tmp
+scripts
+TODOS
+FAQ
+.claude

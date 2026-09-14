@@ -7,12 +7,14 @@ read what port 22 is for, see other hosts with port 22 open, and so on.
 
 ## Running the frontend
 
-The frontend is a Next.js app in the `frontend/` directory.
+The frontend is a Next.js app living at the top level of this repository,
+so all `npm` and `docker` commands are run from the repository root.
 
 ### With the npm dev server
 
 ```bash
-( cd frontend && npm install && npm run dev )
+npm install
+npm run dev
 ```
 
 Then open http://localhost:3000.
@@ -20,17 +22,18 @@ Then open http://localhost:3000.
 ### With Docker
 
 ```bash
-( cd frontend && docker build -t knowdb-frontend . && docker run --rm -p 3000:3000 knowdb-frontend )
+docker build -t knowdb .
+docker run --rm -p 3000:3000 knowdb
 ```
 
 Then open http://localhost:3000.
 
 ### Running the tests
 
-The frontend has Playwright tests (the test runner starts the dev server for you):
+The frontend has Playwright tests in `tests/` (the test runner starts the
+dev server for you):
 
 ```bash
-cd frontend
 npm install
 npx playwright install chromium
 npm test
@@ -40,16 +43,16 @@ npm test
 
 `scripts/generate_hosts.py` generates 100 random hosts and writes them to
 `tmp/hosts.json`. The frontend reads a committed copy of this data from
-`frontend/data/hosts.json`:
+`data/hosts.json`:
 
 ```bash
 python3 scripts/generate_hosts.py
-cp tmp/hosts.json frontend/data/hosts.json
+cp tmp/hosts.json data/hosts.json
 ```
 
 ## Descriptions of ports and software
 
-`frontend/data/info.json` is a hand-written file with descriptions of
+`data/info.json` is a hand-written file with descriptions of
 well-known ports and software. Each port has a short common name (like
 `ssh` for port 22) and a description, and each software package has a
 description. Edit this file to improve or extend the descriptions shown
@@ -57,7 +60,7 @@ on entry pages; the frontend reads it at build time.
 
 ## Groups of hosts
 
-`frontend/data/groups.json` defines groups of hosts, such as `Linux`,
+`data/groups.json` defines groups of hosts, such as `Linux`,
 `Windows`, `webservers` and `production`. Groups show up as their own entry
 type in the UI: a host page lists the groups it belongs to, and a group page
 lists the hosts in it along with the rules that put them there.
