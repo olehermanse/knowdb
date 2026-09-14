@@ -15,6 +15,8 @@ export interface Host {
   "local-users": string[];
   // CFEngine classes reported by the host, e.g. "linux", "ubuntu_22".
   classes: string[];
+  // Whether the host has reported in recently.
+  online: boolean;
 }
 
 export type EntryType =

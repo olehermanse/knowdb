@@ -27,24 +27,39 @@ export function avatarCells(hostkey: string): boolean[][] {
 export default function HostAvatar({ host, size = 40 }: { host: Host; size?: number }) {
   const color = getOsColor(host.os);
   const cells = avatarCells(host.id);
+  const status = host.online ? "Online" : "Offline";
   return (
-    <svg
-      className="host-avatar"
-      viewBox={`0 0 ${GRID} ${GRID}`}
-      width={size}
-      height={size}
-      shapeRendering="crispEdges"
-      role="img"
-      aria-label={`Avatar of ${host.hostname}`}
-      data-testid="host-avatar"
-      data-color={color}
+    <span
+      className="host-avatar-wrap"
+      style={{ width: size, height: size }}
+      title={status}
+      data-testid="host-avatar-wrap"
     >
-      <rect width={GRID} height={GRID} className="host-avatar-bg" />
-      {cells.flatMap((row, y) =>
-        row.map((on, x) =>
-          on ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={color} /> : null,
-        ),
-      )}
-    </svg>
+      <svg
+        className="host-avatar"
+        viewBox={`0 0 ${GRID} ${GRID}`}
+        width={size}
+        height={size}
+        shapeRendering="crispEdges"
+        role="img"
+        aria-label={`Avatar of ${host.hostname} (${status.toLowerCase()})`}
+        data-testid="host-avatar"
+        data-color={color}
+      >
+        <rect width={GRID} height={GRID} className="host-avatar-bg" />
+        {cells.flatMap((row, y) =>
+          row.map((on, x) =>
+            on ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={color} /> : null,
+          ),
+        )}
+      </svg>
+      <span
+        className={`host-status ${host.online ? "host-status-online" : "host-status-offline"}`}
+        style={{ width: Math.round(size * 0.3), height: Math.round(size * 0.3) }}
+        aria-hidden="true"
+        data-testid="host-status"
+        data-online={host.online ? "true" : "false"}
+      />
+    </span>
   );
 }

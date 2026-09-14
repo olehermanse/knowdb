@@ -1305,6 +1305,45 @@ test("host pages show software versions as links", async ({ page }) => {
   }
 });
 
+test("avatars show an online/offline dot and about 70% of hosts are online", async ({
+  page,
+}) => {
+  const online = hosts.filter((h) => h.online).length;
+  expect(online / hosts.length).toBeGreaterThan(0.55);
+  expect(online / hosts.length).toBeLessThan(0.85);
+
+  const onlineHost = hosts.find((h) => h.online)!;
+  const offlineHost = hosts.find((h) => !h.online)!;
+  for (const host of [onlineHost, offlineHost]) {
+    await page.goto(`/entry/host/${encodeURIComponent(host.id)}`);
+    const wrap = page.getByTestId("host-avatar-wrap");
+    const dot = wrap.getByTestId("host-status");
+    await expect(dot).toHaveAttribute("data-online", String(host.online));
+    await expect(wrap).toHaveAttribute("title", host.online ? "Online" : "Offline");
+    await expect(dot).toHaveCSS(
+      "background-color",
+      host.online ? "rgb(34, 197, 94)" : "rgb(156, 163, 175)",
+    );
+    // The dot sits in the bottom right corner of the avatar.
+    const a = (await wrap.boundingBox())!;
+    const d = (await dot.boundingBox())!;
+    expect(d.x + d.width / 2).toBeGreaterThan(a.x + a.width * 0.7);
+    expect(d.y + d.height / 2).toBeGreaterThan(a.y + a.height * 0.7);
+  }
+
+  // Dots appear in host lists too, and the avatar is vertically centred
+  // with the badge and the text next to it.
+  await page.goto("/entry/port/22?tab=hosts");
+  const item = page.getByTestId("host-item").first();
+  await expect(item.getByTestId("host-status")).toHaveCount(1);
+  const avatar = (await item.getByTestId("host-avatar-wrap").boundingBox())!;
+  const summary = (await item.locator(".host-summary").boundingBox())!;
+  const badge = (await item.locator(".type-badge").boundingBox())!;
+  const centre = (b: { y: number; height: number }) => b.y + b.height / 2;
+  expect(Math.abs(centre(avatar) - centre(summary))).toBeLessThan(2);
+  expect(Math.abs(centre(avatar) - centre(badge))).toBeLessThan(2);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

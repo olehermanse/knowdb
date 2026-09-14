@@ -7,6 +7,8 @@
   --badge-bg: #eef2ff;
   --badge-fg: #3730a3;
   --avatar-bg: #f0f0f0;
+  --online: #22c55e;
+  --offline: #9ca3af;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +21,8 @@
     --badge-bg: #1e1b4b;
     --badge-fg: #c7d2fe;
     --avatar-bg: #27272a;
+    --online: #4ade80;
+    --offline: #6b7280;
   }
 }
 
@@ -161,8 +165,9 @@ a,
   overflow-wrap: anywhere;
 }
 
-.host-item {
-  align-items: flex-start;
+/* More specific than `.entry-list li` so the centring wins over baseline. */
+.entry-list li.host-item {
+  align-items: center;
 }
 
 .host-summary {
@@ -316,10 +321,34 @@ a,
   font-weight: 700;
 }
 
-/* Host avatars (identicons). */
-.host-avatar {
+/* Host avatars (identicons) with an online/offline dot bottom right. */
+.host-avatar-wrap {
+  position: relative;
+  display: inline-block;
   flex-shrink: 0;
+  line-height: 0;
+}
+
+.host-avatar {
+  display: block;
   border-radius: 0.35rem;
+}
+
+.host-status {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 2px solid var(--background);
+  box-sizing: content-box;
+}
+
+.host-status-online {
+  background: var(--online);
+}
+
+.host-status-offline {
+  background: var(--offline);
 }
 
 .host-avatar-bg {

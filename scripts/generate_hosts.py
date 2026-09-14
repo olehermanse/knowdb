@@ -315,6 +315,8 @@ def generate_host(used_hostnames, used_macs):
         "software-versions": generate_software_versions(software),
         "local-users": generate_users(os_name, hostname),
         "classes": generate_classes(os_name, hostname),
+        # Roughly 70% of hosts are online (have reported recently).
+        "online": random.random() < 0.7,
     }
 
 

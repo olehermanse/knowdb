@@ -8,7 +8,9 @@ read what port 22 is for, see other hosts with port 22 open, and so on.
 Every host has a GitHub-style pixel avatar derived from its host key, so
 it stays the same everywhere the host appears. The avatar's colour comes
 from the host's operating system (the `color` field of the OS entry in
-`data/info.json`, falling back to a colour derived from the OS name).
+`data/info.json`, falling back to a colour derived from the OS name). A
+green or gray dot in the avatar's bottom right corner shows whether the
+host is online.
 
 Every entry page except a host's shows the hosts related to the entry in
 three tabs: the operating systems they run (a pie chart and ranked list),
@@ -157,7 +159,8 @@ The relevant information from a host looks like this:
   "software": ["apache", "cfengine", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
   "software-versions": {"apache": "2.4.62", "cfengine": "3.27.0", "dpkg": "1.22.6"},
   "local-users": ["root", "nickanderson"],
-  "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"]
+  "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"],
+  "online": true
 }
 ```
 
@@ -179,5 +182,6 @@ Some guidelines for generating random hosts:
 - `software` should also be based on name - all Ubuntu should have dpkg, apt and apt-get, RHEL should have yum, rpm, dnf, and so on.
 - `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
+- `online` is whether the host has reported in recently. Around 70% of hosts should be online.
 - `local-users` should include root on all Linux machines, and Administrator on Windows.
   Make sure to include some common system / application users for things like email software, printing, etc.
