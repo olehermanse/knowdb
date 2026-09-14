@@ -134,15 +134,24 @@ function VersionsPanel({ entry }: { entry: Entry }) {
   );
 }
 
+function portsDescription(entry: Entry): string {
+  switch (entry.type) {
+    case "software":
+      return `The ${entry.name} hosts are listening to these ports:`;
+    case "version":
+      return `The hosts with ${entry.name} are listening to these ports:`;
+    default:
+      return "The hosts are listening to these ports:";
+  }
+}
+
 // The ports the related hosts listen on, one card per port, ascending.
 function PortsPanel({ entry }: { entry: Entry }) {
   const ports = aggregatePorts(entry.hosts);
   return (
     <>
       <p className="muted" data-testid="ports-description">
-        {entry.type === "software"
-          ? `The ${entry.name} hosts are listening to these ports:`
-          : "The hosts are listening to these ports:"}
+        {portsDescription(entry)}
       </p>
       {ports.length === 0 && <p className="muted">None</p>}
       <ul className="entry-list" data-testid="aggregated-ports">
