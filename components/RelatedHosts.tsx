@@ -385,6 +385,7 @@ export default function RelatedHosts({
                 <span
                   className="muted"
                   data-comments-count
+                  suppressHydrationWarning
                   dangerouslySetInnerHTML={{ __html: `(${counts[t]})` }}
                 />
               ) : (

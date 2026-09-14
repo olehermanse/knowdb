@@ -9,8 +9,10 @@ export default function Comments({ entry, heading }: { entry: EntryRef; heading?
   const list = getComments(entry);
   const key = commentKey(entry);
   // The parts the inline script changes (the count and the user's own
-  // comments) are rendered with dangerouslySetInnerHTML so React leaves
-  // their contents alone when hydrating.
+  // comments) are rendered with dangerouslySetInnerHTML and
+  // suppressHydrationWarning: the script may already have filled them from
+  // local storage by the time React hydrates, and React must neither patch
+  // nor warn about that.
   const emptyRow = list.length === 0 ? EMPTY_ROW : "";
   return (
     <section className="comments" data-comments={key} data-testid="comments">
@@ -20,6 +22,7 @@ export default function Comments({ entry, heading }: { entry: EntryRef; heading?
           <span
             className="muted"
             data-comments-count
+            suppressHydrationWarning
             dangerouslySetInnerHTML={{ __html: `(${list.length})` }}
           />
         </h2>
@@ -33,6 +36,7 @@ export default function Comments({ entry, heading }: { entry: EntryRef; heading?
         <ul
           className="entry-list comments-list"
           data-local-comments
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: emptyRow }}
         />
       </div>

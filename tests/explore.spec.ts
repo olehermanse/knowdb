@@ -2272,6 +2272,16 @@ test("posting a comment stores it in the browser only", async ({ page }) => {
   // And it is only in this browser.
   const stored = await page.evaluate(() => localStorage.getItem("knowdb-comments:port:5308"));
   expect(JSON.parse(stored!)).toHaveLength(1);
+
+  // Reloading with a stored comment must not upset React's hydration.
+  const console = [] as string[];
+  page.on("console", (m) => {
+    if (m.type() === "error" || m.type() === "warning") console.push(m.text());
+  });
+  await page.goto("/entry/port/5308?tab=comments");
+  await expect(page.getByTestId("comment-card")).toHaveCount(1);
+  await page.waitForTimeout(500);
+  expect(console.filter((t) => /hydrat|did not match|didn't match/i.test(t))).toEqual([]);
 });
 
 test("host pages have a comments section, host previews do not", async ({ page }) => {
