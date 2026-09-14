@@ -169,7 +169,7 @@ test("entries are two-way linked: host -> port -> host", async ({ page }) => {
   await expect(linkedHosts).toHaveCount(hosts.length);
   await page
     .getByTestId("linked-hosts")
-    .getByRole("link", { name: someHost.id, exact: true })
+    .getByRole("link", { name: someHost.hostname, exact: true })
     .click();
   await expect(page.getByTestId("entry-name")).toContainText(someHost.id);
 });
@@ -226,7 +226,7 @@ test("group page lists matching hosts and its rules", async ({ page }) => {
   for (const host of expected.slice(0, 3)) {
     await expect(
       page.getByTestId("linked-hosts").getByRole("link", {
-        name: host.id,
+        name: host.hostname,
         exact: true,
       }),
     ).toBeVisible();
@@ -243,7 +243,7 @@ test("groups are two-way linked: host -> group -> host", async ({ page }) => {
   await expect(page).toHaveURL(groupHref("Ubuntu"));
   await page
     .getByTestId("linked-hosts")
-    .getByRole("link", { name: ubuntuHost.id, exact: true })
+    .getByRole("link", { name: ubuntuHost.hostname, exact: true })
     .click();
   await expect(page.getByTestId("entry-name")).toContainText(ubuntuHost.id);
 });
@@ -427,6 +427,34 @@ test("port and host pages do not aggregate ports", async ({ page }) => {
   await expect(page.getByTestId("aggregated-ports")).toHaveCount(0);
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await expect(page.getByTestId("aggregated-ports")).toHaveCount(0);
+});
+
+test("host lists show abbreviated ID, OS and IP addresses", async ({
+  page,
+}) => {
+  await page.goto("/entry/port/22");
+  const item = page
+    .getByTestId("linked-hosts")
+    .locator("li", { hasText: someHost.hostname })
+    .first();
+  // Hostname links to the host, the ID is abbreviated with the full ID on hover.
+  await expect(
+    item.getByRole("link", { name: someHost.hostname, exact: true }),
+  ).toHaveAttribute("href", `/entry/host/${encodeURIComponent(someHost.id)}`);
+  const shortId = item.locator(".host-id");
+  await expect(shortId).toHaveText(`(${someHost.id.slice(0, 12)}…)`);
+  await expect(shortId).toHaveAttribute("title", someHost.id);
+  await expect(item).not.toContainText(someHost.id);
+  // OS and every IP address are shown and clickable.
+  await expect(
+    item.getByRole("link", { name: someHost.os, exact: true }),
+  ).toHaveAttribute("href", `/entry/os/${encodeURIComponent(someHost.os)}`);
+  for (const ip of someHost.ips) {
+    await expect(item.getByRole("link", { name: ip, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/ip/${encodeURIComponent(ip)}`,
+    );
+  }
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

@@ -92,6 +92,24 @@ a,
   overflow-wrap: anywhere;
 }
 
+.host-item {
+  align-items: flex-start;
+}
+
+.host-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.host-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.9rem;
+}
+
 .type-badge {
   display: inline-block;
   background: var(--badge-bg);

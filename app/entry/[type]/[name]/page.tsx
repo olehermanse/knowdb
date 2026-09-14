@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import OsPieChart from "@/components/OsPieChart";
 import {
+  abbreviateHostId,
   AGGREGATING_TYPES,
   aggregateOs,
   aggregatePorts,
@@ -181,13 +182,32 @@ function LinkedHosts({ entry }: { entry: Entry }) {
       <ul className="entry-list" data-testid="linked-hosts">
         {entry.hosts.map((hostkey) => {
           const host = getHost(hostkey);
+          if (!host) return null;
           return (
-            <li key={hostkey}>
+            <li key={hostkey} className="host-item">
               <span className="type-badge">host</span>
-              <span>
-                {host && <>{host.hostname} — </>}
-                <EntryLink type="host" name={hostkey} />
-              </span>
+              <div className="host-summary">
+                <div>
+                  <EntryLink type="host" name={hostkey} label={host.hostname} />{" "}
+                  <span className="muted host-id" title={hostkey}>
+                    ({abbreviateHostId(hostkey)})
+                  </span>
+                </div>
+                <div className="muted host-facts">
+                  <span>
+                    OS: <EntryLink type="os" name={host.os} />
+                  </span>
+                  <span>
+                    IPs:{" "}
+                    {host.ips.map((ip, i) => (
+                      <span key={ip}>
+                        {i > 0 && ", "}
+                        <EntryLink type="ip" name={ip} />
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              </div>
             </li>
           );
         })}

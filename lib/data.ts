@@ -217,6 +217,13 @@ export function randomEntries(count: number): EntryRef[] {
   return shuffle(picked);
 }
 
+// Shorten a host key like "SHA=7a176d50116c..." to "SHA=7a176d50…" for lists.
+export function abbreviateHostId(hostkey: string): string {
+  const match = /^(SHA=)?([0-9a-fA-F]+)$/.exec(hostkey);
+  if (!match || match[2].length <= 12) return hostkey;
+  return `${match[1] ?? ""}${match[2].slice(0, 8)}…`;
+}
+
 // If a hostname belongs to exactly one host, return that host's key so
 // links to the hostname can go straight to the host.
 export function uniqueHostForHostname(hostname: string): string | undefined {
