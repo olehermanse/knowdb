@@ -1269,6 +1269,9 @@ test("software has versions which are entries of their own", async ({
   );
   // The versions tab is the first tab on software pages, and only there.
   await expect(page.getByTestId("tab-versions")).toBeVisible();
+  await expect(page.getByTestId("versions-description")).toHaveText(
+    "Versions of cfengine in your infrastructure:",
+  );
   const items = page.getByTestId("version-item");
   await expect(items).toHaveCount(versions.size);
   // Most hosts first, one card per version linking to its own entry, with

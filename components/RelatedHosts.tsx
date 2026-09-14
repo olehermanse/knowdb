@@ -105,7 +105,7 @@ function VersionsPanel({ entry }: { entry: Entry }) {
   return (
     <>
       <p className="muted" data-testid="versions-description">
-        Versions of {entry.name} installed on the hosts:
+        Versions of {entry.name} in your infrastructure:
       </p>
       {versions.length === 0 && <p className="muted">None</p>}
       <ul className="entry-list" data-testid="versions">
