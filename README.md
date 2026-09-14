@@ -60,7 +60,8 @@ on entry pages; the frontend reads it at build time.
 type in the UI: a host page lists the groups it belongs to, and a group page
 lists the hosts in it along with the rules that put them there, a pie chart
 and ranked list of the operating systems in the group, and the ports the
-hosts are listening on.
+hosts are listening on. The operating systems section is also shown on
+software, port and local user pages.
 
 For now a group is defined by case-insensitive substring matching on the
 host's OS and hostname. A host is in the group if, for every field listed

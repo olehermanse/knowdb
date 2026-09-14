@@ -370,12 +370,38 @@ test("group with a single operating system shows a sentence instead", async ({
   ).toHaveAttribute("href", `/entry/os/${encodeURIComponent(expected[0][0])}`);
 });
 
-test("operating systems section only appears on group pages", async ({
+test("operating systems section is reused on software, port and user pages", async ({
   page,
 }) => {
-  await page.goto("/entry/software/dpkg");
-  await expect(page.getByTestId("os-heading")).toHaveCount(0);
+  const cases: [string, (h: Host) => boolean, string][] = [
+    ["/entry/software/dpkg", (h) => h.software.includes("dpkg"), "software"],
+    ["/entry/port/22", (h) => h["ports-listening"].includes(22), "port"],
+    ["/entry/user/root", (h) => h["local-users"].includes("root"), "local user"],
+  ];
+  for (const [url, selects, subject] of cases) {
+    const expected = osCounts(hosts.filter(selects));
+    expect(expected.length, url).toBeGreaterThan(1);
+    await page.goto(url);
+    await expect(page.getByTestId("os-heading")).toHaveText(
+      `Operating systems (${expected.length})`,
+    );
+    await expect(page.getByTestId("os-section")).toContainText(
+      `hosts with this ${subject}`,
+    );
+    const items = page.getByTestId("os-list").locator("li");
+    await expect(items.getByRole("link")).toHaveText(expected.map(([os]) => os));
+    await expect(items.first()).toContainText(hostsLabel(expected[0][1]));
+  }
+});
+
+test("operating systems section is absent where it makes no sense", async ({
+  page,
+}) => {
   await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}`);
+  await expect(page.getByTestId("os-heading")).toHaveCount(0);
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("os-heading")).toHaveCount(0);
+  await page.goto(`/entry/ip/${encodeURIComponent(someHost.ips[0])}`);
   await expect(page.getByTestId("os-heading")).toHaveCount(0);
 });
 

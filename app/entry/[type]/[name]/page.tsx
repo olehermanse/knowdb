@@ -1,11 +1,10 @@
 import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
-import OsPieChart from "@/components/OsPieChart";
+import OperatingSystems, { hasOsSection } from "@/components/OperatingSystems";
 import {
   abbreviateHostId,
   AGGREGATING_TYPES,
-  aggregateOs,
   aggregatePorts,
   describeEntry,
   Entry,
@@ -104,21 +103,6 @@ function GroupRules({ group }: { group: Group }) {
         </Fragment>
       ))}
     </dl>
-  );
-}
-
-function OperatingSystems({ entry }: { entry: Entry }) {
-  const counts = aggregateOs(entry.hosts);
-  return (
-    <>
-      <h2 data-testid="os-heading">
-        Operating systems <span className="muted">({counts.length})</span>
-      </h2>
-      <p className="muted">
-        Operating systems of the hosts in this group, most hosts first.
-      </p>
-      <OsPieChart counts={counts} subject="This group" />
-    </>
   );
 }
 
@@ -261,7 +245,7 @@ export default async function EntryPage({
         {describeEntry(entry)}
       </p>
       {group && <GroupRules group={group} />}
-      {group && <OperatingSystems entry={entry} />}
+      {hasOsSection(type) && <OperatingSystems entry={entry} />}
       {AGGREGATING_TYPES.includes(type) && <AggregatedPorts entry={entry} />}
       {host ? <HostDetails host={host} /> : <LinkedHosts entry={entry} />}
     </>
