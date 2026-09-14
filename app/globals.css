@@ -540,7 +540,6 @@ a,
 }
 
 .entry-pane-right {
-  border-left: 1px solid var(--border);
   padding-left: 3rem;
 }
 
@@ -550,9 +549,7 @@ a,
   }
 
   .entry-pane-right {
-    border-left: none;
     padding-left: 0;
-    border-top: 1px solid var(--border);
     padding-top: 1.5rem;
   }
 }
