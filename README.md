@@ -91,7 +91,10 @@ address, like `openssh.com` or `github.com/openssh/openssh-portable`. Links poin
 websites, source code repositories and specifications; any source works.
 Software entries can list the `ports` they typically listen on, such as
 `[5432]` for postgresql; software and port pages then show a "See also"
-line linking to each other.
+line linking to each other. "See also" also links entries of different
+types with matching names, ignoring case and punctuation: the group
+`Linux` and the class `linux`, the class `ubuntu_24` and the OS
+`Ubuntu 24`, the class `cfengine` and the software `cfengine`.
 Well-known software, operating systems and ports can also have a `logo`,
 the URL of an image shown next to the entry's title (currently served
 from Simple Icons, https://simpleicons.org/).

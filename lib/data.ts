@@ -71,6 +71,8 @@ export interface Entry extends EntryRef {
 }
 
 const hosts = hostsJson as unknown as Host[];
+// Hard coded descriptions, links and logos; the type is defined further down.
+const info = infoJson as Info;
 
 function entryKey(type: EntryType, name: string): string {
   return `${type}:${name}`;
@@ -87,6 +89,20 @@ export function parseVersionEntryName(name: string): { software: string; version
     ? { software: name, version: "" }
     : { software: name.slice(0, i), version: name.slice(i + 1) };
 }
+
+// Names of different entry types often refer to the same thing: the group
+// "Linux" and the class "linux", the class "ubuntu_24" and the OS
+// "Ubuntu 24". Normalising lowercases and turns runs of anything that is
+// not a letter or digit into "_" so such names compare equal.
+export function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+// Entry types whose names are worth matching against each other.
+const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port"];
 
 function buildIndex() {
   const hostsByKey = new Map<string, Host>();
@@ -130,10 +146,29 @@ function buildIndex() {
     groupsByHost.set(host.id, hostGroups);
   }
 
-  return { hostsByKey, entries, groupsByHost };
+  // Entries of matchable types by normalised name; ports also under their
+  // common name (5308 is also "cfengine").
+  const byNormalizedName = new Map<string, EntryRef[]>();
+  const addName = (name: string, ref: EntryRef) => {
+    const key = normalizeName(name);
+    if (!key) return;
+    const list = byNormalizedName.get(key) ?? [];
+    if (!list.some((r) => r.type === ref.type && r.name === ref.name)) list.push(ref);
+    byNormalizedName.set(key, list);
+  };
+  for (const { type, name } of entries.values()) {
+    if (!NAME_MATCH_TYPES.includes(type)) continue;
+    addName(name, { type, name });
+    if (type === "port") {
+      const common = info.ports[name]?.name;
+      if (common) addName(common, { type, name });
+    }
+  }
+
+  return { hostsByKey, entries, groupsByHost, byNormalizedName };
 }
 
-const { hostsByKey, entries, groupsByHost } = buildIndex();
+const { hostsByKey, entries, groupsByHost, byNormalizedName } = buildIndex();
 
 export function getEntry(type: EntryType, name: string): Entry | undefined {
   const entry = entries.get(entryKey(type, name));
@@ -378,7 +413,6 @@ interface Info {
   classes: Record<string, DescribedInfo>;
 }
 
-const info = infoJson as Info;
 
 export function getPortInfo(port: string | number): PortInfo | undefined {
   return info.ports[String(port)];
@@ -512,16 +546,31 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
       if (sw.ports?.includes(port)) related.push({ type: "software", name });
     }
   }
+  // Entries of other types with a matching name, e.g. the class "linux"
+  // for the group "Linux". Ports are also matched by their common name.
+  const names = [entry.name];
+  if (entry.type === "port") {
+    const common = getPortInfo(entry.name)?.name;
+    if (common) names.push(common);
+  }
+  for (const name of names) {
+    for (const ref of byNormalizedName.get(normalizeName(name)) ?? []) {
+      if (ref.type === entry.type) continue;
+      if (!related.some((r) => r.type === ref.type && r.name === ref.name)) related.push(ref);
+    }
+  }
   return related.filter((ref) => entries.has(entryKey(ref.type, ref.name)));
 }
 
-// "port 5432 (postgresql)" or "software postgresql", for see-also links.
+// "port 5432 (postgresql)", "software postgresql", "Ubuntu 24 (OS)", ...
 export function seeAlsoLabel(ref: EntryRef): string {
   if (ref.type === "port") {
     const name = getPortInfo(ref.name)?.name;
     return name ? `port ${ref.name} (${name})` : `port ${ref.name}`;
   }
-  return `${ref.type} ${ref.name}`;
+  if (ref.type === "software") return `software ${ref.name}`;
+  const typeLabel = ref.type === "os" ? "OS" : ref.type;
+  return `${ref.name} (${typeLabel})`;
 }
 
 export const NO_USER_INFO = "No information available about this user.";

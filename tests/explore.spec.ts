@@ -1352,6 +1352,56 @@ test("avatars show an online/offline dot and about 70% of hosts are online", asy
   expect(Math.abs(centre(avatar) - centre(badge))).toBeLessThan(2);
 });
 
+test("See also links entries of different types with matching names", async ({
+  page,
+}) => {
+  const seeAlsoLink = (name: string) =>
+    page.getByTestId("see-also").getByRole("link", { name, exact: true });
+
+  // Group "Linux" <-> class "linux".
+  await page.goto(groupHref("Linux"));
+  await expect(seeAlsoLink("linux (class)")).toHaveAttribute("href", "/entry/class/linux");
+  await seeAlsoLink("linux (class)").click();
+  await expect(page).toHaveURL("/entry/class/linux");
+  await expect(seeAlsoLink("Linux (group)")).toHaveAttribute(
+    "href",
+    `/entry/group/${encodeURIComponent("Linux")}`,
+  );
+
+  // Class "cfengine" <-> software "cfengine", and the port named cfengine.
+  await page.goto("/entry/class/cfengine");
+  await expect(seeAlsoLink("software cfengine")).toHaveAttribute(
+    "href",
+    "/entry/software/cfengine",
+  );
+  await expect(seeAlsoLink("port 5308 (cfengine)")).toHaveAttribute(
+    "href",
+    "/entry/port/5308",
+  );
+  await page.goto("/entry/software/cfengine");
+  await expect(seeAlsoLink("cfengine (class)")).toHaveAttribute(
+    "href",
+    "/entry/class/cfengine",
+  );
+
+  // Class "ubuntu_24" <-> OS "Ubuntu 24" (case and punctuation ignored).
+  const ubuntu24 = hosts.find((h) => h.os === "Ubuntu 24");
+  test.skip(!ubuntu24, "no Ubuntu 24 host in the generated data");
+  await page.goto("/entry/class/ubuntu_24");
+  await expect(seeAlsoLink("Ubuntu 24 (OS)")).toHaveAttribute(
+    "href",
+    `/entry/os/${encodeURIComponent("Ubuntu 24")}`,
+  );
+  await page.goto(`/entry/os/${encodeURIComponent("Ubuntu 24")}`);
+  await expect(seeAlsoLink("ubuntu_24 (class)")).toHaveAttribute(
+    "href",
+    "/entry/class/ubuntu_24",
+  );
+  // Group "Ubuntu" <-> class "ubuntu".
+  await page.goto(groupHref("Ubuntu"));
+  await expect(seeAlsoLink("ubuntu (class)")).toBeVisible();
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");
