@@ -227,12 +227,24 @@ test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
     expect(parseFloat(await card.evaluate((el) => getComputedStyle(el).borderTopLeftRadius))).toBeGreaterThan(0);
     await expect(pane.getByTestId("pane-entry-name")).toContainText(someHost.hostname);
     await expect(pane.getByTestId("pane-entry-summary")).toContainText("This is");
+    // An arrow in the card's bottom right corner opens the host's own page.
+    const open = pane.getByTestId("pane-open-host");
+    await expect(open).toHaveAttribute("href", `/entry/host/${encodeURIComponent(someHost.id)}`);
+    const cardBox = (await card.boundingBox())!;
+    const openBox = (await open.boundingBox())!;
+    expect(openBox.x + openBox.width).toBeGreaterThan(cardBox.x + cardBox.width * 0.9);
+    expect(openBox.y + openBox.height).toBeGreaterThan(cardBox.y + cardBox.height * 0.9);
+    expect(openBox.y + openBox.height).toBeLessThanOrEqual(cardBox.y + cardBox.height + 1);
     await expect(pane.getByTestId("host-details")).toBeVisible();
     await expect(
       pane.getByTestId("host-details").getByRole("link", { name: someHost.os, exact: true }),
     ).toBeVisible();
   };
   await onlyHostsAndSimilar();
+  await page.getByTestId("pane-open-host").click();
+  await expect(page).toHaveURL(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("entry-name")).toContainText(someHost.hostname);
+  await expect(page.getByTestId("pane-open-host")).toHaveCount(0);
 
   // Same for an IP address only this host has, and for its MAC address.
   const ipCounts = new Map<string, number>();

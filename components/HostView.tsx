@@ -1,3 +1,4 @@
+import Link from "next/link";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
@@ -147,6 +148,17 @@ export default function HostView({ host, embedded = false }: { host: Host; embed
       </div>
       <p data-testid={tid("entry-summary")}>{describeHost(host)}</p>
       <HostDetails host={host} />
+      {embedded && (
+        <Link
+          href={entryHref({ type: "host", name: host.id })}
+          className="host-card-open"
+          title={`Open ${host.hostname}`}
+          aria-label={`Open ${host.hostname}`}
+          data-testid="pane-open-host"
+        >
+          →
+        </Link>
+      )}
     </div>
   );
 }
