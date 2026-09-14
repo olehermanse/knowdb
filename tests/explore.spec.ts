@@ -1091,7 +1091,7 @@ test("description, summary and read more form one paragraph", async ({
   await page.goto(`/entry/host/${encodeURIComponent(described.host.id)}`);
   const article = /^[aeiou]/i.test(described.host.os) ? "an" : "a";
   const provider = (described.host as unknown as { "cloud-provider": string })["cloud-provider"];
-  const where = provider ? `running on ${provider}` : "running in your own data center";
+  const where = provider ? `running in ${provider}` : "running in your own data center";
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `This is ${article} ${described.host.os} host in the ${described.env} environment, ${where}. It looks like ${described.role}.`,
   );
@@ -1604,7 +1604,7 @@ test("hosts have a cloud provider, or none for their own data center", async ({
     "href",
     "/entry/cloud/AWS",
   );
-  await expect(page.getByTestId("entry-summary")).toContainText("running on AWS.");
+  await expect(page.getByTestId("entry-summary")).toContainText("running in AWS.");
   await page.goto(`/entry/host/${encodeURIComponent(without[0].id)}`);
   await expect(page.getByTestId("host-cloud")).toHaveText("None");
   await expect(page.getByTestId("host-cloud").getByRole("link")).toHaveCount(0);
@@ -1620,18 +1620,18 @@ test("hosts have a cloud provider, or none for their own data center", async ({
   );
   await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", /Amazon_Web_Services/);
   await expect(page.getByTestId("entry-summary")).toHaveText(
-    `${awsHosts.length} hosts in your infrastructure run on AWS, across ${pluralize(distinctOs(awsHosts), "operating system")}.`,
+    `${awsHosts.length} hosts in your infrastructure run in AWS, across ${pluralize(distinctOs(awsHosts), "operating system")}.`,
   );
   await openTab(page, "os");
   await expect(page.getByTestId("os-section")).toContainText(
-    "The hosts on AWS run these operating systems:",
+    "The hosts in AWS run these operating systems:",
   );
   await openTab(page, "ports");
   await expect(page.getByTestId("ports-description")).toHaveText(
-    "The hosts on AWS are listening to these ports:",
+    "The hosts in AWS are listening to these ports:",
   );
   await openTab(page, "hosts");
-  await expect(page.getByTestId("hosts-description")).toHaveText("Hosts running on AWS:");
+  await expect(page.getByTestId("hosts-description")).toHaveText("Hosts running in AWS:");
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${awsHosts.length})`);
 
   // Cloud providers work as search filters.
@@ -1656,7 +1656,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
   await expect(page.getByTestId("clouds-heading")).toHaveText(`Clouds (${ranked.length})`);
   await openTab(page, "clouds");
   await expect(page.getByTestId("cloud-section")).toContainText(
-    "The hosts listening to this port run on these cloud providers:",
+    "The hosts listening to this port run in these clouds:",
   );
   await expect(page.getByTestId("cloud-pie").locator("path")).toHaveCount(
     Math.min(ranked.length, 8),

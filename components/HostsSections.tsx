@@ -34,7 +34,7 @@ function describeLinkedHosts(entry: Entry): string {
     case "class":
       return `Hosts with the class ${entry.name} set:`;
     case "cloud":
-      return `Hosts running on ${entry.name}:`;
+      return `Hosts running in ${entry.name}:`;
     case "version": {
       const { software, version } = parseVersionEntryName(entry.name);
       return `Hosts with ${software} version ${version} installed:`;

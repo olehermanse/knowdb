@@ -17,7 +17,7 @@ export interface Host {
   classes: string[];
   // Whether the host has reported in recently.
   online: boolean;
-  // Cloud provider the host runs on, or "" for your own data center.
+  // Cloud provider the host runs in, or "" for your own data center.
   "cloud-provider": string;
   // When the host first and most recently reported in (ISO 8601, UTC).
   "first-seen": string;
@@ -57,7 +57,7 @@ export type EntryType =
   | "class"
   // A specific version of a piece of software, named "<software> <version>".
   | "version"
-  // A cloud provider hosts run on (AWS, Azure, ...).
+  // A cloud provider hosts run in (AWS, Azure, ...).
   | "cloud";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
@@ -711,7 +711,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   group: "A group of hosts, defined in groups.json.",
   class: "A CFEngine class reported by hosts, describing something true about them.",
   version: "A specific version of a piece of software.",
-  cloud: "A cloud provider that hosts run on.",
+  cloud: "A cloud provider that hosts run in.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -825,7 +825,7 @@ export function summarizeEntry(entry: Entry): string {
     case "class":
       return `This class is set on ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
     case "cloud":
-      return `${hosts} in your infrastructure ${n === 1 ? "runs" : "run"} on ${entry.name}, across ${oses()}.`;
+      return `${hosts} in your infrastructure ${n === 1 ? "runs" : "run"} in ${entry.name}, across ${oses()}.`;
     case "ip":
       return `This IP address is used by ${hosts} in your infrastructure.`;
     case "mac":
@@ -992,7 +992,7 @@ export function describeHost(host: Host): string {
   let text = `This is ${withArticle(host.os)} host`;
   if (env) text += ` in the ${env} environment`;
   const cloud = host["cloud-provider"];
-  text += cloud ? `, running on ${cloud}.` : ", running in your own data center.";
+  text += cloud ? `, running in ${cloud}.` : ", running in your own data center.";
   if (role) text += ` It looks like ${withArticle(role)}.`;
   return text;
 }

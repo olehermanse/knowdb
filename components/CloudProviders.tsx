@@ -6,20 +6,20 @@ export const NO_CLOUD_LABEL = "None";
 function sectionText(entry: Entry): string {
   switch (entry.type) {
     case "software":
-      return `The hosts with ${entry.name} installed run on these cloud providers:`;
+      return `The hosts with ${entry.name} installed run in these clouds:`;
     case "version":
-      return `The hosts with ${entry.name} run on these cloud providers:`;
+      return `The hosts with ${entry.name} run in these clouds:`;
     case "os":
-      return `The ${entry.name} hosts run on these cloud providers:`;
+      return `The ${entry.name} hosts run in these clouds:`;
     case "port":
-      return "The hosts listening to this port run on these cloud providers:";
+      return "The hosts listening to this port run in these clouds:";
     default:
-      return "The hosts run on these cloud providers:";
+      return "The hosts run in these clouds:";
   }
 }
 
 // "Clouds" tab: a pie chart and ranked list of the cloud providers the
-// related hosts run on. Hosts without a provider get their own slice.
+// related hosts run in. Hosts without a provider get their own slice.
 export default function CloudProviders({ entry }: { entry: Entry }) {
   const counts = aggregateClouds(entry.hosts);
   const items: PieItem[] = counts.map((c) => ({

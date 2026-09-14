@@ -25,7 +25,7 @@ function sectionText(type: EntryType, subject: string, name: string): string {
     return `The hosts with ${name} installed run these operating systems:`;
   }
   if (type === "cloud") {
-    return `The hosts on ${name} run these operating systems:`;
+    return `The hosts in ${name} run these operating systems:`;
   }
   if (type === "version") {
     return `The ${name} software version is installed on these operating systems:`;

@@ -192,7 +192,7 @@ function portsDescription(entry: Entry): string {
     case "class":
       return `The ${entry.name} hosts are listening to these ports:`;
     case "cloud":
-      return `The hosts on ${entry.name} are listening to these ports:`;
+      return `The hosts in ${entry.name} are listening to these ports:`;
     default:
       return "The hosts are listening to these ports:";
   }
