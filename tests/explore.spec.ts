@@ -1261,7 +1261,11 @@ test("hosts have pixel avatars coloured by operating system", async ({
 test("hosts have classes which work like groups", async ({ page }) => {
   expect(someHost.classes.length).toBeGreaterThan(0);
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
-  const classes = page.getByTestId("host-classes");
+  await expect(page.getByTestId("classes-modal-count")).toHaveText(
+    `${someHost.classes.length} classes`,
+  );
+  await page.getByTestId("classes-modal-open").click();
+  const classes = page.getByTestId("classes-modal-list");
   await expect(classes.getByRole("link")).toHaveText(someHost.classes);
   await expect(classes.getByRole("link", { name: "any", exact: true })).toHaveAttribute(
     "href",
@@ -1393,18 +1397,17 @@ test("software has versions which are entries of their own", async ({
 
 test("host pages show software versions as links", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
-  const software = page.getByTestId("host-software");
+  await page.getByTestId("software-modal-open").click();
+  const list = page.getByTestId("software-modal-list");
   const versionsOf = someHost["software-versions"] as unknown as Record<string, string>;
   for (const sw of someHost.software) {
-    await expect(software.getByRole("link", { name: sw, exact: true })).toHaveAttribute(
+    await expect(list.getByRole("link", { name: sw, exact: true })).toHaveAttribute(
       "href",
       `/entry/software/${encodeURIComponent(sw)}`,
     );
     const version = versionsOf[sw];
     if (!version) continue;
-    const item = software.locator(".software-with-version", {
-      has: page.getByRole("link", { name: sw, exact: true }),
-    });
+    const item = list.locator("li", { has: page.getByRole("link", { name: sw, exact: true }) });
     await expect(item.getByRole("link", { name: version, exact: true })).toHaveAttribute(
       "href",
       `/entry/version/${encodeURIComponent(`${sw} ${version}`)}`,
@@ -1846,6 +1849,49 @@ test("host page has two columns with software and classes below", async ({
   expect(Math.abs(r.y - l.y)).toBeLessThan(2);
   expect(w.y).toBeGreaterThanOrEqual(Math.max(l.y + l.height, r.y + r.height) - 1);
   expect(w.width).toBeGreaterThan(l.width * 1.5);
+});
+
+test("software and classes open in a filterable modal", async ({ page }) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  // Counts and buttons instead of inline lists.
+  await expect(page.getByTestId("software-modal-count")).toHaveText(
+    `${someHost.software.length} software packages`,
+  );
+  await expect(page.getByTestId("host-software").getByRole("link")).toHaveCount(0);
+  const dialog = page.getByTestId("classes-modal-dialog");
+  await expect(dialog).toBeHidden();
+
+  await page.getByTestId("classes-modal-open").click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading")).toHaveText(`Classes of ${someHost.hostname}`);
+  const items = page.getByTestId("classes-modal-list").locator("li");
+  await expect(items).toHaveCount(someHost.classes.length);
+  // Items are stacked vertically.
+  const first = (await items.nth(0).boundingBox())!;
+  const second = (await items.nth(1).boundingBox())!;
+  expect(second.y).toBeGreaterThan(first.y + first.height - 1);
+
+  // Filtering as you type.
+  const filter = page.getByTestId("classes-modal-filter");
+  await expect(filter).toBeFocused();
+  await filter.fill("cfengine");
+  const matching = someHost.classes.filter((c) => c.includes("cfengine"));
+  await expect(items).toHaveCount(matching.length);
+  await expect(items.getByRole("link")).toHaveText(matching);
+  await expect(page.getByTestId("classes-modal-shown")).toHaveText(
+    `${matching.length} of ${someHost.classes.length} classes match`,
+  );
+  await filter.fill("zzzz-nothing");
+  await expect(items).toHaveCount(1);
+  await expect(items.first()).toHaveText("Nothing matches.");
+  await filter.fill("");
+  await expect(items).toHaveCount(someHost.classes.length);
+
+  // Escape closes it; reopening starts unfiltered.
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await page.getByTestId("classes-modal-open").click();
+  await expect(items).toHaveCount(someHost.classes.length);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

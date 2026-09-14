@@ -449,3 +449,71 @@ a,
     grid-template-columns: 1fr;
   }
 }
+
+/* Count + "Show all" button opening a filterable list modal. */
+.list-modal-button,
+.list-modal-close {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+  padding: 0.15rem 0.6rem;
+  font-weight: 600;
+}
+
+.list-modal {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0;
+  width: min(36rem, 92vw);
+  max-height: 85vh;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.list-modal::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.list-modal-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  max-height: 85vh;
+}
+
+.list-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.list-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.list-modal-close {
+  padding: 0 0.6rem;
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+.list-modal input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.list-modal-list {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 0.25rem;
+}

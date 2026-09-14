@@ -5,6 +5,9 @@ based on the data reported from your hosts.
 Click on a host to see information about it, see that port 22 is open,
 read what port 22 is for, see other hosts with port 22 open, and so on.
 
+A host page shows its software and classes as counts with a "Show all"
+button that opens a scrollable list which filters live as you type.
+
 Every host has a GitHub-style pixel avatar derived from its host key, so
 it stays the same everywhere the host appears. The avatar's colour comes
 from the host's operating system (the `color` field of the OS entry in

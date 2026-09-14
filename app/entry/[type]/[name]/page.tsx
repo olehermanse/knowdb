@@ -3,11 +3,13 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
+import ListModal from "@/components/ListModal";
 import { parsePage } from "@/components/HostList";
 import RelatedHosts, { parseTab } from "@/components/RelatedHosts";
 import {
   describeEntry,
   Entry,
+  entryHref,
   externalLinkLabel,
   getEntry,
   getEntryLinks,
@@ -95,32 +97,44 @@ function HostDetails({ host }: { host: Host }) {
       </div>
       <dl className="host-details host-details-wide" data-testid="host-details-wide">
           <dt>Software</dt>
-          <dd className="inline-links" data-testid="host-software">
-            {host.software.map((sw) => {
+        <dd data-testid="host-software">
+          <ListModal
+            title={`Software on ${host.hostname}`}
+            singular="software package"
+            plural="software packages"
+            testId="software-modal"
+            rows={host.software.map((sw) => {
               const version = host["software-versions"]?.[sw];
-              return (
-                <span key={sw} className="software-with-version">
-                  <EntryLink type="software" name={sw} />
-                  {version && (
-                    <>
-                      {" "}
-                      <EntryLink
-                        type="version"
-                        name={versionEntryName(sw, version)}
-                        label={version}
-                      />
-                    </>
-                  )}
-                </span>
-              );
+              return {
+                key: sw,
+                type: "software",
+                label: sw,
+                href: entryHref({ type: "software", name: sw }),
+                extra: version
+                  ? {
+                      label: version,
+                      href: entryHref({ type: "version", name: versionEntryName(sw, version) }),
+                    }
+                  : undefined,
+              };
             })}
-          </dd>
-          <dt>Classes</dt>
-          <dd className="inline-links" data-testid="host-classes">
-            {host.classes.map((cls) => (
-              <EntryLink key={cls} type="class" name={cls} />
-            ))}
-          </dd>
+          />
+        </dd>
+        <dt>Classes</dt>
+        <dd data-testid="host-classes">
+          <ListModal
+            title={`Classes of ${host.hostname}`}
+            singular="class"
+            plural="classes"
+            testId="classes-modal"
+            rows={host.classes.map((cls) => ({
+              key: cls,
+              type: "class",
+              label: cls,
+              href: entryHref({ type: "class", name: cls }),
+            }))}
+          />
+        </dd>
       </dl>
     </div>
   );
