@@ -14,6 +14,7 @@ import {
   aggregateVersions,
   Entry,
   entryHref,
+  EntryType,
   filterSearchHref,
   getHost,
   getPortInfo,
@@ -37,7 +38,14 @@ export function parseTab(raw: string | string[] | undefined): Tab | undefined {
 // The versions tab exists only for software; the operating systems tab is
 // hidden on OS pages, the clouds tab on cloud pages and the ports tab on
 // port pages. (Host pages do not show this component at all.)
+const ADDRESS_TYPES: EntryType[] = ["ip", "mac", "hostname"];
+
 export function visibleTabs(entry: Entry): Tab[] {
+  // An address or hostname belonging to a single host: just that host, and
+  // similar entries. Operating systems, clouds and ports would only repeat it.
+  if (ADDRESS_TYPES.includes(entry.type) && entry.hosts.length === 1) {
+    return ["hosts", "similar"];
+  }
   return TAB_ORDER.filter(
     (tab) =>
       !(tab === "versions" && entry.type !== "software") &&

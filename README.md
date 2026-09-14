@@ -21,7 +21,8 @@ tab listing entries of the same type whose names start with the same three
 or more characters, longest match first; it is shown grayed out with (0)
 when there are none. The operating systems tab is
 hidden on OS pages, the clouds tab on cloud pages and the ports tab on
-port pages.
+port pages. An IP address, MAC address or hostname belonging to a single
+host shows only the Hosts and Similar tabs.
 
 Lists of hosts show at most 50 hosts at a time, with pagination links
 below the list.

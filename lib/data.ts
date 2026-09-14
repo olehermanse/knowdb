@@ -347,8 +347,9 @@ export function abbreviateHostId(hostkey: string): string {
   return `${match[1] ?? ""}${match[2].slice(0, 8)}…`;
 }
 
-// If a hostname belongs to exactly one host, return that host's key so
-// links to the hostname can go straight to the host.
+// If a hostname belongs to exactly one host, return that host's key. Used
+// to leave such hostnames out of search results, where the host itself is
+// found by its hostname.
 export function uniqueHostForHostname(hostname: string): string | undefined {
   const entry = entries.get(entryKey("hostname", hostname));
   if (entry && entry.hosts.size === 1) return [...entry.hosts][0];
@@ -356,10 +357,6 @@ export function uniqueHostForHostname(hostname: string): string | undefined {
 }
 
 export function entryHref(ref: EntryRef): string {
-  if (ref.type === "hostname") {
-    const hostkey = uniqueHostForHostname(ref.name);
-    if (hostkey) return entryHref({ type: "host", name: hostkey });
-  }
   return `/entry/${ref.type}/${encodeURIComponent(ref.name)}`;
 }
 

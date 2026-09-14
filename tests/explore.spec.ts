@@ -170,26 +170,53 @@ test("host page shows common port names in parenthesis", async ({ page }) => {
   }
 });
 
-test("clicking a unique hostname goes directly to the host", async ({
+test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
   page,
 }) => {
-  // Hostnames in the generated data are unique, so every hostname link
-  // should resolve straight to its host instead of an intermediate page.
+  // The hostname link on a host page leads to the hostname's own page.
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   const hostnameLink = page
     .getByTestId("host-details")
     .getByRole("link", { name: someHost.hostname, exact: true });
   await expect(hostnameLink).toHaveAttribute(
     "href",
-    `/entry/host/${encodeURIComponent(someHost.id)}`,
+    `/entry/hostname/${encodeURIComponent(someHost.hostname)}`,
   );
+  await hostnameLink.click();
+  await expect(page).toHaveURL(`/entry/hostname/${encodeURIComponent(someHost.hostname)}`);
+  await expect(page.getByTestId("entry-name")).toHaveText(someHost.hostname);
 
-  // Visiting the hostname entry directly redirects to the host as well.
-  await page.goto(`/entry/hostname/${encodeURIComponent(someHost.hostname)}`);
-  await expect(page).toHaveURL(
-    `/entry/host/${encodeURIComponent(someHost.id)}`,
-  );
-  await expect(page.getByTestId("entry-name")).toContainText(someHost.id);
+  const onlyHostsAndSimilar = async () => {
+    const tabs = page.getByTestId("related-hosts").getByRole("tab");
+    await expect(tabs).toHaveCount(2);
+    await expect(tabs.nth(0)).toHaveText("Hosts (1)");
+    await expect(tabs.nth(1)).toContainText("Similar");
+    await expect(page.getByTestId("os-heading")).toHaveCount(0);
+    await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
+    await expect(page.getByTestId("ports-heading")).toHaveCount(0);
+    // Hosts is the default tab and lists the one host.
+    await expect(page.getByTestId("host-item")).toHaveCount(1);
+    await expect(
+      page.getByTestId("host-item").getByRole("link", { name: someHost.hostname, exact: true }),
+    ).toHaveAttribute("href", `/entry/host/${encodeURIComponent(someHost.id)}`);
+  };
+  await onlyHostsAndSimilar();
+
+  // Same for an IP address only this host has, and for its MAC address.
+  const ipCounts = new Map<string, number>();
+  for (const h of hosts) for (const ip of h.ips) ipCounts.set(ip, (ipCounts.get(ip) ?? 0) + 1);
+  const ownIp = someHost.ips.find((ip) => ipCounts.get(ip) === 1);
+  if (ownIp) {
+    await page.goto(`/entry/ip/${encodeURIComponent(ownIp)}`);
+    await onlyHostsAndSimilar();
+  }
+  await page.goto(`/entry/mac/${encodeURIComponent(someHost.macs[0])}`);
+  await onlyHostsAndSimilar();
+
+  // Shared addresses keep all their tabs.
+  await page.goto("/entry/ip/127.0.0.1");
+  await expect(page.getByTestId("os-heading")).toBeVisible();
+  await expect(page.getByTestId("ports-heading")).toBeVisible();
 });
 
 test("entries are two-way linked: host -> port -> host", async ({ page }) => {
@@ -471,8 +498,8 @@ test("operating systems tab is hidden on OS and host pages", async ({
   await expect(page.getByTestId("ports-heading")).toHaveCount(0);
   await expect(page.getByTestId("os-heading")).toBeVisible();
   await expect(page.getByTestId("hosts-heading")).toBeVisible();
-  // IP addresses get all three tabs like any other non-host entry.
-  await page.goto(`/entry/ip/${encodeURIComponent(someHost.ips[0])}`);
+  // Shared IP addresses get all the tabs like any other non-host entry.
+  await page.goto("/entry/ip/127.0.0.1");
   await expect(page.getByTestId("os-heading")).toBeVisible();
 });
 
@@ -1604,16 +1631,23 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
 
-  // A host's own MAC address page has one host, so one provider: a sentence.
-  const mac = someHost.macs[0];
-  await page.goto(`/entry/mac/${encodeURIComponent(mac)}?tab=clouds`);
-  const provider = providerOf(someHost);
-  await expect(page.getByTestId("cloud-summary")).toHaveText(
-    provider
-      ? `The only host with this MAC address runs on ${provider}.`
-      : "The only host with this MAC address runs in your own data center.",
+  // A class whose hosts all share one provider (or none) gets one sentence.
+  const byClass = new Map<string, Host[]>();
+  for (const h of hosts) for (const c of h.classes) byClass.set(c, [...(byClass.get(c) ?? []), h]);
+  const uniform = [...byClass.entries()].find(
+    ([, hs]) => new Set(hs.map(providerOf)).size === 1,
   );
-  await expect(page.getByTestId("cloud-section").locator("p")).toHaveCount(1);
+  if (uniform) {
+    const [cls, hs] = uniform;
+    const provider = providerOf(hs[0]);
+    await page.goto(`/entry/class/${encodeURIComponent(cls)}?tab=clouds`);
+    const subject =
+      hs.length === 1 ? "The only host with this class runs" : `All ${hs.length} hosts with this class run`;
+    await expect(page.getByTestId("cloud-summary")).toHaveText(
+      provider ? `${subject} on ${provider}.` : `${subject} in your own data center.`,
+    );
+    await expect(page.getByTestId("cloud-section").locator("p")).toHaveCount(1);
+  }
 });
 
 test("front page buttons list everything of a type", async ({ page }) => {

@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import Image from "next/image";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
 import { parsePage } from "@/components/HostList";
@@ -8,7 +8,6 @@ import RelatedHosts, { parseTab } from "@/components/RelatedHosts";
 import {
   describeEntry,
   Entry,
-  entryHref,
   externalLinkLabel,
   getEntry,
   getEntryLinks,
@@ -23,7 +22,6 @@ import {
   isEntryType,
   seeAlsoLabel,
   summarizeEntry,
-  uniqueHostForHostname,
   versionEntryName,
 } from "@/lib/data";
 
@@ -191,11 +189,6 @@ export default async function EntryPage({
   const entry = getEntry(type, name);
   if (!entry) notFound();
 
-  // A hostname with exactly one host is the same thing as that host.
-  if (type === "hostname") {
-    const hostkey = uniqueHostForHostname(name);
-    if (hostkey) redirect(entryHref({ type: "host", name: hostkey }));
-  }
 
   const host = type === "host" ? getHost(name) : undefined;
   const group = type === "group" ? getGroup(name) : undefined;
