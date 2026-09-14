@@ -40,6 +40,45 @@ body {
 .site-header {
   border-bottom: 1px solid var(--border);
   padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1 1 16rem;
+  max-width: 32rem;
+}
+
+.search-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.search-form button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.site-main .search-form {
+  margin: 1rem 0;
+  max-width: none;
 }
 
 .site-header a {

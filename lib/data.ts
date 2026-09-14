@@ -364,3 +364,46 @@ export function describeEntry(entry: EntryRef): string {
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
+
+export interface SearchResult {
+  entry: Entry;
+  description: string;
+}
+
+// Rank of a match: lower sorts first.
+function matchRank(entry: Entry, description: string, q: string): number {
+  const name = entry.name.toLowerCase();
+  const host = entry.type === "host" ? hostsByKey.get(entry.name) : undefined;
+  const hostname = host?.hostname.toLowerCase();
+  if (name === q || hostname === q) return 0;
+  if (name.startsWith(q) || hostname?.startsWith(q)) return 1;
+  if (name.includes(q) || hostname?.includes(q)) return 2;
+  if (entry.type === "port" && getPortInfo(entry.name)?.name.toLowerCase() === q)
+    return 1;
+  if (description.toLowerCase().includes(q)) return 3;
+  return -1;
+}
+
+// Search "anything": entry names, hostnames, host keys, port names, and
+// the descriptions of entries. Case-insensitive substring matching.
+// Hostname entries are left out when they resolve to a single host, since
+// that host is found by its hostname anyway.
+export function searchEntries(query: string, limit = 200): SearchResult[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const results: (SearchResult & { rank: number })[] = [];
+  for (const raw of entries.values()) {
+    if (raw.type === "hostname" && uniqueHostForHostname(raw.name)) continue;
+    const entry: Entry = { type: raw.type, name: raw.name, hosts: [...raw.hosts].sort() };
+    const description = describeEntry(entry);
+    const rank = matchRank(entry, description, q);
+    if (rank >= 0) results.push({ entry, description, rank });
+  }
+  results.sort(
+    (a, b) =>
+      a.rank - b.rank ||
+      ENTRY_TYPES.indexOf(a.entry.type) - ENTRY_TYPES.indexOf(b.entry.type) ||
+      a.entry.name.localeCompare(b.entry.name),
+  );
+  return results.slice(0, limit).map(({ entry, description }) => ({ entry, description }));
+}

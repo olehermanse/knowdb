@@ -5,6 +5,14 @@ based on the data reported from your hosts.
 Click on a host to see information about it, see that port 22 is open,
 read what port 22 is for, see other hosts with port 22 open, and so on.
 
+## Searching
+
+The search bar at the top of every page searches "anything": hostnames,
+host keys, port numbers and names, software, users, operating systems,
+groups, IP and MAC addresses, and words from descriptions. Results show
+the type of each entry, its name and description, and hosts are shown
+with their OS and IP addresses.
+
 ## Running the frontend
 
 The frontend is a Next.js app living at the top level of this repository,

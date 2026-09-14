@@ -619,6 +619,83 @@ test("entries without links show no links section", async ({ page }) => {
   await expect(page.getByTestId("external-links")).toHaveCount(0);
 });
 
+test("search bar on any page finds entries by name", async ({ page }) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await page.getByTestId("search-input").first().fill("ssh");
+  await page.getByTestId("search-input").first().press("Enter");
+  await expect(page).toHaveURL(/\/search\?q=ssh$/);
+
+  const results = page.getByTestId("search-results").locator("li");
+  await expect(results.first()).toBeVisible();
+  // Port 22 is found by its common name, with type and description shown.
+  const port22 = results.filter({ has: page.getByRole("link", { name: "22", exact: true }) });
+  await expect(port22.locator(".type-badge")).toHaveText("port");
+  await expect(port22).toContainText(info.ports["22"].description);
+  // Software matching "ssh" is found too, typed as software.
+  const openssh = results.filter({
+    has: page.getByRole("link", { name: "openssh", exact: true }),
+  });
+  await expect(openssh.locator(".type-badge")).toHaveText("software");
+  await expect(openssh).toContainText(info.software["openssh"].description);
+});
+
+test("search finds hosts by hostname and shows host details", async ({
+  page,
+}) => {
+  await page.goto(`/search?q=${encodeURIComponent(someHost.hostname)}`);
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `for “${someHost.hostname}”`,
+  );
+  const item = page.getByTestId("host-item").filter({
+    has: page.getByRole("link", { name: someHost.hostname, exact: true }),
+  });
+  await expect(item.locator(".type-badge")).toHaveText("host");
+  await expect(item).toContainText(`(${someHost.id.slice(0, 12)}…)`);
+  await expect(item.getByRole("link", { name: someHost.os, exact: true })).toBeVisible();
+  await expect(item.getByRole("link", { name: someHost.ips[0], exact: true })).toBeVisible();
+  // No separate hostname entry duplicates the host.
+  await expect(
+    page.getByTestId("search-results").locator(".type-badge", { hasText: "hostname" }),
+  ).toHaveCount(0);
+});
+
+test("search matches many types and descriptions", async ({ page }) => {
+  await page.goto("/search?q=ubuntu");
+  const results = page.getByTestId("search-results");
+  const badges = await results.locator(".type-badge").allTextContents();
+  expect(badges).toContain("os");
+  expect(badges).toContain("group");
+  expect(badges).toContain("software"); // apt, dpkg mention Ubuntu/Debian
+  // Exact name matches come first.
+  await expect(results.locator("li").first().getByRole("link").first()).toHaveText(
+    "Ubuntu",
+  );
+
+  // A phrase that only appears in descriptions.
+  await page.goto(`/search?q=${encodeURIComponent("remote login")}`);
+  await expect(
+    page.getByTestId("search-results").getByRole("link", { name: "22", exact: true }),
+  ).toBeVisible();
+
+  // Searching a port number finds the port.
+  await page.goto("/search?q=5308");
+  await expect(
+    page.getByTestId("search-results").getByRole("link", { name: "5308", exact: true }),
+  ).toBeVisible();
+});
+
+test("search handles empty queries and no results", async ({ page }) => {
+  await page.goto("/search");
+  await expect(page.getByTestId("search-hint")).toBeVisible();
+  await expect(page.getByTestId("search-results")).toHaveCount(0);
+
+  await page.goto("/search?q=zzzzqqqq");
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    "No results for “zzzzqqqq”.",
+  );
+  await expect(page.getByTestId("search-results")).toHaveCount(0);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");
