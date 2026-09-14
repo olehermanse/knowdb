@@ -406,6 +406,39 @@ export function entriesOfType(type: EntryType): Entry[] {
     .sort((a, b) => collator.compare(sortKey(a), sortKey(b)));
 }
 
+// Length of the common case-insensitive prefix of two names.
+function commonPrefixLength(a: string, b: string): number {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  let i = 0;
+  while (i < x.length && i < y.length && x[i] === y[i]) i++;
+  return i;
+}
+
+export const SIMILAR_MIN_PREFIX = 3;
+
+export interface SimilarEntry {
+  entry: Entry;
+  // How many leading characters the names share.
+  common: number;
+}
+
+// Entries of the same type whose names start with the same 3 or more
+// characters, longest match first.
+export function similarEntries(entry: EntryRef): SimilarEntry[] {
+  const found: SimilarEntry[] = [];
+  for (const other of entries.values()) {
+    if (other.type !== entry.type || other.name === entry.name) continue;
+    const common = commonPrefixLength(entry.name, other.name);
+    if (common < SIMILAR_MIN_PREFIX) continue;
+    found.push({
+      entry: { type: other.type, name: other.name, hosts: [...other.hosts].sort() },
+      common,
+    });
+  }
+  return found.sort((a, b) => b.common - a.common || a.entry.name.localeCompare(b.entry.name));
+}
+
 export function countOfType(type: EntryType): number {
   let n = 0;
   for (const e of entries.values()) if (e.type === type) n++;

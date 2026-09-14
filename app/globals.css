@@ -386,6 +386,17 @@ a,
   color: var(--badge-fg);
 }
 
+.tab-disabled,
+.tab-disabled .muted {
+  color: var(--muted);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tab-disabled:hover {
+  background: transparent;
+}
+
 .tab-panel {
   padding-top: 0.5rem;
 }

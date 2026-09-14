@@ -25,7 +25,7 @@ const groupHref = (name: string) => `/entry/group/${encodeURIComponent(name)}`;
 // Related hosts are shown in tabs; open one by clicking its tab.
 async function openTab(
   page: import("@playwright/test").Page,
-  tab: "os" | "clouds" | "ports" | "hosts",
+  tab: "os" | "clouds" | "ports" | "hosts" | "similar",
 ) {
   await page.getByTestId(`${tab}-heading`).click();
   await expect(page.getByTestId(`tab-${tab}`)).toBeVisible();
@@ -1614,6 +1614,7 @@ test("front page buttons list everything of a type", async ({ page }) => {
   const buttons = page.getByTestId("type-buttons").getByRole("link");
   await expect(buttons).toHaveCount(12);
   // Buttons come before the random list and sit side by side.
+  await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
   const listBox = (await page.getByTestId("entry-list").boundingBox())!;
   expect(buttonsBox.y).toBeLessThan(listBox.y);
@@ -1687,6 +1688,66 @@ test("a version on a single operating system gets one plain sentence", async ({
   // No separate intro sentence or chart.
   await expect(page.getByTestId("os-section").locator("p")).toHaveCount(1);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
+});
+
+test("similar tab lists same-type entries sharing a name prefix", async ({
+  page,
+}) => {
+  const prefixLen = (a: string, b: string) => {
+    const x = a.toLowerCase(), y = b.toLowerCase();
+    let i = 0;
+    while (i < x.length && i < y.length && x[i] === y[i]) i++;
+    return i;
+  };
+  const allClasses = [...new Set(hosts.flatMap((h) => h.classes))];
+  const me = "ubuntu_22";
+  test.skip(!allClasses.includes(me), "no ubuntu_22 class in the generated data");
+  const expected = allClasses
+    .filter((c) => c !== me && prefixLen(c, me) >= 3)
+    .map((c) => ({ name: c, common: prefixLen(c, me) }))
+    .sort((a, b) => b.common - a.common || a.name.localeCompare(b.name));
+  expect(expected.length).toBeGreaterThan(1);
+
+  await page.goto(`/entry/class/${me}`);
+  const tab = page.getByTestId("similar-heading");
+  await expect(tab).toHaveText(`Similar (${expected.length})`);
+  await openTab(page, "similar");
+  await expect(page.getByTestId("similar-description")).toContainText(
+    "Other classes with names starting like ubuntu_22:",
+  );
+  const items = page.getByTestId("similar-item");
+  await expect(items).toHaveCount(expected.length);
+  await expect(items.getByRole("link")).toHaveText(expected.map((e) => e.name));
+  await expect(items.first().locator(".type-badge")).toHaveText("class");
+  await expect(items.first().getByRole("link")).toHaveAttribute(
+    "href",
+    `/entry/class/${encodeURIComponent(expected[0].name)}`,
+  );
+
+  // Software: apt and apt-get are similar; so are postfix and postgresql.
+  await page.goto("/entry/software/apt?tab=similar");
+  await expect(page.getByTestId("similar-item").getByRole("link")).toContainText(["apt-get"]);
+  await page.goto("/entry/software/postfix?tab=similar");
+  await expect(
+    page.getByTestId("similar-item").getByRole("link", { name: "postgresql", exact: true }),
+  ).toBeVisible();
+});
+
+test("similar tab is disabled when nothing is similar", async ({ page }) => {
+  // No other port starts with "22".
+  const ports = [...new Set(hosts.flatMap((h) => h["ports-listening"]))].map(String);
+  expect(ports.filter((p) => p !== "22" && p.startsWith("22")).length).toBe(0);
+  await page.goto("/entry/port/22");
+  const tab = page.getByTestId("similar-heading");
+  await expect(tab).toHaveText("Similar (0)");
+  await expect(tab).toHaveAttribute("aria-disabled", "true");
+  await expect(tab).toHaveClass(/tab-disabled/);
+  expect(await tab.evaluate((el) => el.tagName)).toBe("SPAN");
+  await expect(tab.getByRole("link")).toHaveCount(0);
+  // Asking for the disabled tab falls back to the first tab.
+  await page.goto("/entry/port/22?tab=similar");
+  await expect(page.getByTestId("tab-os")).toBeVisible();
+  await expect(page.getByTestId("similar")).toHaveCount(0);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

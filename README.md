@@ -16,7 +16,10 @@ Every entry page except a host's shows the hosts related to the entry in
 tabs: the operating systems they run (a pie chart and ranked list), the
 cloud providers they run on (likewise, with hosts outside any cloud as
 their own slice), the ports they listen on, and the host list itself.
-Software pages have a Versions tab as well. The operating systems tab is
+Software pages have a Versions tab as well, and every page has a Similar
+tab listing entries of the same type whose names start with the same three
+or more characters, longest match first; it is shown grayed out with (0)
+when there are none. The operating systems tab is
 hidden on OS pages, the clouds tab on cloud pages and the ports tab on
 port pages.
 

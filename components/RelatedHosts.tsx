@@ -7,9 +7,11 @@ import OperatingSystems from "@/components/OperatingSystems";
 import {
   aggregateClouds,
   aggregateOs,
+  describeEntry,
+  similarEntries,
+  TYPE_LABELS,
   aggregatePorts,
   aggregateVersions,
-  describeEntry,
   Entry,
   entryHref,
   filterSearchHref,
@@ -24,8 +26,8 @@ import {
 // run (pie chart), the ports they listen on, and the paginated host list.
 // The operating systems tab is hidden on OS pages and the ports tab on
 // port pages, where it would only repeat the entry itself.
-export type Tab = "versions" | "os" | "clouds" | "ports" | "hosts";
-const TAB_ORDER: Tab[] = ["versions", "os", "clouds", "ports", "hosts"];
+export type Tab = "versions" | "os" | "clouds" | "ports" | "hosts" | "similar";
+const TAB_ORDER: Tab[] = ["versions", "os", "clouds", "ports", "hosts", "similar"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -153,6 +155,31 @@ function portsDescription(entry: Entry): string {
   }
 }
 
+// Entries of the same type with similar names, longest shared prefix first.
+function SimilarPanel({ entry }: { entry: Entry }) {
+  const similar = similarEntries(entry);
+  return (
+    <>
+      <p className="muted" data-testid="similar-description">
+        Other {TYPE_LABELS[entry.type].toLowerCase()} with names starting like {entry.name}:
+      </p>
+      <ul className="entry-list" data-testid="similar">
+        {similar.map(({ entry: e, common }) => (
+          <li key={e.name} className="host-item" data-testid="similar-item" data-common={common}>
+            <span className="type-badge">{e.type}</span>
+            <div className="host-summary">
+              <div>
+                <EntryLink type={e.type} name={e.name} />
+              </div>
+              <div className="muted host-facts">{describeEntry(e)}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 // The ports the related hosts listen on, one card per port, ascending.
 function PortsPanel({ entry }: { entry: Entry }) {
   const ports = aggregatePorts(entry.hosts);
@@ -232,8 +259,12 @@ export default function RelatedHosts({
   page: number;
 }) {
   const tabs = visibleTabs(entry);
-  const current = tab && tabs.includes(tab) ? tab : tabs[0];
+  const similarCount = similarEntries(entry).length;
+  // Tabs with nothing to show are disabled: visible, gray, not clickable.
+  const disabled = new Set<Tab>(similarCount === 0 ? ["similar"] : []);
+  const current = tab && tabs.includes(tab) && !disabled.has(tab) ? tab : tabs[0];
   const counts: Record<Tab, number> = {
+    similar: similarCount,
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     os: aggregateOs(entry.hosts).length,
     clouds: aggregateClouds(entry.hosts).length,
@@ -246,6 +277,7 @@ export default function RelatedHosts({
     clouds: "Clouds",
     ports: "Ports",
     hosts: "Hosts",
+    similar: "Similar",
   };
   const testIds: Record<Tab, string> = {
     versions: "versions-heading",
@@ -253,22 +285,36 @@ export default function RelatedHosts({
     clouds: "clouds-heading",
     ports: "ports-heading",
     hosts: "hosts-heading",
+    similar: "similar-heading",
   };
   return (
     <section className="related-hosts" data-testid="related-hosts">
       <nav className="tabs" role="tablist" aria-label="Related hosts">
-        {tabs.map((t) => (
-          <Link
-            key={t}
-            href={tabHref(entry, t)}
-            role="tab"
-            aria-selected={t === current}
-            className={`tab${t === current ? " tab-current" : ""}`}
-            data-testid={testIds[t]}
-          >
-            {labels[t]} <span className="muted">({counts[t]})</span>
-          </Link>
-        ))}
+        {tabs.map((t) =>
+          disabled.has(t) ? (
+            <span
+              key={t}
+              role="tab"
+              aria-selected={false}
+              aria-disabled="true"
+              className="tab tab-disabled"
+              data-testid={testIds[t]}
+            >
+              {labels[t]} <span className="muted">({counts[t]})</span>
+            </span>
+          ) : (
+            <Link
+              key={t}
+              href={tabHref(entry, t)}
+              role="tab"
+              aria-selected={t === current}
+              className={`tab${t === current ? " tab-current" : ""}`}
+              data-testid={testIds[t]}
+            >
+              {labels[t]} <span className="muted">({counts[t]})</span>
+            </Link>
+          ),
+        )}
       </nav>
       <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
         {current === "versions" && <VersionsPanel entry={entry} />}
@@ -276,6 +322,7 @@ export default function RelatedHosts({
         {current === "clouds" && <CloudProviders entry={entry} />}
         {current === "ports" && <PortsPanel entry={entry} />}
         {current === "hosts" && <HostsPanel entry={entry} page={page} />}
+        {current === "similar" && <SimilarPanel entry={entry} />}
       </div>
     </section>
   );
