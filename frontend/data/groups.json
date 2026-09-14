@@ -1,0 +1,123 @@
+{
+  "_comment": "Groups of hosts, defined by case-insensitive substring matching. A host is in a group if, for every field listed under \"match\", at least one of the substrings matches. Edit freely; the frontend reads this file at build time.",
+  "groups": [
+    {
+      "name": "Linux",
+      "description": "Hosts running a Linux distribution.",
+      "match": { "os": ["Ubuntu", "Debian", "RHEL", "CentOS", "Fedora", "SUSE"] }
+    },
+    {
+      "name": "Ubuntu",
+      "description": "Hosts running Ubuntu.",
+      "match": { "os": ["Ubuntu"] }
+    },
+    {
+      "name": "Debian",
+      "description": "Hosts running Debian.",
+      "match": { "os": ["Debian"] }
+    },
+    {
+      "name": "Red Hat family",
+      "description": "Hosts running RHEL or a RHEL-like distribution (CentOS, Fedora).",
+      "match": { "os": ["RHEL", "CentOS", "Fedora"] }
+    },
+    {
+      "name": "SUSE",
+      "description": "Hosts running SUSE Linux Enterprise.",
+      "match": { "os": ["SUSE"] }
+    },
+    {
+      "name": "Windows",
+      "description": "Hosts running Windows Server.",
+      "match": { "os": ["Windows"] }
+    },
+    {
+      "name": "production",
+      "description": "Production hosts, based on hostname.",
+      "match": { "hostname": ["production"] }
+    },
+    {
+      "name": "staging",
+      "description": "Staging hosts, based on hostname.",
+      "match": { "hostname": ["staging"] }
+    },
+    {
+      "name": "testing",
+      "description": "Testing hosts, based on hostname.",
+      "match": { "hostname": ["testing"] }
+    },
+    {
+      "name": "dev",
+      "description": "Development hosts, based on hostname.",
+      "match": { "hostname": ["dev"] }
+    },
+    {
+      "name": "webservers",
+      "description": "Hosts serving web traffic, based on hostname.",
+      "match": { "hostname": ["webserver", "web"] }
+    },
+    {
+      "name": "load balancers",
+      "description": "Hosts distributing traffic to other hosts, based on hostname.",
+      "match": { "hostname": ["lb", "loadbalancer"] }
+    },
+    {
+      "name": "proxies",
+      "description": "Proxy servers, based on hostname.",
+      "match": { "hostname": ["proxy"] }
+    },
+    {
+      "name": "mail servers",
+      "description": "Hosts handling email, based on hostname.",
+      "match": { "hostname": ["mail", "smtp", "imap"] }
+    },
+    {
+      "name": "databases",
+      "description": "Database servers, based on hostname.",
+      "match": { "hostname": ["db", "database", "postgres", "mysql"] }
+    },
+    {
+      "name": "DNS servers",
+      "description": "Name servers, based on hostname.",
+      "match": { "hostname": ["dns"] }
+    },
+    {
+      "name": "NTP servers",
+      "description": "Time servers, based on hostname.",
+      "match": { "hostname": ["ntp"] }
+    },
+    {
+      "name": "firewalls",
+      "description": "Firewall hosts, based on hostname.",
+      "match": { "hostname": ["firewall", "fw"] }
+    },
+    {
+      "name": "hubs",
+      "description": "CFEngine hubs (policy servers), based on hostname.",
+      "match": { "hostname": ["hub"] }
+    },
+    {
+      "name": "backup servers",
+      "description": "Hosts storing backups, based on hostname.",
+      "match": { "hostname": ["backup"] }
+    },
+    {
+      "name": "monitoring",
+      "description": "Monitoring hosts, based on hostname.",
+      "match": { "hostname": ["monitor"] }
+    },
+    {
+      "name": "clients",
+      "description": "Client machines, based on hostname.",
+      "match": { "hostname": ["client"] }
+    },
+    {
+      "name": "production Linux",
+      "description": "Production hosts running Linux. Example of a group matching on both OS and hostname.",
+      "match": {
+        "os": ["Ubuntu", "Debian", "RHEL", "CentOS", "Fedora", "SUSE"],
+        "hostname": ["production"]
+      }
+    }
+  ]
+}

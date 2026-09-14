@@ -1,5 +1,6 @@
 import hostsJson from "@/data/hosts.json";
 import infoJson from "@/data/info.json";
+import groupsJson from "@/data/groups.json";
 
 export interface Host {
   os: string;
@@ -18,7 +19,35 @@ export type EntryType =
   | "ip"
   | "port"
   | "software"
-  | "user";
+  | "user"
+  | "group";
+
+// A group of hosts, defined in data/groups.json by case-insensitive
+// substring matching on host fields. A host is in the group if, for every
+// field listed in `match`, at least one of the substrings matches.
+export interface Group {
+  name: string;
+  description: string;
+  match: {
+    os?: string[];
+    hostname?: string[];
+  };
+}
+
+const groups = (groupsJson as { groups: Group[] }).groups;
+
+function fieldMatches(value: string, substrings: string[] | undefined): boolean {
+  if (!substrings) return true;
+  const lower = value.toLowerCase();
+  return substrings.some((s) => lower.includes(s.toLowerCase()));
+}
+
+export function hostInGroup(host: Host, group: Group): boolean {
+  return (
+    fieldMatches(host.os, group.match.os) &&
+    fieldMatches(host.hostname, group.match.hostname)
+  );
+}
 
 export interface EntryRef {
   type: EntryType;
@@ -39,16 +68,24 @@ function entryKey(type: EntryType, name: string): string {
 function buildIndex() {
   const hostsByKey = new Map<string, Host>();
   const entries = new Map<string, { type: EntryType; name: string; hosts: Set<string> }>();
+  const groupsByHost = new Map<string, string[]>();
 
-  const link = (type: EntryType, name: string, hostkey: string) => {
+  const ensure = (type: EntryType, name: string) => {
     const key = entryKey(type, name);
     let entry = entries.get(key);
     if (!entry) {
       entry = { type, name, hosts: new Set() };
       entries.set(key, entry);
     }
-    entry.hosts.add(hostkey);
+    return entry;
   };
+
+  const link = (type: EntryType, name: string, hostkey: string) => {
+    ensure(type, name).hosts.add(hostkey);
+  };
+
+  // Groups exist as entries even if no host currently matches them.
+  for (const group of groups) ensure("group", group.name);
 
   for (const host of hosts) {
     hostsByKey.set(host.id, host);
@@ -59,12 +96,15 @@ function buildIndex() {
     for (const port of host["ports-listening"]) link("port", String(port), host.id);
     for (const sw of host.software) link("software", sw, host.id);
     for (const user of host["local-users"]) link("user", user, host.id);
+    const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
+    for (const name of hostGroups) link("group", name, host.id);
+    groupsByHost.set(host.id, hostGroups);
   }
 
-  return { hostsByKey, entries };
+  return { hostsByKey, entries, groupsByHost };
 }
 
-const { hostsByKey, entries } = buildIndex();
+const { hostsByKey, entries, groupsByHost } = buildIndex();
 
 export function getEntry(type: EntryType, name: string): Entry | undefined {
   const entry = entries.get(entryKey(type, name));
@@ -74,6 +114,19 @@ export function getEntry(type: EntryType, name: string): Entry | undefined {
 
 export function getHost(hostkey: string): Host | undefined {
   return hostsByKey.get(hostkey);
+}
+
+export function getGroup(name: string): Group | undefined {
+  return groups.find((g) => g.name === name);
+}
+
+export function allGroups(): Group[] {
+  return groups;
+}
+
+// Names of the groups a host belongs to, in groups.json order.
+export function getHostGroups(hostkey: string): string[] {
+  return groupsByHost.get(hostkey) ?? [];
 }
 
 export function allEntries(): EntryRef[] {
@@ -114,6 +167,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "port",
   "software",
   "user",
+  "group",
 ];
 
 export function isEntryType(value: string): value is EntryType {
@@ -155,6 +209,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   port: "A network port a host is listening on.",
   software: "A software package installed on a host.",
   user: "A local user account present on a host.",
+  group: "A group of hosts, defined in groups.json.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -165,6 +220,10 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "software") {
     const known = getSoftwareInfo(entry.name);
     if (known) return known.description;
+  }
+  if (entry.type === "group") {
+    const group = getGroup(entry.name);
+    if (group) return group.description;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import {
@@ -5,8 +6,11 @@ import {
   Entry,
   entryHref,
   getEntry,
+  getGroup,
   getHost,
+  getHostGroups,
   getPortInfo,
+  Group,
   Host,
   isEntryType,
   uniqueHostForHostname,
@@ -19,6 +23,7 @@ function portLabel(port: number): string {
 }
 
 function HostDetails({ host }: { host: Host }) {
+  const groups = getHostGroups(host.id);
   return (
     <dl className="host-details" data-testid="host-details">
       <dt>Hostname</dt>
@@ -58,6 +63,35 @@ function HostDetails({ host }: { host: Host }) {
           <EntryLink key={user} type="user" name={user} />
         ))}
       </dd>
+      <dt>Groups</dt>
+      <dd className="inline-links" data-testid="host-groups">
+        {groups.length === 0 && <span className="muted">None</span>}
+        {groups.map((group) => (
+          <EntryLink key={group} type="group" name={group} />
+        ))}
+      </dd>
+    </dl>
+  );
+}
+
+// The matching rules of a group, so a user can see why hosts are in it.
+function GroupRules({ group }: { group: Group }) {
+  const rules: { field: string; substrings: string[] }[] = [];
+  if (group.match.os) rules.push({ field: "OS", substrings: group.match.os });
+  if (group.match.hostname)
+    rules.push({ field: "Hostname", substrings: group.match.hostname });
+  return (
+    <dl className="host-details" data-testid="group-rules">
+      {rules.map(({ field, substrings }) => (
+        <Fragment key={field}>
+          <dt>{field} contains</dt>
+          <dd className="inline-links">
+            {substrings.map((s) => (
+              <code key={s}>{s}</code>
+            ))}
+          </dd>
+        </Fragment>
+      ))}
     </dl>
   );
 }
@@ -102,6 +136,7 @@ export default async function EntryPage({
   }
 
   const host = type === "host" ? getHost(name) : undefined;
+  const group = type === "group" ? getGroup(name) : undefined;
 
   return (
     <>
@@ -121,6 +156,7 @@ export default async function EntryPage({
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>
+      {group && <GroupRules group={group} />}
       {host ? <HostDetails host={host} /> : <LinkedHosts entry={entry} />}
     </>
   );

@@ -1,6 +1,26 @@
 import { test, expect } from "@playwright/test";
 import hosts from "../data/hosts.json";
 import info from "../data/info.json";
+import groupsJson from "../data/groups.json";
+
+type Host = (typeof hosts)[number];
+type Group = (typeof groupsJson.groups)[number] & {
+  match: { os?: string[]; hostname?: string[] };
+};
+const groups = groupsJson.groups as Group[];
+
+// Mirrors the matching rules documented in groups.json.
+function contains(value: string, substrings?: string[]) {
+  if (!substrings) return true;
+  return substrings.some((s) => value.toLowerCase().includes(s.toLowerCase()));
+}
+function inGroup(host: Host, group: Group) {
+  return (
+    contains(host.os, group.match.os) &&
+    contains(host.hostname, group.match.hostname)
+  );
+}
+const groupHref = (name: string) => `/entry/group/${encodeURIComponent(name)}`;
 
 // Every generated host listens on ports 22 and 5308, so these entries are
 // guaranteed to exist and be linked to all hosts.
@@ -119,6 +139,73 @@ test("port and software descriptions come from info.json", async ({
   await expect(page.getByTestId("entry-description")).toHaveText(
     info.software["dpkg"].description,
   );
+});
+
+test("host page lists the groups the host is in", async ({ page }) => {
+  const windowsHost = hosts.find((h) => h.os.startsWith("Windows"))!;
+  await page.goto(`/entry/host/${encodeURIComponent(windowsHost.id)}`);
+  const hostGroups = page.getByTestId("host-groups");
+  const expected = groups.filter((g) => inGroup(windowsHost, g));
+  expect(expected.map((g) => g.name)).toContain("Windows");
+  await expect(hostGroups.locator("a")).toHaveCount(expected.length);
+  for (const group of expected) {
+    await expect(
+      hostGroups.getByRole("link", { name: group.name, exact: true }),
+    ).toHaveAttribute("href", groupHref(group.name));
+  }
+  await expect(
+    hostGroups.getByRole("link", { name: "Linux", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("group page lists matching hosts and its rules", async ({ page }) => {
+  const group = groups.find((g) => g.name === "production Linux")!;
+  await page.goto(groupHref(group.name));
+  await expect(page.getByTestId("entry-name")).toHaveText(group.name);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    group.description,
+  );
+
+  const rules = page.getByTestId("group-rules");
+  await expect(rules).toContainText("OS contains");
+  await expect(rules).toContainText("Hostname contains");
+  await expect(rules.locator("code", { hasText: "production" })).toBeVisible();
+
+  const expected = hosts.filter((h) => inGroup(h, group));
+  expect(expected.length).toBeGreaterThan(0);
+  const linked = page.getByTestId("linked-hosts").locator("li");
+  await expect(linked).toHaveCount(expected.length);
+  for (const host of expected.slice(0, 3)) {
+    await expect(
+      page.getByTestId("linked-hosts").getByRole("link", {
+        name: host.id,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+});
+
+test("groups are two-way linked: host -> group -> host", async ({ page }) => {
+  const ubuntuHost = hosts.find((h) => h.os.startsWith("Ubuntu"))!;
+  await page.goto(`/entry/host/${encodeURIComponent(ubuntuHost.id)}`);
+  await page
+    .getByTestId("host-groups")
+    .getByRole("link", { name: "Ubuntu", exact: true })
+    .click();
+  await expect(page).toHaveURL(groupHref("Ubuntu"));
+  await page
+    .getByTestId("linked-hosts")
+    .getByRole("link", { name: ubuntuHost.id, exact: true })
+    .click();
+  await expect(page.getByTestId("entry-name")).toContainText(ubuntuHost.id);
+});
+
+test("every group in groups.json has an entry page", async ({ page }) => {
+  for (const group of groups) {
+    const response = await page.goto(groupHref(group.name));
+    expect(response!.status(), group.name).toBe(200);
+    await expect(page.getByTestId("entry-name")).toHaveText(group.name);
+  }
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

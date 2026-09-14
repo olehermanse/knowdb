@@ -55,6 +55,30 @@ well-known ports and software. Each port has a short common name (like
 description. Edit this file to improve or extend the descriptions shown
 on entry pages; the frontend reads it at build time.
 
+## Groups of hosts
+
+`frontend/data/groups.json` defines groups of hosts, such as `Linux`,
+`Windows`, `webservers` and `production`. Groups show up as their own entry
+type in the UI: a host page lists the groups it belongs to, and a group page
+lists the hosts in it along with the rules that put them there.
+
+For now a group is defined by case-insensitive substring matching on the
+host's OS and hostname. A host is in the group if, for every field listed
+under `match`, at least one of the substrings matches:
+
+```json
+{
+  "name": "production Linux",
+  "description": "Production hosts running Linux.",
+  "match": {
+    "os": ["Ubuntu", "Debian", "RHEL", "CentOS", "Fedora", "SUSE"],
+    "hostname": ["production"]
+  }
+}
+```
+
+Edit the file to add or change groups; the frontend reads it at build time.
+
 ## Host data format
 
 The relevant information from a host looks like this:
