@@ -239,6 +239,27 @@ export function aggregateOs(hostkeys: string[]): OsCount[] {
     .sort((a, b) => b.hosts - a.hosts || a.os.localeCompare(b.os));
 }
 
+export interface CloudCount {
+  // Cloud provider name, or "" for hosts in your own data center.
+  cloud: string;
+  hosts: number;
+}
+
+// Aggregate the cloud providers of a set of hosts, most hosts first; hosts
+// without a provider are counted under "".
+export function aggregateClouds(hostkeys: string[]): CloudCount[] {
+  const counts = new Map<string, number>();
+  for (const hostkey of hostkeys) {
+    const host = hostsByKey.get(hostkey);
+    if (!host) continue;
+    const cloud = host["cloud-provider"] ?? "";
+    counts.set(cloud, (counts.get(cloud) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([cloud, hosts]) => ({ cloud, hosts }))
+    .sort((a, b) => b.hosts - a.hosts || a.cloud.localeCompare(b.cloud));
+}
+
 export interface VersionCount {
   version: string;
   // Number of the given hosts having this version installed.

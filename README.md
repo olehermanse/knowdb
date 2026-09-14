@@ -14,9 +14,11 @@ host is online.
 
 Every entry page except a host's shows the hosts related to the entry in
 tabs: the operating systems they run (a pie chart and ranked list), the
-ports they listen on, and the host list itself. Software pages have a
-Versions tab as well. The operating systems tab is hidden on OS pages and
-the ports tab on port pages.
+cloud providers they run on (likewise, with hosts outside any cloud as
+their own slice), the ports they listen on, and the host list itself.
+Software pages have a Versions tab as well. The operating systems tab is
+hidden on OS pages, the clouds tab on cloud pages and the ports tab on
+port pages.
 
 Lists of hosts show at most 50 hosts at a time, with pagination links
 below the list.

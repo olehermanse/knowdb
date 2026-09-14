@@ -25,7 +25,7 @@ const groupHref = (name: string) => `/entry/group/${encodeURIComponent(name)}`;
 // Related hosts are shown in tabs; open one by clicking its tab.
 async function openTab(
   page: import("@playwright/test").Page,
-  tab: "os" | "ports" | "hosts",
+  tab: "os" | "clouds" | "ports" | "hosts",
 ) {
   await page.getByTestId(`${tab}-heading`).click();
   await expect(page.getByTestId(`tab-${tab}`)).toBeVisible();
@@ -494,7 +494,7 @@ test("software page aggregates listening ports of its hosts", async ({
 
 test("os page aggregates listening ports of its hosts", async ({ page }) => {
   const os = someHost.os;
-  await page.goto(`/entry/os/${encodeURIComponent(os)}`);
+  await page.goto(`/entry/os/${encodeURIComponent(os)}?tab=ports`);
   await expectAggregatedPorts(
     page,
     hosts.filter((h) => h.os === os),
@@ -526,7 +526,7 @@ test("hosts and ports sections have short headings and descriptions", async ({
   await expect(page.getByTestId("ports-description")).toHaveText(
     "The hosts are listening to these ports:",
   );
-  await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}`);
+  await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}?tab=ports`);
   await expect(page.getByTestId("ports-description")).toHaveText(
     `The ${someHost.os} hosts are listening to these ports:`,
   );
@@ -1548,6 +1548,63 @@ test("hosts have a cloud provider, or none for their own data center", async ({
   await page.goto(`/search?q=${encodeURIComponent("cloud:AWS port:22")}`);
   await expect(page.getByTestId("search-summary")).toContainText(
     `${awsHosts.length} hosts matching cloud AWS, port 22`,
+  );
+});
+
+test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
+  const providerOf = (h: Host) => (h as unknown as { "cloud-provider": string })["cloud-provider"];
+  const counts = new Map<string, number>();
+  for (const h of hosts) counts.set(providerOf(h), (counts.get(providerOf(h)) ?? 0) + 1);
+  const ranked = [...counts.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  );
+  expect(ranked.length).toBeGreaterThan(1);
+  expect(counts.has("")).toBe(true);
+
+  // Port 22 is on every host, so its clouds tab covers the whole fleet.
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("clouds-heading")).toHaveText(`Clouds (${ranked.length})`);
+  await openTab(page, "clouds");
+  await expect(page.getByTestId("cloud-section")).toContainText(
+    "The hosts listening to this port run on these cloud providers:",
+  );
+  await expect(page.getByTestId("cloud-pie").locator("path")).toHaveCount(
+    Math.min(ranked.length, 8),
+  );
+  const items = page.getByTestId("cloud-list").locator("li");
+  await expect(items).toHaveCount(ranked.length);
+  for (const [i, [cloud, n]] of ranked.entries()) {
+    const item = items.nth(i);
+    await expect(item).toContainText(`${n} ${n === 1 ? "host" : "hosts"}`);
+    if (cloud) {
+      await expect(item.getByRole("link", { name: cloud, exact: true })).toHaveAttribute(
+        "href",
+        `/entry/cloud/${encodeURIComponent(cloud)}`,
+      );
+    } else {
+      // Hosts outside any cloud are a slice of their own, without a link.
+      await expect(item).toContainText("None (own data center)");
+      await expect(item.getByRole("link")).toHaveCount(0);
+    }
+  }
+
+  // Shown on group and OS pages, hidden on cloud pages and host pages.
+  await page.goto(groupHref("Windows"));
+  await expect(page.getByTestId("clouds-heading")).toBeVisible();
+  await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}`);
+  await expect(page.getByTestId("clouds-heading")).toBeVisible();
+  await page.goto("/entry/cloud/AWS");
+  await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
+  await expect(page.getByTestId("os-heading")).toBeVisible();
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
+
+  // A host's own MAC address page has one host, so one provider: a sentence.
+  const mac = someHost.macs[0];
+  await page.goto(`/entry/mac/${encodeURIComponent(mac)}?tab=clouds`);
+  const provider = providerOf(someHost);
+  await expect(page.getByTestId("cloud-summary")).toHaveText(
+    provider ? `All 1 host run on ${provider}.` : "All 1 host run in your own data center.",
   );
 });
 

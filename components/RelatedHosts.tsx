@@ -2,8 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import EntryLink from "@/components/EntryLink";
 import HostList from "@/components/HostList";
+import CloudProviders from "@/components/CloudProviders";
 import OperatingSystems from "@/components/OperatingSystems";
 import {
+  aggregateClouds,
   aggregateOs,
   aggregatePorts,
   aggregateVersions,
@@ -22,8 +24,8 @@ import {
 // run (pie chart), the ports they listen on, and the paginated host list.
 // The operating systems tab is hidden on OS pages and the ports tab on
 // port pages, where it would only repeat the entry itself.
-export type Tab = "versions" | "os" | "ports" | "hosts";
-const TAB_ORDER: Tab[] = ["versions", "os", "ports", "hosts"];
+export type Tab = "versions" | "os" | "clouds" | "ports" | "hosts";
+const TAB_ORDER: Tab[] = ["versions", "os", "clouds", "ports", "hosts"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -31,12 +33,14 @@ export function parseTab(raw: string | string[] | undefined): Tab | undefined {
 }
 
 // The versions tab exists only for software; the operating systems tab is
-// hidden on OS pages and the ports tab on port pages.
+// hidden on OS pages, the clouds tab on cloud pages and the ports tab on
+// port pages. (Host pages do not show this component at all.)
 export function visibleTabs(entry: Entry): Tab[] {
   return TAB_ORDER.filter(
     (tab) =>
       !(tab === "versions" && entry.type !== "software") &&
       !(tab === "os" && entry.type === "os") &&
+      !(tab === "clouds" && entry.type === "cloud") &&
       !(tab === "ports" && entry.type === "port"),
   );
 }
@@ -232,18 +236,21 @@ export default function RelatedHosts({
   const counts: Record<Tab, number> = {
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     os: aggregateOs(entry.hosts).length,
+    clouds: aggregateClouds(entry.hosts).length,
     ports: aggregatePorts(entry.hosts).length,
     hosts: entry.hosts.length,
   };
   const labels: Record<Tab, string> = {
     versions: "Versions",
     os: "Operating systems",
+    clouds: "Clouds",
     ports: "Ports",
     hosts: "Hosts",
   };
   const testIds: Record<Tab, string> = {
     versions: "versions-heading",
     os: "os-heading",
+    clouds: "clouds-heading",
     ports: "ports-heading",
     hosts: "hosts-heading",
   };
@@ -266,6 +273,7 @@ export default function RelatedHosts({
       <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
         {current === "versions" && <VersionsPanel entry={entry} />}
         {current === "os" && <OperatingSystems entry={entry} />}
+        {current === "clouds" && <CloudProviders entry={entry} />}
         {current === "ports" && <PortsPanel entry={entry} />}
         {current === "hosts" && <HostsPanel entry={entry} page={page} />}
       </div>
