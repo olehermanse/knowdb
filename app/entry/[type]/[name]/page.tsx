@@ -109,11 +109,11 @@ function AggregatedPorts({ entry }: { entry: Entry }) {
   const ports = aggregatePorts(entry.hosts);
   return (
     <>
-      <h2>
-        Listening ports <span className="muted">({ports.length})</span>
+      <h2 data-testid="ports-heading">
+        Ports <span className="muted">({ports.length})</span>
       </h2>
       <p className="muted">
-        Ports the linked hosts are listening on, with the number of hosts
+        Ports the hosts below are listening on, with the number of hosts
         listening on each.
       </p>
       <div className="inline-links" data-testid="aggregated-ports">
@@ -131,12 +131,37 @@ function AggregatedPorts({ entry }: { entry: Entry }) {
   );
 }
 
+// One sentence explaining how the listed hosts relate to the entry.
+function describeLinkedHosts(entry: Entry): string {
+  switch (entry.type) {
+    case "hostname":
+      return `Hosts with the hostname ${entry.name}.`;
+    case "os":
+      return `Hosts running ${entry.name}.`;
+    case "ip":
+      return `Hosts with the IP address ${entry.name}.`;
+    case "port":
+      return `Hosts listening on port ${entry.name}.`;
+    case "software":
+      return `Hosts with ${entry.name} installed.`;
+    case "user":
+      return `Hosts with a local user named ${entry.name}.`;
+    case "group":
+      return `Hosts in the group ${entry.name}.`;
+    default:
+      return `Hosts linked to ${entry.name}.`;
+  }
+}
+
 function LinkedHosts({ entry }: { entry: Entry }) {
   return (
     <>
-      <h2>
-        Linked hosts <span className="muted">({entry.hosts.length})</span>
+      <h2 data-testid="hosts-heading">
+        Hosts <span className="muted">({entry.hosts.length})</span>
       </h2>
+      <p className="muted" data-testid="hosts-description">
+        {describeLinkedHosts(entry)}
+      </p>
       <ul className="entry-list" data-testid="linked-hosts">
         {entry.hosts.map((hostkey) => {
           const host = getHost(hostkey);

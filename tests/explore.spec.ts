@@ -286,6 +286,26 @@ test("os page aggregates listening ports of its hosts", async ({ page }) => {
   );
 });
 
+test("hosts and ports sections have short headings and descriptions", async ({
+  page,
+}) => {
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("hosts-heading")).toHaveText(
+    `Hosts (${hosts.length})`,
+  );
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    "Hosts listening on port 22.",
+  );
+  await expect(page.getByText("Linked hosts")).toHaveCount(0);
+
+  await page.goto("/entry/software/dpkg");
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    "Hosts with dpkg installed.",
+  );
+  await expect(page.getByTestId("ports-heading")).toHaveText(/^Ports \(\d+\)$/);
+  await expect(page.getByText("Listening ports")).toHaveCount(0);
+});
+
 test("port and host pages do not aggregate ports", async ({ page }) => {
   await page.goto("/entry/port/22");
   await expect(page.getByTestId("aggregated-ports")).toHaveCount(0);
