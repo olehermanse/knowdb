@@ -31,7 +31,7 @@ function sectionText(type: EntryType, subject: string, name: string): string {
   if (type === "version") {
     return `The ${name} software version is installed on these operating systems:`;
   }
-  return `Operating systems of the hosts with this ${subject}, most hosts first.`;
+  return `Operating systems of the hosts with this ${subject}:`;
 }
 
 // "Operating systems" section: a pie chart and a ranked list of the

@@ -439,7 +439,7 @@ test("operating systems section is reused on software, port and user pages", asy
     [
       "/entry/user/root",
       (h) => h["local-users"].includes("root"),
-      "Operating systems of the hosts with this local user, most hosts first.",
+      "Operating systems of the hosts with this local user:",
     ],
   ];
   for (const [url, selects, text] of cases) {
