@@ -70,7 +70,7 @@ function ExternalLinks({ entry }: { entry: Entry }) {
   const links = getEntryLinks(entry);
   if (links.length === 0) return null;
   return (
-    <p className="external-links" data-testid="external-links">
+    <span className="external-links" data-testid="external-links">
       <span className="muted">Read more:</span>{" "}
       {links.map((link, i) => (
         <span key={link.url}>
@@ -80,7 +80,7 @@ function ExternalLinks({ entry }: { entry: Entry }) {
           </a>
         </span>
       ))}
-    </p>
+    </span>
   );
 }
 
@@ -149,11 +149,19 @@ export default async function EntryPage({
       <div className="entry-split">
         <div className="entry-pane entry-pane-left" data-testid="entry-pane">
           <SeeAlso entry={entry} />
-          <p className="muted" data-testid="entry-description">
-            {describeEntry(entry)}
+          {/* Description, the sentence with numbers, and read more links: one paragraph. */}
+          <p className="entry-text" data-testid="entry-text">
+            <span className="muted" data-testid="entry-description">
+              {describeEntry(entry)}
+            </span>
+            {summary && (
+              <>
+                {" "}
+                <span data-testid="entry-summary">{summary}</span>
+              </>
+            )}{" "}
+            <ExternalLinks entry={entry} />
           </p>
-          {summary && <p data-testid="entry-summary">{summary}</p>}
-          <ExternalLinks entry={entry} />
           {group && <GroupRules group={group} />}
           <RelatedHosts
             entry={entry}

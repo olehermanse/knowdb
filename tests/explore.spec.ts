@@ -1031,15 +1031,24 @@ test("entries show a sentence with numbers from the infrastructure", async ({
   );
 });
 
-test("the summary sentence sits between description and read more links", async ({
+test("description, summary and read more form one paragraph", async ({
   page,
 }) => {
   await page.goto("/entry/port/22");
-  const description = await page.getByTestId("entry-description").boundingBox();
-  const summary = await page.getByTestId("entry-summary").boundingBox();
-  const links = await page.getByTestId("external-links").boundingBox();
-  expect(description!.y).toBeLessThan(summary!.y);
-  expect(summary!.y).toBeLessThan(links!.y);
+  const paragraph = page.getByTestId("entry-text");
+  expect(await paragraph.evaluate((el) => el.tagName)).toBe("P");
+  // All three live inside it, in this order.
+  const description = await page.getByTestId("entry-description").textContent();
+  const summary = await page.getByTestId("entry-summary").textContent();
+  const text = (await paragraph.textContent())!;
+  expect(text.indexOf(description!)).toBe(0);
+  expect(text.indexOf(summary!)).toBeGreaterThan(text.indexOf(description!));
+  expect(text.indexOf("Read more:")).toBeGreaterThan(text.indexOf(summary!));
+  await expect(paragraph.getByTestId("external-links").getByRole("link").first()).toBeVisible();
+  // See also stays a separate line above it.
+  const seeAlso = (await page.getByTestId("see-also").boundingBox())!;
+  const box = (await paragraph.boundingBox())!;
+  expect(seeAlso.y + seeAlso.height).toBeLessThanOrEqual(box.y + 1);
 
   // Hosts get a plain-language summary: OS, environment and likely role.
   const envWords: Record<string, string> = {
