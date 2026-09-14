@@ -528,6 +528,49 @@ test("MAC addresses are linked both ways", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("user and OS pages show info.json descriptions or a fallback", async ({
+  page,
+}) => {
+  const users = info.users as Record<string, { description: string }>;
+  const oses = info.os as Record<string, { description: string }>;
+
+  await page.goto("/entry/user/root");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    users["root"].description,
+  );
+  await page.goto(`/entry/os/${encodeURIComponent("Ubuntu 24")}`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    oses["Ubuntu 24"].description,
+  );
+
+  // Every user and OS in the data is either described or gets the fallback.
+  const allUsers = [...new Set(hosts.flatMap((h) => h["local-users"]))];
+  for (const user of allUsers) {
+    await page.goto(`/entry/user/${encodeURIComponent(user)}`);
+    await expect(page.getByTestId("entry-description")).toHaveText(
+      users[user]?.description ?? "No information available about this user.",
+    );
+  }
+  const allOs = [...new Set(hosts.map((h) => h.os))];
+  for (const os of allOs) {
+    await page.goto(`/entry/os/${encodeURIComponent(os)}`);
+    await expect(page.getByTestId("entry-description")).toHaveText(
+      oses[os]?.description ??
+        "No information available about this operating system.",
+    );
+  }
+});
+
+test("missing OS information shows the fallback sentence", async ({ page }) => {
+  const oses = info.os as Record<string, { description: string }>;
+  const missing = [...new Set(hosts.map((h) => h.os))].find((os) => !oses[os]);
+  test.skip(!missing, "every operating system in the data is described");
+  await page.goto(`/entry/os/${encodeURIComponent(missing!)}`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    "No information available about this operating system.",
+  );
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

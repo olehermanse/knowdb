@@ -47,11 +47,13 @@ python3 scripts/generate_hosts.py && cp tmp/hosts.json data/hosts.json
 
 ## Descriptions of ports and software
 
-`data/info.json` is a hand-written file with descriptions of
-well-known ports and software. Each port has a short common name (like
-`ssh` for port 22) and a description, and each software package has a
-description. Edit this file to improve or extend the descriptions shown
-on entry pages; the frontend reads it at build time.
+`data/info.json` is a hand-written file with descriptions of well-known
+ports, software, local user accounts and operating systems. Each port has
+a short common name (like `ssh` for port 22) and a description; software,
+users and operating systems have a description. Entry pages show the
+description when one exists, and otherwise a sentence like "No information
+available about this user". Edit this file to improve or extend the
+descriptions; the frontend reads it at build time.
 
 ## Groups of hosts
 

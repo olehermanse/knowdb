@@ -271,9 +271,15 @@ export interface SoftwareInfo {
   description: string;
 }
 
+export interface DescribedInfo {
+  description: string;
+}
+
 interface Info {
   ports: Record<string, PortInfo>;
   software: Record<string, SoftwareInfo>;
+  users: Record<string, DescribedInfo>;
+  os: Record<string, DescribedInfo>;
 }
 
 const info = infoJson as Info;
@@ -285,6 +291,17 @@ export function getPortInfo(port: string | number): PortInfo | undefined {
 export function getSoftwareInfo(name: string): SoftwareInfo | undefined {
   return info.software[name];
 }
+
+export function getUserInfo(name: string): DescribedInfo | undefined {
+  return info.users[name];
+}
+
+export function getOsInfo(name: string): DescribedInfo | undefined {
+  return info.os[name];
+}
+
+export const NO_USER_INFO = "No information available about this user.";
+export const NO_OS_INFO = "No information available about this operating system.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -310,6 +327,12 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "group") {
     const group = getGroup(entry.name);
     if (group) return group.description;
+  }
+  if (entry.type === "user") {
+    return getUserInfo(entry.name)?.description ?? NO_USER_INFO;
+  }
+  if (entry.type === "os") {
+    return getOsInfo(entry.name)?.description ?? NO_OS_INFO;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
