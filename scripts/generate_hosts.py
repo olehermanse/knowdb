@@ -12,21 +12,30 @@ from pathlib import Path
 NUM_HOSTS = 100
 OUTPUT_PATH = Path(__file__).parent.parent / "tmp" / "hosts.json"
 
-OPERATING_SYSTEMS = [
-    "Ubuntu 24",
-    "Ubuntu 22",
-    "Ubuntu 20",
-    "Debian 12",
-    "Debian 11",
-    "RHEL 9",
-    "RHEL 8",
-    "CentOS 7",
-    "SUSE 15",
-    "Fedora 40",
-    "Windows 2016",
-    "Windows 2019",
-    "Windows 2022",
-]
+# Operating systems with relative weights, so the distribution is not
+# uniform: a few platforms are very common, most are less common, and some
+# are rare.
+OPERATING_SYSTEM_WEIGHTS = {
+    # Very common
+    "Ubuntu 24": 20,
+    "RHEL 8": 18,
+    "Debian 12": 16,
+    # Common
+    "Ubuntu 22": 8,
+    "RHEL 9": 8,
+    "Windows 2022": 6,
+    # Less common
+    "Windows 2016": 4,
+    "Ubuntu 26": 4,
+    "Debian 11": 3,
+    "Ubuntu 20": 3,
+    "Windows 2019": 2,
+    "Fedora 40": 2,
+    # Rare
+    "CentOS 7": 1,
+    "SUSE 15": 1,
+}
+OPERATING_SYSTEMS = list(OPERATING_SYSTEM_WEIGHTS)
 
 HOSTNAME_PREFIXES = ["production", "testing", "staging", "dev"]
 HOSTNAME_ROLES = [
@@ -203,7 +212,9 @@ def generate_users(os_name, hostname):
 
 
 def generate_host(used_hostnames):
-    os_name = random.choice(OPERATING_SYSTEMS)
+    os_name = random.choices(
+        OPERATING_SYSTEMS, weights=list(OPERATING_SYSTEM_WEIGHTS.values())
+    )[0]
     hostname = generate_hostname(used_hostnames)
     return {
         "os": os_name,

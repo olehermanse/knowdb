@@ -98,6 +98,7 @@ The relevant information from a host looks like this:
 Some guidelines for generating random hosts:
 
 - `os` Should be one of N different real operating systems in a hardcoded list (Ubuntu 24, Ubuntu 22, Debian 12, RHEL 9, Windows 2016, etc.).
+  The choice is weighted, not uniform: a few platforms are very common (Ubuntu 24, RHEL 8, Debian 12), most are less common (Windows 2016, Ubuntu 26, ...), and some are rare (SUSE 15, CentOS 7).
 - `id` should be a truly randomly generated SHA 256 hex ID, prefixed with `SHA=`
 - `hostname` should be unique and believable, combine 2 or three words like: production-hub, testing1-webserver-alpha, testing2-webserver-alpha. Prefixes to use could be production, testing, staging, dev, optionally with numbers, role / descriptions (middle word) could be hub, webserver, client, firewall, lb, etc. Last word could be common identifier words like alpha, beta, charlie, alice, bob, mercury, saturn, jupiter, zeus, etc.
 - `ips` should be valid IPv4 or IPv6 IP addresses.

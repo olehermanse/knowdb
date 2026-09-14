@@ -269,36 +269,50 @@ function hostsInGroup(name: string): Host[] {
   return hosts.filter((h) => inGroup(h, group));
 }
 
+// Name of the first group whose number of distinct operating systems
+// satisfies `predicate`, so the tests do not depend on the generated data.
+function groupWithOsCount(predicate: (n: number) => boolean): string {
+  const group = groups.find((g) =>
+    predicate(osCounts(hostsInGroup(g.name)).length),
+  );
+  expect(group, "no group with the wanted number of operating systems").toBeTruthy();
+  return group!.name;
+}
+
+const hostsLabel = (n: number) => `${n} ${n === 1 ? "host" : "hosts"}`;
+
 test("group page shows an operating system pie chart and ranked list", async ({
   page,
 }) => {
-  const expected = osCounts(hostsInGroup("Windows"));
-  expect(expected.length).toBe(3);
-  await page.goto(groupHref("Windows"));
+  // A group with a few operating systems, so nothing folds into "Other".
+  const name = groupWithOsCount((n) => n >= 2 && n <= 7);
+  const selected = hostsInGroup(name);
+  const expected = osCounts(selected);
+  await page.goto(groupHref(name));
 
   await expect(page.getByTestId("os-heading")).toHaveText(
-    "Operating systems (3)",
+    `Operating systems (${expected.length})`,
   );
   // One slice per operating system, each with a hover title.
   const slices = page.getByTestId("os-pie").locator("path");
-  await expect(slices).toHaveCount(3);
+  await expect(slices).toHaveCount(expected.length);
   await expect(slices.first()).toHaveAttribute("data-os", expected[0][0]);
   await expect(slices.first().locator("title")).toHaveText(
-    `${expected[0][0]}: ${expected[0][1]} hosts (${Math.round(
-      (expected[0][1] / hostsInGroup("Windows").length) * 100,
+    `${expected[0][0]}: ${hostsLabel(expected[0][1])} (${Math.round(
+      (expected[0][1] / selected.length) * 100,
     )}%)`,
   );
 
   // The list is ranked by most hosts first, and links to each OS.
   const items = page.getByTestId("os-list").locator("li");
-  await expect(items).toHaveCount(3);
+  await expect(items).toHaveCount(expected.length);
   for (const [i, [os, n]] of expected.entries()) {
     await expect(items.nth(i).getByRole("link")).toHaveText(os);
     await expect(items.nth(i).getByRole("link")).toHaveAttribute(
       "href",
       `/entry/os/${encodeURIComponent(os)}`,
     );
-    await expect(items.nth(i)).toContainText(`${n} hosts`);
+    await expect(items.nth(i)).toContainText(hostsLabel(n));
   }
 
   // The operating systems section comes before the ports section.
@@ -310,16 +324,16 @@ test("group page shows an operating system pie chart and ranked list", async ({
 test("operating systems beyond the palette fold into an Other slice", async ({
   page,
 }) => {
-  const expected = osCounts(hostsInGroup("Linux"));
-  expect(expected.length).toBeGreaterThan(8);
-  await page.goto(groupHref("Linux"));
+  const name = groupWithOsCount((n) => n > 8);
+  const expected = osCounts(hostsInGroup(name));
+  await page.goto(groupHref(name));
 
   const slices = page.getByTestId("os-pie").locator("path");
   await expect(slices).toHaveCount(8);
   await expect(slices.last()).toHaveAttribute("data-os", "Other");
   const otherHosts = expected.slice(7).reduce((sum, [, n]) => sum + n, 0);
   await expect(slices.last().locator("title")).toContainText(
-    `Other: ${otherHosts} hosts`,
+    `Other: ${hostsLabel(otherHosts)}`,
   );
 
   // The list still names every operating system, in ranked order.
@@ -333,14 +347,13 @@ test("operating systems beyond the palette fold into an Other slice", async ({
 test("group with a single operating system shows a sentence instead", async ({
   page,
 }) => {
-  const selected = hostsInGroup("SUSE");
-  const expected = osCounts(selected);
-  expect(expected.length).toBe(1);
-  await page.goto(groupHref("SUSE"));
+  const name = groupWithOsCount((n) => n === 1);
+  const expected = osCounts(hostsInGroup(name));
+  await page.goto(groupHref(name));
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
   await expect(page.getByTestId("os-list")).toHaveCount(0);
   await expect(page.getByTestId("os-summary")).toHaveText(
-    `This group has only 1 operating system: ${expected[0][0]} (${expected[0][1]} hosts).`,
+    `This group has only 1 operating system: ${expected[0][0]} (${hostsLabel(expected[0][1])}).`,
   );
   await expect(
     page.getByTestId("os-summary").getByRole("link", { name: expected[0][0] }),
