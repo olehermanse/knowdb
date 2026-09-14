@@ -574,3 +574,8 @@ a,
 .entry-pane-left > :first-child {
   margin-top: 0;
 }
+
+/* "See also: ..." reads as an aside. */
+.see-also {
+  font-style: italic;
+}

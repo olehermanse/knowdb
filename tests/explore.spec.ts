@@ -1191,6 +1191,7 @@ test("software and ports link to each other with See also", async ({
   await page.goto("/entry/software/postgresql");
   const seeAlso = page.getByTestId("see-also");
   await expect(seeAlso).toContainText("See also:");
+  await expect(seeAlso).toHaveCSS("font-style", "italic");
   await expect(
     seeAlso.getByRole("link", { name: "port 5432 (postgresql)", exact: true }),
   ).toHaveAttribute("href", "/entry/port/5432");
