@@ -122,6 +122,42 @@ RHEL_LIKE_SOFTWARE = ["yum", "rpm", "dnf"]
 SUSE_SOFTWARE = ["zypper", "rpm"]
 WINDOWS_SOFTWARE = ["powershell", "chocolatey", "windows-defender"]
 COMMON_LINUX_SOFTWARE = ["curl", "wget", "openssh", "cron", "rsyslog"]
+# Installed on every host, Linux and Windows alike.
+UNIVERSAL_SOFTWARE = ["cfengine"]
+
+# Believable versions per software, with weights so that most hosts share
+# the same few versions (the current release dominates, older ones linger).
+SOFTWARE_VERSIONS = {
+    "cfengine": [("3.27.0", 60), ("3.24.3", 25), ("3.21.7", 10), ("3.18.5", 5)],
+    "apache": [("2.4.62", 50), ("2.4.58", 30), ("2.4.57", 15), ("2.4.37", 5)],
+    "nginx": [("1.26.2", 50), ("1.24.0", 30), ("1.22.1", 15), ("1.18.0", 5)],
+    "haproxy": [("2.9.10", 50), ("2.8.12", 35), ("2.6.19", 15)],
+    "squid": [("6.10", 55), ("5.9", 30), ("4.15", 15)],
+    "mysql": [("8.0.39", 60), ("8.4.2", 25), ("5.7.44", 15)],
+    "postgresql": [("16.4", 50), ("15.8", 25), ("14.13", 15), ("13.16", 10)],
+    "postfix": [("3.9.0", 50), ("3.8.6", 35), ("3.7.11", 15)],
+    "dovecot": [("2.3.21", 70), ("2.3.16", 30)],
+    "bind": [("9.18.28", 60), ("9.16.50", 30), ("9.11.36", 10)],
+    "chrony": [("4.6", 50), ("4.5", 35), ("4.2", 15)],
+    "grafana": [("11.2.0", 55), ("10.4.8", 35), ("9.5.21", 10)],
+    "prometheus": [("2.54.1", 60), ("2.45.6", 30), ("2.37.9", 10)],
+    "rsync": [("3.3.0", 55), ("3.2.7", 35), ("3.1.3", 10)],
+    "rsyslog": [("8.2408.0", 50), ("8.2312.0", 30), ("8.2102.0", 20)],
+    "openssh": [("9.8p1", 45), ("9.6p1", 30), ("8.9p1", 15), ("8.7p1", 10)],
+    "curl": [("8.9.1", 45), ("8.5.0", 30), ("7.88.1", 15), ("7.76.1", 10)],
+    "wget": [("1.24.5", 50), ("1.21.4", 35), ("1.21.1", 15)],
+    "cron": [("3.0pl1-189", 50), ("3.0pl1-137", 30), ("1.7.0", 20)],
+    "dpkg": [("1.22.6", 55), ("1.21.22", 35), ("1.20.13", 10)],
+    "apt": [("2.7.14", 55), ("2.6.1", 35), ("2.4.13", 10)],
+    "apt-get": [("2.7.14", 55), ("2.6.1", 35), ("2.4.13", 10)],
+    "rpm": [("4.19.1.1", 45), ("4.16.1.3", 35), ("4.14.3", 20)],
+    "yum": [("4.14.0", 60), ("4.7.0", 25), ("3.4.3", 15)],
+    "dnf": [("4.14.0", 60), ("4.7.0", 40)],
+    "zypper": [("1.14.76", 70), ("1.14.64", 30)],
+    "powershell": [("7.4.5", 50), ("7.2.24", 25), ("5.1.20348", 25)],
+    "chocolatey": [("2.3.0", 60), ("2.2.2", 25), ("1.4.0", 15)],
+    "windows-defender": [("4.18.24080.9", 60), ("4.18.24070.5", 30), ("4.18.23110.3", 10)],
+}
 
 # Users by role keyword found in the hostname.
 ROLE_USERS = {
@@ -229,7 +265,19 @@ def generate_software(os_name, hostname):
     role = role_of(hostname)
     if role and not os_name.startswith("Windows"):
         software = software + ROLE_SOFTWARE.get(role, [])
-    return sorted(set(software))
+    return sorted(set(software + UNIVERSAL_SOFTWARE))
+
+
+def generate_software_versions(software):
+    versions = {}
+    for name in software:
+        choices = SOFTWARE_VERSIONS.get(name)
+        if not choices:
+            continue
+        versions[name] = random.choices(
+            [v for v, _ in choices], weights=[w for _, w in choices]
+        )[0]
+    return versions
 
 
 def generate_users(os_name, hostname):
@@ -255,6 +303,7 @@ def generate_host(used_hostnames, used_macs):
         OPERATING_SYSTEMS, weights=list(OPERATING_SYSTEM_WEIGHTS.values())
     )[0]
     hostname = generate_hostname(used_hostnames)
+    software = generate_software(os_name, hostname)
     return {
         "os": os_name,
         "id": generate_id(),
@@ -262,7 +311,8 @@ def generate_host(used_hostnames, used_macs):
         "ips": generate_ips(),
         "macs": generate_macs(used_macs),
         "ports-listening": generate_ports(hostname),
-        "software": generate_software(os_name, hostname),
+        "software": software,
+        "software-versions": generate_software_versions(software),
         "local-users": generate_users(os_name, hostname),
         "classes": generate_classes(os_name, hostname),
     }

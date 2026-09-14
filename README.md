@@ -129,6 +129,14 @@ for each operating system from `data/classes.json` and adds
 `policy_server` and `am_policy_hub` on hubs. Common classes are described
 in `data/info.json` under `classes`.
 
+## Software versions
+
+Each host reports the version of every installed piece of software in
+`software-versions`. Versions are their own entry type, named like
+`apache 2.4.62`: a software page lists its versions with host counts, and a
+version page links back to the software and lists the hosts on it.
+`cfengine` is installed on every host.
+
 ## Host data format
 
 The relevant information from a host looks like this:
@@ -141,7 +149,8 @@ The relevant information from a host looks like this:
   "ips": ["124.56.78.77", "127.0.0.1"],
   "macs": ["00:50:56:a1:b2:c3"],
   "ports-listening": [22, 80, 443, 5308],
-  "software": ["apache", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
+  "software": ["apache", "cfengine", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
+  "software-versions": {"apache": "2.4.62", "cfengine": "3.27.0", "dpkg": "1.22.6"},
   "local-users": ["root", "nickanderson"],
   "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"]
 }
@@ -164,5 +173,6 @@ Some guidelines for generating random hosts:
   Should make sense wrt the name, so a webserver would have 443 and 80 listening, for example.
 - `software` should also be based on name - all Ubuntu should have dpkg, apt and apt-get, RHEL should have yum, rpm, dnf, and so on.
 - `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
+- `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
 - `local-users` should include root on all Linux machines, and Administrator on Windows.
   Make sure to include some common system / application users for things like email software, printing, etc.

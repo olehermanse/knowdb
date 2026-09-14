@@ -66,11 +66,11 @@ async function expectAggregatedPorts(
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
 
-test("front page shows 10 random entries", async ({ page }) => {
+test("front page shows 12 random entries", async ({ page }) => {
   await page.goto("/");
   const items = page.getByTestId("entry-list").locator("li");
-  await expect(items).toHaveCount(10);
-  await expect(items.locator("a.entry-link")).toHaveCount(10);
+  await expect(items).toHaveCount(12);
+  await expect(items.locator("a.entry-link")).toHaveCount(12);
 });
 
 test("front page always shows at least one entry of each type", async ({
@@ -87,12 +87,13 @@ test("front page always shows at least one entry of each type", async ({
     "user",
     "group",
     "class",
+    "version",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
     const badges = page.getByTestId("entry-list").locator(".type-badge");
-    await expect(badges).toHaveCount(10);
+    await expect(badges).toHaveCount(12);
     const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
     for (const type of allTypes) {
       expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
@@ -566,7 +567,10 @@ test("port and host pages do not aggregate ports", async ({ page }) => {
 test("host lists show abbreviated ID, OS and IP addresses", async ({
   page,
 }) => {
-  await page.goto("/entry/port/22");
+  // Hosts are listed 50 per page in host key order; go to our host's page.
+  const sortedIds = hosts.map((h) => h.id).sort();
+  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
+  await page.goto(`/entry/port/22${ourPage > 1 ? `?page=${ourPage}` : ""}`);
   const item = page
     .getByTestId("linked-hosts")
     .locator("li", { hasText: someHost.hostname })
@@ -877,9 +881,12 @@ test("entries show a sentence with numbers from the infrastructure", async ({
 }) => {
   // Software: hosts and operating systems.
   const cronHosts = hosts.filter((h) => h.software.includes("cron"));
+  const cronVersions = new Set(
+    cronHosts.map((h) => (h["software-versions"] as unknown as Record<string, string>)["cron"]),
+  ).size;
   await page.goto("/entry/software/cron");
   await expect(page.getByTestId("entry-summary")).toHaveText(
-    `cron is installed on ${pluralize(cronHosts.length, "host")} in your infrastructure, across ${pluralize(distinctOs(cronHosts), "operating system")}.`,
+    `cron is installed on ${pluralize(cronHosts.length, "host")} in your infrastructure, across ${pluralize(distinctOs(cronHosts), "operating system")}, in ${pluralize(cronVersions, "different version")}.`,
   );
 
   // OS: hosts and different ports.
@@ -1202,6 +1209,76 @@ test("hosts have classes which work like groups", async ({ page }) => {
   await expect(page.getByTestId("entry-description")).toHaveText(
     "No information available about this class.",
   );
+});
+
+test("software has versions which are entries of their own", async ({
+  page,
+}) => {
+  // cfengine is on every host, with a handful of shared versions.
+  expect(hosts.every((h) => h.software.includes("cfengine"))).toBe(true);
+  const versions = new Map<string, number>();
+  for (const h of hosts) {
+    const v = (h["software-versions"] as unknown as Record<string, string>)["cfengine"];
+    expect(v).toBeTruthy();
+    versions.set(v, (versions.get(v) ?? 0) + 1);
+  }
+  expect(versions.size).toBeGreaterThan(1);
+  expect(versions.size).toBeLessThan(10);
+
+  await page.goto("/entry/software/cfengine");
+  await expect(page.getByTestId("versions-heading")).toHaveText(
+    `Versions (${versions.size})`,
+  );
+  const items = page.getByTestId("version-item");
+  await expect(items).toHaveCount(versions.size);
+  // Most hosts first, each version linking to its own entry.
+  const ranked = [...versions.entries()].sort((a, b) => b[1] - a[1]);
+  const [topVersion, topCount] = ranked[0];
+  await expect(items.first()).toContainText(topVersion);
+  await expect(items.first()).toContainText(`${topCount} hosts`);
+  await expect(items.first().getByRole("link")).toHaveAttribute(
+    "href",
+    `/entry/version/${encodeURIComponent(`cfengine ${topVersion}`)}`,
+  );
+  await expect(page.getByTestId("entry-summary")).toContainText(
+    `in ${versions.size} different versions`,
+  );
+
+  // The version page links back to the software and lists its hosts.
+  await items.first().getByRole("link").click();
+  await expect(page.getByTestId("entry-name")).toHaveText(`cfengine ${topVersion}`);
+  await expect(page.getByTestId("entry-description")).toContainText(
+    `Version ${topVersion} of cfengine.`,
+  );
+  await expect(
+    page.getByTestId("see-also").getByRole("link", { name: "software cfengine", exact: true }),
+  ).toHaveAttribute("href", "/entry/software/cfengine");
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${topCount})`);
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    `Hosts with cfengine version ${topVersion} installed.`,
+  );
+  await expect(page.getByTestId("os-heading")).toBeVisible();
+});
+
+test("host pages show software versions as links", async ({ page }) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const software = page.getByTestId("host-software");
+  const versionsOf = someHost["software-versions"] as unknown as Record<string, string>;
+  for (const sw of someHost.software) {
+    await expect(software.getByRole("link", { name: sw, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/software/${encodeURIComponent(sw)}`,
+    );
+    const version = versionsOf[sw];
+    if (!version) continue;
+    const item = software.locator(".software-with-version", {
+      has: page.getByRole("link", { name: sw, exact: true }),
+    });
+    await expect(item.getByRole("link", { name: version, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/version/${encodeURIComponent(`${sw} ${version}`)}`,
+    );
+  }
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

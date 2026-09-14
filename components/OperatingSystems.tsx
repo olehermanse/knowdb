@@ -7,6 +7,7 @@ export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
   group: "group",
   class: "class",
   software: "software",
+  version: "software version",
   port: "port",
   user: "local user",
 };

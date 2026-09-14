@@ -10,6 +10,8 @@ export interface Host {
   macs: string[];
   "ports-listening": number[];
   software: string[];
+  // Version of each installed software, keyed by software name.
+  "software-versions": Record<string, string>;
   "local-users": string[];
   // CFEngine classes reported by the host, e.g. "linux", "ubuntu_22".
   classes: string[];
@@ -25,7 +27,9 @@ export type EntryType =
   | "software"
   | "user"
   | "group"
-  | "class";
+  | "class"
+  // A specific version of a piece of software, named "<software> <version>".
+  | "version";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -64,10 +68,22 @@ export interface Entry extends EntryRef {
   hosts: string[];
 }
 
-const hosts = hostsJson as Host[];
+const hosts = hostsJson as unknown as Host[];
 
 function entryKey(type: EntryType, name: string): string {
   return `${type}:${name}`;
+}
+
+// Version entries are named "<software> <version>", e.g. "apache 2.4.62".
+export function versionEntryName(software: string, version: string): string {
+  return `${software} ${version}`;
+}
+
+export function parseVersionEntryName(name: string): { software: string; version: string } {
+  const i = name.indexOf(" ");
+  return i < 0
+    ? { software: name, version: "" }
+    : { software: name.slice(0, i), version: name.slice(i + 1) };
 }
 
 function buildIndex() {
@@ -100,7 +116,11 @@ function buildIndex() {
     for (const ip of host.ips) link("ip", ip, host.id);
     for (const mac of host.macs) link("mac", mac, host.id);
     for (const port of host["ports-listening"]) link("port", String(port), host.id);
-    for (const sw of host.software) link("software", sw, host.id);
+    for (const sw of host.software) {
+      link("software", sw, host.id);
+      const version = host["software-versions"]?.[sw];
+      if (version) link("version", versionEntryName(sw, version), host.id);
+    }
     for (const user of host["local-users"]) link("user", user, host.id);
     for (const cls of host.classes ?? []) link("class", cls, host.id);
     const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
@@ -178,7 +198,43 @@ export function aggregateOs(hostkeys: string[]): OsCount[] {
 }
 
 // Entry types whose pages aggregate information about their linked hosts.
-export const AGGREGATING_TYPES: EntryType[] = ["group", "class", "software", "os"];
+export const AGGREGATING_TYPES: EntryType[] = ["group", "class", "software", "version", "os"];
+
+export interface VersionCount {
+  version: string;
+  // Number of the given hosts having this version installed.
+  hosts: number;
+}
+
+// The versions of a piece of software across the given hosts, most hosts
+// first; ties are broken by version string, newest-looking first.
+export function aggregateVersions(software: string, hostkeys: string[]): VersionCount[] {
+  const counts = new Map<string, number>();
+  for (const hostkey of hostkeys) {
+    const version = hostsByKey.get(hostkey)?.["software-versions"]?.[software];
+    if (version) counts.set(version, (counts.get(version) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([version, hosts]) => ({ version, hosts }))
+    .sort((a, b) => b.hosts - a.hosts || compareVersions(b.version, a.version));
+}
+
+// Compare dotted version strings numerically where possible.
+export function compareVersions(a: string, b: string): number {
+  const pa = a.split(/[.\-p]/);
+  const pb = b.split(/[.\-p]/);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = Number(pa[i] ?? 0);
+    const nb = Number(pb[i] ?? 0);
+    if (Number.isNaN(na) || Number.isNaN(nb)) {
+      const c = (pa[i] ?? "").localeCompare(pb[i] ?? "");
+      if (c !== 0) return c;
+    } else if (na !== nb) {
+      return na - nb;
+    }
+  }
+  return 0;
+}
 
 export function allEntries(): EntryRef[] {
   return [...entries.values()].map(({ type, name }) => ({ type, name }));
@@ -258,6 +314,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "user",
   "group",
   "class",
+  "version",
 ];
 
 export function isEntryType(value: string): value is EntryType {
@@ -420,6 +477,9 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getIpInfo(entry.name);
     case "class":
       return getClassInfo(entry.name);
+    case "version":
+      // Versions share the software's description, links and logo.
+      return getSoftwareInfo(parseVersionEntryName(entry.name).software);
     default:
       return undefined;
   }
@@ -435,7 +495,9 @@ export function getEntryLogo(entry: EntryRef): string | undefined {
 // entries that exist in the infrastructure are returned.
 export function getSeeAlso(entry: EntryRef): EntryRef[] {
   const related: EntryRef[] = [];
-  if (entry.type === "software") {
+  if (entry.type === "version") {
+    related.push({ type: "software", name: parseVersionEntryName(entry.name).software });
+  } else if (entry.type === "software") {
     for (const port of getSoftwareInfo(entry.name)?.ports ?? []) {
       related.push({ type: "port", name: String(port) });
     }
@@ -472,6 +534,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   user: "A local user account present on a host.",
   group: "A group of hosts, defined in groups.json.",
   class: "A CFEngine class reported by hosts, describing something true about them.",
+  version: "A specific version of a piece of software.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -499,6 +562,11 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "class") {
     return getClassInfo(entry.name)?.description ?? NO_CLASS_INFO;
+  }
+  if (entry.type === "version") {
+    const { software, version } = parseVersionEntryName(entry.name);
+    const known = getSoftwareInfo(software)?.description;
+    return `Version ${version} of ${software}.${known ? ` ${known}` : ""}`;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
@@ -559,8 +627,15 @@ export function summarizeEntry(entry: Entry): string {
   const oses = () => plural(aggregateOs(entry.hosts).length, "operating system");
   const ports = () => plural(aggregatePorts(entry.hosts).length, "different port");
   switch (entry.type) {
-    case "software":
-      return `${entry.name} is installed on ${hosts} in your infrastructure, across ${oses()}.`;
+    case "software": {
+      const versions = aggregateVersions(entry.name, entry.hosts).length;
+      const versionsText = versions > 0 ? `, in ${plural(versions, "different version")}` : "";
+      return `${entry.name} is installed on ${hosts} in your infrastructure, across ${oses()}${versionsText}.`;
+    }
+    case "version": {
+      const { software, version } = parseVersionEntryName(entry.name);
+      return `${software} ${version} is installed on ${hosts} in your infrastructure, across ${oses()}.`;
+    }
     case "os":
       return `In your infrastructure, you have ${entry.name} installed on ${hosts}, and these hosts are listening to ${ports()}.`;
     case "port":

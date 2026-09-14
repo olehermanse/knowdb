@@ -28,6 +28,9 @@ import {
   seeAlsoLabel,
   summarizeEntry,
   uniqueHostForHostname,
+  versionEntryName,
+  aggregateVersions,
+  parseVersionEntryName,
 } from "@/lib/data";
 
 // "22 (ssh)" for well-known ports, just the number otherwise.
@@ -72,10 +75,25 @@ function HostDetails({ host }: { host: Host }) {
         ))}
       </dd>
       <dt>Software</dt>
-      <dd className="inline-links">
-        {host.software.map((sw) => (
-          <EntryLink key={sw} type="software" name={sw} />
-        ))}
+      <dd className="inline-links" data-testid="host-software">
+        {host.software.map((sw) => {
+          const version = host["software-versions"]?.[sw];
+          return (
+            <span key={sw} className="software-with-version">
+              <EntryLink type="software" name={sw} />
+              {version && (
+                <>
+                  {" "}
+                  <EntryLink
+                    type="version"
+                    name={versionEntryName(sw, version)}
+                    label={version}
+                  />
+                </>
+              )}
+            </span>
+          );
+        })}
       </dd>
       <dt>Local users</dt>
       <dd className="inline-links">
@@ -119,6 +137,32 @@ function GroupRules({ group }: { group: Group }) {
         </Fragment>
       ))}
     </dl>
+  );
+}
+
+// Versions of a piece of software across its hosts, most hosts first.
+function Versions({ entry }: { entry: Entry }) {
+  const versions = aggregateVersions(entry.name, entry.hosts);
+  if (versions.length === 0) return null;
+  return (
+    <>
+      <h2 data-testid="versions-heading">
+        Versions <span className="muted">({versions.length})</span>
+      </h2>
+      <p className="muted">Versions of {entry.name} installed on the hosts:</p>
+      <div className="inline-links" data-testid="versions">
+        {versions.map(({ version, hosts }) => (
+          <span key={version} data-testid="version-item">
+            <EntryLink
+              type="version"
+              name={versionEntryName(entry.name, version)}
+              label={version}
+            />{" "}
+            <span className="muted">({hostsLabel(hosts)})</span>
+          </span>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -233,6 +277,10 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts in the group ${entry.name}.`;
     case "class":
       return `Hosts with the class ${entry.name} set.`;
+    case "version": {
+      const { software, version } = parseVersionEntryName(entry.name);
+      return `Hosts with ${software} version ${version} installed.`;
+    }
     default:
       return `Hosts linked to ${entry.name}.`;
   }
@@ -316,6 +364,7 @@ export default async function EntryPage({
       <p data-testid="entry-summary">{summarizeEntry(entry)}</p>
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
+      {type === "software" && <Versions entry={entry} />}
       {hasOsSection(type) && <OperatingSystems entry={entry} />}
       {AGGREGATING_TYPES.includes(type) && <AggregatedPorts entry={entry} />}
       {host ? (
