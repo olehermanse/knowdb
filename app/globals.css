@@ -471,9 +471,10 @@ a,
   max-height: 85vh;
   background: var(--background);
   color: var(--foreground);
-  /* Popovers are position: fixed by default; centre in the viewport. */
+  /* Popovers are position: fixed by default. Pin the top and centre
+     horizontally, so filtering only changes the height, not the position. */
   inset: 0;
-  margin: auto;
+  margin: 8vh auto auto;
 }
 
 .list-modal::backdrop {

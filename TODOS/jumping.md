@@ -1,1 +1,0 @@
-The modal for classes and software is jumping too much as filtering is happening. Instead of being centered when size changes, the top should be fixed, and the size / height should be the only thing changing.

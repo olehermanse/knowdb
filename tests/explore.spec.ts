@@ -1891,10 +1891,17 @@ test("software and classes open in a filterable modal", async ({ page }) => {
   const second = (await items.nth(1).boundingBox())!;
   expect(second.y).toBeGreaterThan(first.y + first.height - 1);
 
-  // Filtering as you type.
+  // Filtering as you type. The dialog keeps its top edge; only its height
+  // changes, so it does not jump around.
+  const before = (await dialog.boundingBox())!;
   const filter = page.getByTestId("classes-modal-filter");
   await expect(filter).toBeFocused();
   await filter.fill("cfengine");
+  await expect(items).toHaveCount(someHost.classes.filter((c) => c.includes("cfengine")).length);
+  const after = (await dialog.boundingBox())!;
+  expect(Math.abs(after.y - before.y)).toBeLessThan(1);
+  expect(Math.abs(after.x - before.x)).toBeLessThan(1);
+  expect(after.height).toBeLessThan(before.height);
   const matching = someHost.classes.filter((c) => c.includes("cfengine"));
   await expect(items).toHaveCount(matching.length);
   await expect(items.getByRole("link")).toHaveText(matching);
