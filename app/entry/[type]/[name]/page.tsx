@@ -150,10 +150,8 @@ export default async function EntryPage({
         <div className="entry-pane entry-pane-left" data-testid="entry-pane">
           <SeeAlso entry={entry} />
           {/* Description, the sentence with numbers, and read more links: one paragraph. */}
-          <p className="entry-text" data-testid="entry-text">
-            <span className="muted" data-testid="entry-description">
-              {describeEntry(entry)}
-            </span>
+          <p className="entry-text muted" data-testid="entry-text">
+            <span data-testid="entry-description">{describeEntry(entry)}</span>
             {summary && (
               <>
                 {" "}

@@ -1045,6 +1045,14 @@ test("description, summary and read more form one paragraph", async ({
   expect(text.indexOf(summary!)).toBeGreaterThan(text.indexOf(description!));
   expect(text.indexOf("Read more:")).toBeGreaterThan(text.indexOf(summary!));
   await expect(paragraph.getByTestId("external-links").getByRole("link").first()).toBeVisible();
+  // The three parts share one style (same faded colour, same size).
+  const style = (id: string) =>
+    page.getByTestId(id).evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return `${cs.color} ${cs.fontSize} ${cs.fontStyle}`;
+    });
+  expect(await style("entry-summary")).toBe(await style("entry-description"));
+  expect(await style("external-links")).toBe(await style("entry-description"));
   // See also stays a separate line above it.
   const seeAlso = (await page.getByTestId("see-also").boundingBox())!;
   const box = (await paragraph.boundingBox())!;
