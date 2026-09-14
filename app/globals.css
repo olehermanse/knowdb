@@ -583,9 +583,3 @@ a,
 .see-also {
   font-style: italic;
 }
-
-/* "First seen ..., last seen ..." beneath titles: small and faded. */
-.seen-line {
-  font-size: 0.9rem;
-  margin-top: -0.5rem;
-}

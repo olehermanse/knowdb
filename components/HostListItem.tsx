@@ -21,8 +21,7 @@ export default function HostListItem({ host }: { host: Host }) {
             OS: <EntryLink type="os" name={host.os} />
           </span>
           <span>
-            First seen <Timestamp iso={host["first-seen"]} />, last seen{" "}
-            <Timestamp iso={host["last-seen"]} />.
+            Last seen: <Timestamp iso={host["last-seen"]} />
           </span>
           <span>
             IPs:{" "}

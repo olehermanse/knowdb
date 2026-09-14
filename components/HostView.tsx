@@ -1,7 +1,7 @@
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
-import SeenLine from "@/components/SeenLine";
+import Timestamp from "@/components/Timestamp";
 import {
   describeHost,
   entryHref,
@@ -39,7 +39,15 @@ function HostDetails({ host }: { host: Host }) {
               <span className="muted">None</span>
             )}
           </dd>
-          <dt>Local users</dt>
+          <dt>First seen</dt>
+        <dd>
+          <Timestamp iso={host["first-seen"]} testId="host-first-seen" />
+        </dd>
+        <dt>Last seen</dt>
+        <dd>
+          <Timestamp iso={host["last-seen"]} testId="host-last-seen" />
+        </dd>
+        <dt>Local users</dt>
           <dd className="inline-links">
             {host["local-users"].map((user) => (
               <EntryLink key={user} type="user" name={user} />
@@ -146,7 +154,6 @@ export default function HostView({ host, embedded = false }: { host: Host; embed
           {host.hostname} <span className="muted host-id">({host.id})</span>
         </h1>
       </div>
-      <SeenLine seen={{ first: host["first-seen"], last: host["last-seen"] }} testId={tid("host")} />
       <p data-testid={tid("entry-summary")}>{describeHost(host)}</p>
       <HostDetails host={host} />
     </div>
