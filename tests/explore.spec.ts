@@ -571,6 +571,47 @@ test("missing OS information shows the fallback sentence", async ({ page }) => {
   );
 });
 
+test("entries with links in info.json show them as external links", async ({
+  page,
+}) => {
+  const port22 = info.ports["22"] as { links?: { title: string; url: string }[] };
+  expect(port22.links!.length).toBeGreaterThan(0);
+  await page.goto("/entry/port/22");
+  const links = page.getByTestId("external-links");
+  await expect(links).toContainText("Read more:");
+  for (const link of port22.links!) {
+    const a = links.getByRole("link", { name: link.title, exact: true });
+    await expect(a).toHaveAttribute("href", link.url);
+    await expect(a).toHaveAttribute("target", "_blank");
+    await expect(a).toHaveAttribute("rel", /noopener/);
+  }
+
+  // Entries can have several links; every host listens on port 5308.
+  const port5308 = info.ports["5308"] as { links: unknown[] };
+  expect(port5308.links.length).toBeGreaterThan(1);
+  await page.goto("/entry/port/5308");
+  await expect(page.getByTestId("external-links").getByRole("link")).toHaveCount(
+    port5308.links.length,
+  );
+});
+
+test("entries without links show no links section", async ({ page }) => {
+  // Hosts and IP addresses have no hard coded information at all.
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("external-links")).toHaveCount(0);
+  await page.goto(`/entry/ip/${encodeURIComponent(someHost.ips[0])}`);
+  await expect(page.getByTestId("external-links")).toHaveCount(0);
+
+  // A described entry without links has none either.
+  const users = info.users as Record<string, { links?: unknown[] }>;
+  const plain = [...new Set(hosts.flatMap((h) => h["local-users"]))].find(
+    (u) => users[u] && !users[u].links,
+  );
+  test.skip(!plain, "every user in the data has links");
+  await page.goto(`/entry/user/${encodeURIComponent(plain!)}`);
+  await expect(page.getByTestId("external-links")).toHaveCount(0);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

@@ -261,19 +261,23 @@ export function isEntryType(value: string): value is EntryType {
 
 // Hard coded, operator-editable descriptions of well-known ports and
 // software, so a user can e.g. click on port 22 and read what it is for.
-export interface PortInfo {
-  // Short common name, e.g. "ssh" for port 22.
-  name: string;
-  description: string;
-}
-
-export interface SoftwareInfo {
-  description: string;
+// An external source of information about an entry, e.g. a Wikipedia page.
+export interface ExternalLink {
+  title: string;
+  url: string;
 }
 
 export interface DescribedInfo {
   description: string;
+  links?: ExternalLink[];
 }
+
+export interface PortInfo extends DescribedInfo {
+  // Short common name, e.g. "ssh" for port 22.
+  name: string;
+}
+
+export type SoftwareInfo = DescribedInfo;
 
 interface Info {
   ports: Record<string, PortInfo>;
@@ -298,6 +302,23 @@ export function getUserInfo(name: string): DescribedInfo | undefined {
 
 export function getOsInfo(name: string): DescribedInfo | undefined {
   return info.os[name];
+}
+
+// External links for an entry, from info.json. Empty for entry types
+// without hard coded information (hosts, IPs, ...).
+export function getEntryLinks(entry: EntryRef): ExternalLink[] {
+  switch (entry.type) {
+    case "port":
+      return getPortInfo(entry.name)?.links ?? [];
+    case "software":
+      return getSoftwareInfo(entry.name)?.links ?? [];
+    case "user":
+      return getUserInfo(entry.name)?.links ?? [];
+    case "os":
+      return getOsInfo(entry.name)?.links ?? [];
+    default:
+      return [];
+  }
 }
 
 export const NO_USER_INFO = "No information available about this user.";

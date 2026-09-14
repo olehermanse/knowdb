@@ -10,6 +10,7 @@ import {
   Entry,
   entryHref,
   getEntry,
+  getEntryLinks,
   getGroup,
   getHost,
   getHostGroups,
@@ -138,6 +139,25 @@ function AggregatedPorts({ entry }: { entry: Entry }) {
   );
 }
 
+// External links (Wikipedia etc.) from info.json, if the entry has any.
+function ExternalLinks({ entry }: { entry: Entry }) {
+  const links = getEntryLinks(entry);
+  if (links.length === 0) return null;
+  return (
+    <p className="external-links" data-testid="external-links">
+      <span className="muted">Read more:</span>{" "}
+      {links.map((link, i) => (
+        <span key={link.url}>
+          {i > 0 && ", "}
+          <a href={link.url} target="_blank" rel="noopener noreferrer">
+            {link.title}
+          </a>
+        </span>
+      ))}
+    </p>
+  );
+}
+
 // One sentence explaining how the listed hosts relate to the entry.
 function describeLinkedHosts(entry: Entry): string {
   switch (entry.type) {
@@ -244,6 +264,7 @@ export default async function EntryPage({
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>
+      <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
       {hasOsSection(type) && <OperatingSystems entry={entry} />}
       {AGGREGATING_TYPES.includes(type) && <AggregatedPorts entry={entry} />}
