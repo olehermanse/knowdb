@@ -53,8 +53,10 @@ a short common name (like `ssh` for port 22) and a description; software,
 users and operating systems have a description. Entry pages show the
 description when one exists, and otherwise a sentence like "No information
 available about this user". Any entry can also have a `links` list of
-external sources, each with a `title` and `url`, shown as "Read more" on
-the entry page. For now these point to Wikipedia, but any source works.
+external sources, each with the `title` of the page, the `source` site it
+is on, and the `url`, shown as "Read more" on the entry page like
+`"Secure Shell" on Wikipedia`. For now these point to Wikipedia, but any
+source works.
 Keep the list short: most entries need none or one link, and more than a
 handful is too many. Edit this file to improve or extend the descriptions;
 the frontend reads it at build time.

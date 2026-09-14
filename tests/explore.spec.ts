@@ -574,13 +574,20 @@ test("missing OS information shows the fallback sentence", async ({ page }) => {
 test("entries with links in info.json show them as external links", async ({
   page,
 }) => {
-  const port22 = info.ports["22"] as { links?: { title: string; url: string }[] };
+  const port22 = info.ports["22"] as {
+    links?: { title: string; source?: string; url: string }[];
+  };
   expect(port22.links!.length).toBeGreaterThan(0);
   await page.goto("/entry/port/22");
   const links = page.getByTestId("external-links");
   await expect(links).toContainText("Read more:");
+  // Links name the article and the site, e.g. "Secure Shell" on Wikipedia.
+  await expect(
+    links.getByRole("link", { name: '"Secure Shell" on Wikipedia', exact: true }),
+  ).toBeVisible();
   for (const link of port22.links!) {
-    const a = links.getByRole("link", { name: link.title, exact: true });
+    const label = link.source ? `"${link.title}" on ${link.source}` : link.title;
+    const a = links.getByRole("link", { name: label, exact: true });
     await expect(a).toHaveAttribute("href", link.url);
     await expect(a).toHaveAttribute("target", "_blank");
     await expect(a).toHaveAttribute("rel", /noopener/);

@@ -9,6 +9,7 @@ import {
   describeEntry,
   Entry,
   entryHref,
+  externalLinkLabel,
   getEntry,
   getEntryLinks,
   getGroup,
@@ -150,7 +151,7 @@ function ExternalLinks({ entry }: { entry: Entry }) {
         <span key={link.url}>
           {i > 0 && ", "}
           <a href={link.url} target="_blank" rel="noopener noreferrer">
-            {link.title}
+            {externalLinkLabel(link)}
           </a>
         </span>
       ))}

@@ -261,10 +261,17 @@ export function isEntryType(value: string): value is EntryType {
 
 // Hard coded, operator-editable descriptions of well-known ports and
 // software, so a user can e.g. click on port 22 and read what it is for.
-// An external source of information about an entry, e.g. a Wikipedia page.
+// An external source of information about an entry, e.g. a Wikipedia
+// article: `title` is the article's title and `source` the site it is on.
 export interface ExternalLink {
   title: string;
+  source?: string;
   url: string;
+}
+
+// '"Secure Shell" on Wikipedia', or just the title if the source is unknown.
+export function externalLinkLabel(link: ExternalLink): string {
+  return link.source ? `"${link.title}" on ${link.source}` : link.title;
 }
 
 export interface DescribedInfo {
