@@ -150,6 +150,26 @@ export function aggregatePorts(hostkeys: string[]): PortCount[] {
     .sort((a, b) => a.port - b.port);
 }
 
+export interface OsCount {
+  os: string;
+  // Number of the given hosts running this operating system.
+  hosts: number;
+}
+
+// Aggregate the operating systems of a set of hosts, most hosts first.
+// Ties are broken alphabetically so the order is stable.
+export function aggregateOs(hostkeys: string[]): OsCount[] {
+  const counts = new Map<string, number>();
+  for (const hostkey of hostkeys) {
+    const host = hostsByKey.get(hostkey);
+    if (!host) continue;
+    counts.set(host.os, (counts.get(host.os) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([os, hosts]) => ({ os, hosts }))
+    .sort((a, b) => b.hosts - a.hosts || a.os.localeCompare(b.os));
+}
+
 // Entry types whose pages aggregate information about their linked hosts.
 export const AGGREGATING_TYPES: EntryType[] = ["group", "software", "os"];
 

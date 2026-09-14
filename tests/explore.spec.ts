@@ -256,6 +256,106 @@ test("every group in groups.json has an entry page", async ({ page }) => {
   }
 });
 
+function osCounts(selected: Host[]): [string, number][] {
+  const counts = new Map<string, number>();
+  for (const h of selected) counts.set(h.os, (counts.get(h.os) ?? 0) + 1);
+  return [...counts.entries()].sort(
+    ([aOs, a], [bOs, b]) => b - a || aOs.localeCompare(bOs),
+  );
+}
+
+function hostsInGroup(name: string): Host[] {
+  const group = groups.find((g) => g.name === name)!;
+  return hosts.filter((h) => inGroup(h, group));
+}
+
+test("group page shows an operating system pie chart and ranked list", async ({
+  page,
+}) => {
+  const expected = osCounts(hostsInGroup("Windows"));
+  expect(expected.length).toBe(3);
+  await page.goto(groupHref("Windows"));
+
+  await expect(page.getByTestId("os-heading")).toHaveText(
+    "Operating systems (3)",
+  );
+  // One slice per operating system, each with a hover title.
+  const slices = page.getByTestId("os-pie").locator("path");
+  await expect(slices).toHaveCount(3);
+  await expect(slices.first()).toHaveAttribute("data-os", expected[0][0]);
+  await expect(slices.first().locator("title")).toHaveText(
+    `${expected[0][0]}: ${expected[0][1]} hosts (${Math.round(
+      (expected[0][1] / hostsInGroup("Windows").length) * 100,
+    )}%)`,
+  );
+
+  // The list is ranked by most hosts first, and links to each OS.
+  const items = page.getByTestId("os-list").locator("li");
+  await expect(items).toHaveCount(3);
+  for (const [i, [os, n]] of expected.entries()) {
+    await expect(items.nth(i).getByRole("link")).toHaveText(os);
+    await expect(items.nth(i).getByRole("link")).toHaveAttribute(
+      "href",
+      `/entry/os/${encodeURIComponent(os)}`,
+    );
+    await expect(items.nth(i)).toContainText(`${n} hosts`);
+  }
+
+  // The operating systems section comes before the ports section.
+  const osBox = await page.getByTestId("os-heading").boundingBox();
+  const portsBox = await page.getByTestId("ports-heading").boundingBox();
+  expect(osBox!.y).toBeLessThan(portsBox!.y);
+});
+
+test("operating systems beyond the palette fold into an Other slice", async ({
+  page,
+}) => {
+  const expected = osCounts(hostsInGroup("Linux"));
+  expect(expected.length).toBeGreaterThan(8);
+  await page.goto(groupHref("Linux"));
+
+  const slices = page.getByTestId("os-pie").locator("path");
+  await expect(slices).toHaveCount(8);
+  await expect(slices.last()).toHaveAttribute("data-os", "Other");
+  const otherHosts = expected.slice(7).reduce((sum, [, n]) => sum + n, 0);
+  await expect(slices.last().locator("title")).toContainText(
+    `Other: ${otherHosts} hosts`,
+  );
+
+  // The list still names every operating system, in ranked order.
+  const items = page.getByTestId("os-list").locator("li");
+  await expect(items).toHaveCount(expected.length);
+  await expect(items.getByRole("link")).toHaveText(expected.map(([os]) => os));
+  await expect(items.last()).toContainText("(in Other)");
+  await expect(items.first()).not.toContainText("(in Other)");
+});
+
+test("group with a single operating system shows a sentence instead", async ({
+  page,
+}) => {
+  const selected = hostsInGroup("SUSE");
+  const expected = osCounts(selected);
+  expect(expected.length).toBe(1);
+  await page.goto(groupHref("SUSE"));
+  await expect(page.getByTestId("os-pie")).toHaveCount(0);
+  await expect(page.getByTestId("os-list")).toHaveCount(0);
+  await expect(page.getByTestId("os-summary")).toHaveText(
+    `This group has only 1 operating system: ${expected[0][0]} (${expected[0][1]} hosts).`,
+  );
+  await expect(
+    page.getByTestId("os-summary").getByRole("link", { name: expected[0][0] }),
+  ).toHaveAttribute("href", `/entry/os/${encodeURIComponent(expected[0][0])}`);
+});
+
+test("operating systems section only appears on group pages", async ({
+  page,
+}) => {
+  await page.goto("/entry/software/dpkg");
+  await expect(page.getByTestId("os-heading")).toHaveCount(0);
+  await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}`);
+  await expect(page.getByTestId("os-heading")).toHaveCount(0);
+});
+
 test("group page aggregates listening ports of its hosts", async ({
   page,
 }) => {

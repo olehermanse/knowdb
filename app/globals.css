@@ -126,3 +126,84 @@ a,
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
 }
+
+/* Operating system pie chart. Categorical palette, fixed slot order;
+   validated for colour-vision deficiency in both light and dark mode. */
+:root {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+  }
+}
+
+.os-chart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.pie {
+  width: 12rem;
+  height: 12rem;
+  flex-shrink: 0;
+}
+
+/* A 2px surface-coloured gap between slices. */
+.slice {
+  stroke: var(--background);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.slice-1 { fill: var(--series-1); background: var(--series-1); }
+.slice-2 { fill: var(--series-2); background: var(--series-2); }
+.slice-3 { fill: var(--series-3); background: var(--series-3); }
+.slice-4 { fill: var(--series-4); background: var(--series-4); }
+.slice-5 { fill: var(--series-5); background: var(--series-5); }
+.slice-6 { fill: var(--series-6); background: var(--series-6); }
+.slice-7 { fill: var(--series-7); background: var(--series-7); }
+.slice-8 { fill: var(--series-8); background: var(--series-8); }
+
+.os-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 14rem;
+}
+
+.os-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.2rem;
+  flex-shrink: 0;
+  transform: translateY(0.1rem);
+}

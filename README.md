@@ -58,7 +58,9 @@ on entry pages; the frontend reads it at build time.
 `data/groups.json` defines groups of hosts, such as `Linux`,
 `Windows`, `webservers` and `production`. Groups show up as their own entry
 type in the UI: a host page lists the groups it belongs to, and a group page
-lists the hosts in it along with the rules that put them there.
+lists the hosts in it along with the rules that put them there, a pie chart
+and ranked list of the operating systems in the group, and the ports the
+hosts are listening on.
 
 For now a group is defined by case-insensitive substring matching on the
 host's OS and hostname. A host is in the group if, for every field listed
