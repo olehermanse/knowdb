@@ -12,9 +12,7 @@ The frontend is a Next.js app in the `frontend/` directory.
 ### With the npm dev server
 
 ```bash
-cd frontend
-npm install
-npm run dev
+( cd frontend && npm install && npm run dev )
 ```
 
 Then open http://localhost:3000.
@@ -22,9 +20,7 @@ Then open http://localhost:3000.
 ### With Docker
 
 ```bash
-cd frontend
-docker build -t knowdb-frontend .
-docker run --rm -p 3000:3000 knowdb-frontend
+( cd frontend && docker build -t knowdb-frontend . && docker run --rm -p 3000:3000 knowdb-frontend )
 ```
 
 Then open http://localhost:3000.
