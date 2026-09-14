@@ -1,17 +1,51 @@
 [
   {
-    "os": "RHEL 8",
-    "id": "SHA=1146ff6e9ea1fdd7abe0c0772e170541d6abdc385f4969e104add8848c3615b7",
-    "hostname": "staging3-ntp-athena",
+    "os": "Fedora 40",
+    "id": "SHA=242db0fdaf0ed728537897cf2bc8aff09f505c6ef9e3d05a3456f2623b9e8d0a",
+    "hostname": "production5-proxy-jupiter",
     "ips": [
-      "10.0.209.87",
       "127.0.0.1",
-      "13.48.8.89",
-      "172.31.2.124"
+      "172.31.124.59"
     ],
     "macs": [
-      "02:42:ac:2b:4f:23",
-      "d4:be:d9:82:f8:bf"
+      "00:1b:21:c7:92:63"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      3128,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "squid",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
+      "proxy",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=4504f79d03f0d0b30fbebef5fb327e3698080c93ec33a7d9d5f6e835f6e50c9b",
+    "hostname": "dev4-ntp-mars",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "00:1b:21:77:3d:02"
     ],
     "ports-listening": [
       22,
@@ -31,23 +65,385 @@
     ],
     "local-users": [
       "daemon",
+      "lp",
+      "nobody",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=60ab54059c67f7636598459207a4b89be9ffa00973ebbdf65feab2d6b1dff2df",
+    "hostname": "production8-firewall-echo",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:4cee:e0da:9cbb:1744:72ee"
+    ],
+    "macs": [
+      "0a:58:0a:7a:fe:3a"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "lp",
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=112751aeae448713f304def45b9bf6c142a58038bb98b18f7f6b1e6ee5335fa0",
+    "hostname": "production2-dns-mars",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:1957:7193:7885:f520:b66f"
+    ],
+    "macs": [
+      "02:42:ac:0f:ab:b9",
+      "06:1f:3b:af:29:dd",
+      "06:1f:3b:c8:48:87"
+    ],
+    "ports-listening": [
+      22,
+      53,
+      5308
+    ],
+    "software": [
+      "bind",
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "bind",
+      "daemon",
+      "lp",
+      "mail",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 22",
+    "id": "SHA=7d2bcc62698bdf5d2b58f0c2e84219094886a168a5243e03389aee0a3a3eb90d",
+    "hostname": "staging7-client-mars",
+    "ips": [
+      "127.0.0.1",
+      "18.130.33.210",
+      "54.93.18.189",
+      "54.93.75.188"
+    ],
+    "macs": [
+      "00:1b:21:91:02:6b",
+      "d4:be:d9:74:a1:e2"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
       "nobody",
       "root"
     ]
   },
   {
-    "os": "RHEL 8",
-    "id": "SHA=9e79f4e7a854a7cebd26ef0c2c9dba905e3fa42c643c33e4a70a5511e660a09d",
-    "hostname": "testing-db-echo",
+    "os": "Windows 2022",
+    "id": "SHA=25c2fbbf6ec0aee35445193f452502899b896c216e3cf4e443b11f7f81f3fc4d",
+    "hostname": "production6-lb-neptune",
     "ips": [
-      "10.0.37.10",
+      "10.0.29.236",
       "127.0.0.1",
-      "13.48.17.12",
-      "18.130.112.69",
-      "52.28.159.84"
+      "172.31.141.194",
+      "2a05:d014:1000:7329:dc8e:6388:a27a:feb7",
+      "2a05:d014:1000:a844:32bd:1b51:6930:b1f8"
     ],
     "macs": [
-      "d4:be:d9:6d:a3:8b"
+      "00:50:56:78:ff:46"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount"
+    ]
+  },
+  {
+    "os": "Ubuntu 26",
+    "id": "SHA=d432cee47688ced2549f1a4712547b2a4d203476fba9a16efec5563a58d9e1d2",
+    "hostname": "dev-monitor-apollo",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "00:1b:21:4f:f9:07",
+      "02:42:ac:c5:fc:5c"
+    ],
+    "ports-listening": [
+      22,
+      3000,
+      5308,
+      9090
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "grafana",
+      "openssh",
+      "prometheus",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "grafana",
+      "prometheus",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=fe9dab931c9d8559b08143df7e9af610bf8556038aa6e6b1121d61444b3ca787",
+    "hostname": "production7-venus",
+    "ips": [
+      "127.0.0.1",
+      "13.48.129.57",
+      "2a05:d014:1000:4db2:16c0:cc99:bf79:1bc5",
+      "52.28.85.162"
+    ],
+    "macs": [
+      "06:1f:3b:3a:a5:46"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "nobody",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=ec102a0b65da6597c5f0bdcfdb67f23eb860c3200d254bf0a5617f34d3ee42a2",
+    "hostname": "dev1-ntp-alpha",
+    "ips": [
+      "127.0.0.1",
+      "172.31.220.183",
+      "2a05:d014:1000:b62d:a615:5c06:adf2:3f20",
+      "2a05:d014:1000:fa78:37a7:c380:6ac8:c5d0",
+      "3.120.129.53",
+      "34.240.58.92"
+    ],
+    "macs": [
+      "00:50:56:5b:f5:78"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "chrony",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
+      "root"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=59c85dab3229f1182998b834065ebda5da1df56a321bea4b062f8139012ba11a",
+    "hostname": "dev-mail-alpha",
+    "ips": [
+      "10.0.128.160",
+      "127.0.0.1",
+      "52.28.40.150",
+      "54.93.35.226"
+    ],
+    "macs": [
+      "d4:be:d9:50:5c:25"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dovecot",
+      "dpkg",
+      "openssh",
+      "postfix",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "dovecot",
+      "lp",
+      "postfix",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=4a7b036c39cc87934de31845d1b4da18f492c358ebee9201e22e6d29f2807ce4",
+    "hostname": "production1-backup-apollo",
+    "ips": [
+      "127.0.0.1",
+      "18.130.209.143"
+    ],
+    "macs": [
+      "0a:58:0a:33:63:63"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsync",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=e1933a6181cb9180e292dd207aea84d3a5dafbfbdcd3352b2d5584431011f0e3",
+    "hostname": "production-webserver-athena",
+    "ips": [
+      "127.0.0.1",
+      "172.31.86.11",
+      "2a05:d014:1000:6a59:2dd8:1392:e4f1:b500"
+    ],
+    "macs": [
+      "0a:58:0a:32:89:15"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "nginx",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "root",
+      "sshd",
+      "syslog",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=2b18a1f1e09feaa8dd7f322f078ef2c8fb461a06e767146b741e4ad50602235e",
+    "hostname": "testing-db-jupiter",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:a2c9:b5e0:78d4:e1d8:3ebd",
+      "3.120.111.148"
+    ],
+    "macs": [
+      "d4:be:d9:24:0a:0b"
     ],
     "ports-listening": [
       22,
@@ -56,12 +452,152 @@
       5432
     ],
     "software": [
+      "apt",
+      "apt-get",
       "cron",
       "curl",
-      "dnf",
+      "dpkg",
       "mysql",
       "openssh",
       "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "mysql",
+      "nobody",
+      "postgres",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=b5eae7522d52538a9e8e0e7b1faae137ab93fc0e76b9eafb246535a7db8d192d",
+    "hostname": "testing-proxy-beta",
+    "ips": [
+      "127.0.0.1",
+      "172.31.54.36",
+      "2a05:d014:1000:d870:8c2a:286a:53b5:293f",
+      "54.93.79.207"
+    ],
+    "macs": [
+      "00:50:56:2d:a0:0d"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      3128,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "squid",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "lp",
+      "nobody",
+      "proxy",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=fddc2bbe36b846e50ac5fb71baa9eee956418a41fc6a6069c9f0d3ab7e4baa79",
+    "hostname": "staging-athena",
+    "ips": [
+      "127.0.0.1",
+      "52.28.225.94",
+      "52.28.29.128"
+    ],
+    "macs": [
+      "00:50:56:36:9f:d1"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=b23111b28c52d2a32477415144b1d3e09849c3a95a9290f0c5b0662969556c5f",
+    "hostname": "testing-firewall-jupiter",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:6cd0:2aaa:9065:3ecb:aa9a"
+    ],
+    "macs": [
+      "00:1b:21:0d:b1:05"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "root"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=8cfa0a4d9a5d3cd4fcd69f6120b648562b07984bcb77b38dab358fec02dea1c9",
+    "hostname": "staging-client-delta",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:4f03:666a:af40:46bc:7336"
+    ],
+    "macs": [
+      "00:50:56:21:23:20",
+      "02:42:ac:53:a7:6f"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
       "rpm",
       "rsyslog",
       "wget",
@@ -69,26 +605,403 @@
     ],
     "local-users": [
       "daemon",
-      "lp",
       "mail",
-      "mysql",
-      "postgres",
+      "nobody",
       "root",
       "sshd"
     ]
   },
   {
-    "os": "Ubuntu 24",
-    "id": "SHA=15bafa4eeac1089de988da7eba3c29779e365fcc4d3133cecc2d69546aad1bc7",
-    "hostname": "dev-proxy-delta",
+    "os": "Debian 12",
+    "id": "SHA=00972a91cd04249dfa2f60340d5e1b6988a9f8fb0fd89927cfd5719b736fae94",
+    "hostname": "dev-firewall-neptune",
     "ips": [
       "127.0.0.1",
-      "2a05:d014:1000:1c4d:cb85:e6e1:19a1:d841",
-      "2a05:d014:1000:e77f:b1ac:20f1:c6dc:8330"
+      "172.31.150.205",
+      "52.28.239.202"
     ],
     "macs": [
-      "00:1b:21:ae:b7:a3",
-      "0a:58:0a:3f:a6:66"
+      "06:1f:3b:1f:c8:44"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
+      "nobody",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=f34e857166bfc1ba5bf579af0b42a90682679c9584de6ef30c0814cf7b13088c",
+    "hostname": "dev-lb-zeus",
+    "ips": [
+      "10.0.35.93",
+      "127.0.0.1",
+      "2a05:d014:1000:cdf9:4923:299c:69fb:d448"
+    ],
+    "macs": [
+      "00:1b:21:24:aa:72"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "haproxy",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "haproxy",
+      "lp",
+      "mail",
+      "root"
+    ]
+  },
+  {
+    "os": "Fedora 40",
+    "id": "SHA=231a81d719148b9f66288183f45723e4ae024036205f2388030ddef5ae9ce44c",
+    "hostname": "dev-ntp-bob",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "06:1f:3b:79:d4:8c"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "chrony",
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Windows 2016",
+    "id": "SHA=bdd92c613ee3816aa5d24cf39c3992c396eccea24372c89d7c46bbc0d50ac33e",
+    "hostname": "staging5-ntp-carol",
+    "ips": [
+      "127.0.0.1",
+      "52.28.123.33"
+    ],
+    "macs": [
+      "02:42:ac:06:8e:0a",
+      "d4:be:d9:86:bb:d1"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=ea001fa0f5e77385c7c9f29f1ae23fa1869f9ebff2a574bec8af34260c8d4440",
+    "hostname": "testing-backup-echo",
+    "ips": [
+      "10.0.91.160",
+      "127.0.0.1",
+      "3.120.20.202"
+    ],
+    "macs": [
+      "00:1b:21:08:e1:96",
+      "06:1f:3b:72:6c:df"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsync",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "mail",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=e8e28460e2eb7243f88fe6d2e6f95c603fab3627a4f5abad180552ef94ca234b",
+    "hostname": "production-hub-hera",
+    "ips": [
+      "127.0.0.1",
+      "18.130.2.98",
+      "2a05:d014:1000:8bc5:8d43:b981:132:1269",
+      "2a05:d014:1000:fba:80e9:384e:5801:8078",
+      "52.28.37.131",
+      "52.28.95.192"
+    ],
+    "macs": [
+      "02:42:ac:e8:50:67"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "mail",
+      "postgres",
+      "root",
+      "syslog",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Windows 2022",
+    "id": "SHA=9234f21fd3a6d8e19bbd81193ce5971a0a6f29492ec73731fef1374e1e37934d",
+    "hostname": "dev8-lb-apollo",
+    "ips": [
+      "127.0.0.1",
+      "13.48.79.204",
+      "2a05:d014:1000:4ec:11dc:13a5:7a03:36ac",
+      "2a05:d014:1000:bcd:27bc:e71a:a592:8de3",
+      "52.28.155.132",
+      "54.93.206.37"
+    ],
+    "macs": [
+      "00:1b:21:e4:2e:3c"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=a1d734ac216255788b2a5c48ceb6f4efda15f0606021449a28d93c994eb1c90c",
+    "hostname": "production4-bob",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:b508:91b6:ba80:1dc3:4831"
+    ],
+    "macs": [
+      "0a:58:0a:0b:14:c5"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "nobody",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=1b1e44f928dc704831fa6b423c0a625b1a1aa7e5f856ae15d6b09016f6f982c9",
+    "hostname": "staging-ntp-alpha",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:a7be:854c:4045:7850:e34b"
+    ],
+    "macs": [
+      "00:50:56:37:5e:f7",
+      "06:1f:3b:c2:7e:71"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "chrony",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=efeebd4e541c9316c4f7f87322239401787cdd01e6c2fff8393909325170a86c",
+    "hostname": "staging-firewall-saturn",
+    "ips": [
+      "127.0.0.1",
+      "172.31.134.37",
+      "3.120.157.12",
+      "3.120.197.197"
+    ],
+    "macs": [
+      "0a:58:0a:7e:0e:ea"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "root"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=54fb69d5a4e3eebba7ee22593b80723a2d2d009c5759b2e988f0b61ee066ba3e",
+    "hostname": "dev5-backup-alice",
+    "ips": [
+      "127.0.0.1",
+      "13.48.221.248",
+      "18.130.117.124"
+    ],
+    "macs": [
+      "00:50:56:52:8f:42",
+      "06:1f:3b:7c:e6:d8"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsync",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "lp",
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 22",
+    "id": "SHA=b834f8ef47fec0ce3ec02db367ef601862aa2c3f61b636f6ae109db0e41297a4",
+    "hostname": "testing-proxy-bob",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:f597:faca:6823:1b3d:46a1",
+      "34.240.162.188",
+      "52.28.232.223",
+      "54.93.59.186"
+    ],
+    "macs": [
+      "0a:58:0a:74:dd:23"
     ],
     "ports-listening": [
       22,
@@ -109,27 +1022,58 @@
       "wget"
     ],
     "local-users": [
-      "daemon",
-      "nobody",
+      "mail",
       "proxy",
       "root",
-      "sshd",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=f3cbe1b856e22256e74536702986a1a215dbd644a6c83a01539cc2c6647882c7",
+    "hostname": "production4-backup-neptune",
+    "ips": [
+      "127.0.0.1",
+      "18.130.171.22",
+      "54.93.54.160"
+    ],
+    "macs": [
+      "02:42:ac:c6:7b:65"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsync",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "mail",
+      "root",
       "syslog"
     ]
   },
   {
-    "os": "Ubuntu 22",
-    "id": "SHA=565e086122a173c35d236b86c7d009cab065bc889519c02881999fb9e9a33d98",
-    "hostname": "production-monitor-jupiter",
+    "os": "Debian 12",
+    "id": "SHA=c923156c953cb4a1ff7a4374ab0bbaf4e6bf09aa3770201cd097c26a0271d991",
+    "hostname": "testing9-monitor-echo",
     "ips": [
-      "10.0.55.26",
       "127.0.0.1",
-      "18.130.74.203",
-      "3.120.106.175",
-      "34.240.190.30"
+      "52.28.208.54"
     ],
     "macs": [
-      "06:1f:3b:12:26:ed"
+      "00:1b:21:d6:20:6d",
+      "00:50:56:cb:ae:1e",
+      "d4:be:d9:a2:a4:c4"
     ],
     "ports-listening": [
       22,
@@ -150,218 +1094,27 @@
       "wget"
     ],
     "local-users": [
+      "daemon",
       "grafana",
-      "nobody",
+      "lp",
       "prometheus",
       "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=99db72ec56bfddf0f7ba22ee52ba7322f6b47b619552d4c7b024a0c3d0995cfa",
-    "hostname": "testing4-mail-alice",
-    "ips": [
-      "10.0.181.105",
-      "127.0.0.1",
-      "18.130.184.8",
-      "2a05:d014:1000:230b:cba6:3cfb:fca6:2ec8",
-      "2a05:d014:1000:a52b:eb63:1c09:860f:e15",
-      "2a05:d014:1000:b814:733c:7aac:6f04:d531",
-      "3.120.172.71",
-      "34.240.78.116",
-      "54.93.82.165"
-    ],
-    "macs": [
-      "02:42:ac:26:06:e8",
-      "d4:be:d9:04:fe:97"
-    ],
-    "ports-listening": [
-      22,
-      25,
-      143,
-      465,
-      587,
-      993,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dovecot",
-      "dpkg",
-      "openssh",
-      "postfix",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "dovecot",
-      "mail",
-      "postfix",
-      "root",
       "sshd"
     ]
   },
   {
-    "os": "Ubuntu 22",
-    "id": "SHA=7b1eaacdece09f40a0f86cbfc652f8262e70682dd266bf7eab9b49d82ed95a5b",
-    "hostname": "production1-firewall-delta",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:b7ef:ec6f:ceb6:8fd:e643",
-      "54.93.105.245"
-    ],
-    "macs": [
-      "0a:58:0a:0f:af:89",
-      "0a:58:0a:70:84:aa"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Windows 2022",
-    "id": "SHA=13e646c56e62965e928db0cb501d5ed177ce105e3744280f6a1fffaf8c0b019c",
-    "hostname": "production-ntp-delta",
-    "ips": [
-      "127.0.0.1",
-      "54.93.100.75"
-    ],
-    "macs": [
-      "d4:be:d9:95:ef:c8"
-    ],
-    "ports-listening": [
-      22,
-      123,
-      5308
-    ],
-    "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "DefaultAccount"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=323a25117142a0fe15b31ce48daccd16ee414a559abdf2544f49df6e553362ce",
-    "hostname": "testing5-dns-alice",
-    "ips": [
-      "127.0.0.1",
-      "13.48.32.102",
-      "18.130.215.14",
-      "3.120.152.6",
-      "34.240.55.26",
-      "52.28.244.22",
-      "54.93.70.5"
-    ],
-    "macs": [
-      "00:50:56:8f:bd:71"
-    ],
-    "ports-listening": [
-      22,
-      53,
-      5308
-    ],
-    "software": [
-      "bind",
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "bind",
-      "mail",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
     "os": "Debian 12",
-    "id": "SHA=12959609d45ccdb3d8563279878bd4b87d98a8e471069bfba17ac63451b4526c",
-    "hostname": "staging-alpha",
-    "ips": [
-      "10.0.207.167",
-      "127.0.0.1",
-      "172.31.248.45",
-      "18.130.107.208",
-      "18.130.210.61",
-      "34.240.209.70"
-    ],
-    "macs": [
-      "00:1b:21:72:60:43",
-      "02:42:ac:4d:f9:b3"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=1a7fd4106ff0571e7110a1f50a4be0a656f2a0a39621a7a9b114f0468e147a51",
-    "hostname": "testing-mail-bob",
+    "id": "SHA=8617ef794fabb301a7483c04f0191d590b163bf77d7607b95b41b22acbc40829",
+    "hostname": "dev4-mail-venus",
     "ips": [
       "127.0.0.1",
-      "13.48.84.66",
-      "172.31.163.161",
-      "172.31.58.122",
-      "2a05:d014:1000:b123:bfb6:4f9a:8acc:cc2a",
-      "3.120.252.236",
-      "34.240.249.113",
-      "52.28.230.86",
-      "54.93.225.137"
+      "13.48.103.95",
+      "13.48.33.235",
+      "52.28.178.178"
     ],
     "macs": [
-      "06:1f:3b:47:4d:76"
+      "00:50:56:9f:11:17",
+      "06:1f:3b:9c:9b:48"
     ],
     "ports-listening": [
       22,
@@ -386,189 +1139,27 @@
     ],
     "local-users": [
       "dovecot",
-      "lp",
-      "nobody",
+      "mail",
       "postfix",
       "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=c8380cf1ee2b2b2e00d86f46dd9e3df93cedd0175f385eab0169559d8eda2cef",
-    "hostname": "dev2-zeus",
-    "ips": [
-      "127.0.0.1",
-      "13.48.114.174",
-      "2a05:d014:1000:1a4:a3ae:9246:fcc:4766",
-      "2a05:d014:1000:58c9:98c3:2db5:b1e9:8206",
-      "2a05:d014:1000:a326:bacc:f0cb:e412:a3d4",
-      "2a05:d014:1000:b9d1:eaf:4a0a:68f:f260",
-      "3.120.101.39",
-      "3.120.183.251",
-      "34.240.119.206",
-      "34.240.132.122",
-      "52.28.47.209"
-    ],
-    "macs": [
-      "00:50:56:77:05:0f"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "root",
       "sshd"
     ]
   },
   {
-    "os": "Ubuntu 22",
-    "id": "SHA=b18ccf972624b7bfce5e0b994318e81cf49c23353eb080270443063de6bccd39",
-    "hostname": "dev8-firewall-hera",
+    "os": "Debian 12",
+    "id": "SHA=2ba643c61de05bc9cee49f0b473213d9ac5d382fd537e32e08c5286591c75a27",
+    "hostname": "production4-lb-jupiter",
     "ips": [
-      "10.0.138.116",
+      "10.0.161.231",
+      "10.0.26.94",
       "127.0.0.1",
-      "18.130.172.72",
-      "2a05:d014:1000:257f:fff0:712c:1d1d:def6",
-      "2a05:d014:1000:4ab1:ce72:8415:b0d4:b483",
-      "2a05:d014:1000:92c:8620:92ef:2ed2:7a4d",
-      "2a05:d014:1000:fa3c:2bbd:b612:8fd1:31b0",
-      "34.240.180.126",
-      "34.240.253.176",
-      "54.93.135.46",
-      "54.93.140.216"
+      "2a05:d014:1000:2c69:7c5a:76f5:2e56:f628",
+      "2a05:d014:1000:cb46:b505:d5e1:f0ae:5bcf"
     ],
     "macs": [
-      "0a:58:0a:58:e5:e5"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=60355dcb9b6d1aa7fa8e1f0fc2be4bb6ce4eb5f3b4d5310542ac75e330e87b6e",
-    "hostname": "staging-zeus",
-    "ips": [
-      "10.0.164.208",
-      "127.0.0.1",
-      "172.31.207.213",
-      "18.130.58.205",
-      "2a05:d014:1000:5243:4658:fd67:8fe4:aac8",
-      "2a05:d014:1000:6cbd:7f5a:9e0d:9c7a:2373",
-      "2a05:d014:1000:7e34:8513:d04f:272f:a01",
-      "2a05:d014:1000:8e4c:48e:abcd:14a6:6451",
-      "52.28.33.21"
-    ],
-    "macs": [
-      "00:1b:21:52:aa:85",
-      "d4:be:d9:d5:c4:6d"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "nobody",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=57df60d9fc5f7af20323ff67b24727fc8f2af3bdfcf6503605610c88829e515a",
-    "hostname": "testing-backup-alpha",
-    "ips": [
-      "10.0.214.197",
-      "127.0.0.1",
-      "18.130.10.86",
-      "18.130.249.110",
-      "18.130.31.191",
-      "18.130.73.241",
-      "2a05:d014:1000:1a9b:8b77:d8d5:e4fb:be0",
-      "2a05:d014:1000:78a5:ce1f:e595:f337:8c47"
-    ],
-    "macs": [
-      "00:1b:21:46:e2:c4"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsync",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=c04cf749fb705e89b19f6c697647b1b5b5fea3a11be5d6faddeab154a5131820",
-    "hostname": "dev-lb-jupiter",
-    "ips": [
-      "10.0.198.3",
-      "127.0.0.1",
-      "3.120.13.223",
-      "3.120.138.122",
-      "3.120.191.241"
-    ],
-    "macs": [
-      "0a:58:0a:44:17:ef"
+      "00:1b:21:e2:58:ff",
+      "0a:58:0a:db:16:21",
+      "d4:be:d9:87:5a:97"
     ],
     "ports-listening": [
       22,
@@ -589,23 +1180,22 @@
     ],
     "local-users": [
       "haproxy",
-      "mail",
+      "lp",
       "nobody",
       "root",
-      "sshd"
+      "syslog"
     ]
   },
   {
-    "os": "Windows 2022",
-    "id": "SHA=bb2560f0817c41bb7e9e1d9dbef190267b12e47ea55eeb9c82e6207ebf14b58c",
-    "hostname": "dev5-db-alice",
+    "os": "Debian 12",
+    "id": "SHA=e2c8732534ed805da8b314564047778baa6ece27b783e8f1680c411576a2b795",
+    "hostname": "production-db-bob",
     "ips": [
       "127.0.0.1",
-      "18.130.136.67",
-      "2a05:d014:1000:227d:ad7:5109:1ae7:204"
+      "2a05:d014:1000:fcb9:be2b:556d:f920:9046"
     ],
     "macs": [
-      "d4:be:d9:1e:2b:d3"
+      "0a:58:0a:1d:02:b5"
     ],
     "ports-listening": [
       22,
@@ -614,167 +1204,36 @@
       5432
     ],
     "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "DefaultAccount",
-      "Guest",
-      "SYSTEM"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=5f6c247156be37832328f66b4d0bc216b7035a65bbe5dc5060d94805dd184ca3",
-    "hostname": "production-dns-charlie",
-    "ips": [
-      "127.0.0.1",
-      "52.28.176.55",
-      "54.93.0.97"
-    ],
-    "macs": [
-      "0a:58:0a:ff:18:c8"
-    ],
-    "ports-listening": [
-      22,
-      53,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "bind",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "bind",
-      "lp",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=ab11541e0c35d9cca098951d86b7e8c43082d87b8dbaad988efbff74efc7f5d8",
-    "hostname": "dev-jupiter",
-    "ips": [
-      "127.0.0.1",
-      "172.31.177.128",
-      "18.130.64.102",
-      "2a05:d014:1000:5837:fd4:7f8c:4a44:f2e9"
-    ],
-    "macs": [
-      "02:42:ac:0c:da:b0"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
       "apt",
       "apt-get",
       "cron",
       "curl",
       "dpkg",
+      "mysql",
       "openssh",
+      "postgresql",
       "rsyslog",
       "wget"
     ],
     "local-users": [
       "daemon",
       "lp",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=dbf064de8bcdf6b9ca4975c7266d13da37f0d1891d1d0942fd15815cef579717",
-    "hostname": "testing4-athena",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:4754:2f91:2489:a3e5:18dc",
-      "2a05:d014:1000:abc2:13aa:9cdd:e259:1b3f"
-    ],
-    "macs": [
-      "d4:be:d9:d5:a4:45"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=b3a00eacaa15a83fbe010bfa85e8c0c4612f86eacd0a6280a7a4c802c3bf76fb",
-    "hostname": "staging-firewall-zeus",
-    "ips": [
-      "10.0.134.125",
-      "127.0.0.1",
-      "13.48.155.228",
-      "52.28.193.142",
-      "54.93.252.162"
-    ],
-    "macs": [
-      "d4:be:d9:dd:ec:ed"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
+      "mysql",
       "nobody",
-      "root",
-      "sshd"
+      "postgres",
+      "root"
     ]
   },
   {
-    "os": "Ubuntu 24",
-    "id": "SHA=ac54774b24243ea90d30bb1fccbfacf504d22c44a94b1a3992c185210ccf0e4d",
-    "hostname": "staging6-lb-bob",
+    "os": "Fedora 40",
+    "id": "SHA=df7834b1e5a72d05c113ba289e084b1d5c8241bffcea7dfffa683b2e0680aaf8",
+    "hostname": "production9-lb-charlie",
     "ips": [
-      "10.0.102.214",
-      "127.0.0.1",
-      "172.31.150.135",
-      "18.130.49.223",
-      "2a05:d014:1000:baa2:5418:287d:aeb6:80b2",
-      "3.120.187.229"
+      "127.0.0.1"
     ],
     "macs": [
-      "06:1f:3b:c3:db:20"
+      "00:1b:21:8d:dd:46",
+      "0a:58:0a:22:c5:33"
     ],
     "ports-listening": [
       22,
@@ -783,20 +1242,19 @@
       5308
     ],
     "software": [
-      "apt",
-      "apt-get",
       "cron",
       "curl",
-      "dpkg",
+      "dnf",
       "haproxy",
       "openssh",
+      "rpm",
       "rsyslog",
-      "wget"
+      "wget",
+      "yum"
     ],
     "local-users": [
       "daemon",
       "haproxy",
-      "lp",
       "mail",
       "root",
       "sshd"
@@ -804,19 +1262,54 @@
   },
   {
     "os": "Debian 12",
-    "id": "SHA=becd171b19cf67916c8c3a4cc932149943d6e09291e7d18842cf606cab923b52",
-    "hostname": "testing5-webserver-delta",
+    "id": "SHA=b2957cc577aea23cf97a0a604f343b7facb6124a1396889e663827eeee8f8db0",
+    "hostname": "production-db-jupiter",
     "ips": [
+      "10.0.36.177",
       "127.0.0.1",
-      "18.130.28.189",
-      "18.130.84.187",
-      "34.240.37.42",
-      "52.28.14.157",
-      "54.93.108.166",
-      "54.93.229.159"
+      "172.31.50.180"
     ],
     "macs": [
-      "02:42:ac:d3:09:a0"
+      "00:50:56:e6:34:89"
+    ],
+    "ports-listening": [
+      22,
+      3306,
+      5308,
+      5432
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "mysql",
+      "openssh",
+      "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "mysql",
+      "nobody",
+      "postgres",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=27a32fa8a4d7c35cdc68806bb0e60964abb5d4db5372b9700b3a05eed165068e",
+    "hostname": "dev9-webserver-venus",
+    "ips": [
+      "10.0.213.152",
+      "127.0.0.1",
+      "172.31.42.223",
+      "34.240.29.37"
+    ],
+    "macs": [
+      "06:1f:3b:98:8a:6b"
     ],
     "ports-listening": [
       22,
@@ -837,31 +1330,138 @@
       "wget"
     ],
     "local-users": [
-      "daemon",
-      "mail",
-      "nobody",
+      "lp",
       "root",
       "sshd",
+      "syslog",
       "www-data"
     ]
   },
   {
-    "os": "RHEL 8",
-    "id": "SHA=5e0c01440c985730ad5add3f4818e58e7673c45e7f287fa183a624c7c9ced6cd",
-    "hostname": "production6-monitor-apollo",
+    "os": "Debian 12",
+    "id": "SHA=e033793a8d4a3ee4d64180e7bbcd0399549fd2aeb2054158c3c1b0ebfe35d5d8",
+    "hostname": "production-mail-alice",
     "ips": [
-      "10.0.101.214",
-      "10.0.54.21",
-      "10.0.84.15",
       "127.0.0.1",
-      "2a05:d014:1000:9afd:82a1:c065:56b1:dfd",
-      "2a05:d014:1000:fd10:65e4:65:ee0f:bf4c",
-      "3.120.49.110",
-      "52.28.235.113",
-      "52.28.61.218"
+      "13.48.31.151",
+      "172.31.197.132"
     ],
     "macs": [
-      "00:1b:21:af:0d:13"
+      "00:1b:21:5f:72:f1",
+      "02:42:ac:51:15:ef",
+      "d4:be:d9:95:3b:91"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dovecot",
+      "dpkg",
+      "openssh",
+      "postfix",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "dovecot",
+      "lp",
+      "mail",
+      "postfix",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "SUSE 15",
+    "id": "SHA=9c813afd2ca4be91eff827e9a4fdb276cfb466680d602e4b251ce38ae94b47e9",
+    "hostname": "staging2-mail-athena",
+    "ips": [
+      "127.0.0.1",
+      "172.31.181.65"
+    ],
+    "macs": [
+      "00:1b:21:96:a9:10",
+      "02:42:ac:5f:d0:d2"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dovecot",
+      "openssh",
+      "postfix",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "zypper"
+    ],
+    "local-users": [
+      "dovecot",
+      "lp",
+      "mail",
+      "nobody",
+      "postfix",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Windows 2016",
+    "id": "SHA=209087700fad96841dd1055ca8d9e244d744989ab82b5aea686a88fdc408beb4",
+    "hostname": "production-hera",
+    "ips": [
+      "127.0.0.1",
+      "3.120.29.33"
+    ],
+    "macs": [
+      "0a:58:0a:4e:d0:bc"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=ee027d4b83bcc40692171b7785b53b47c8b7794f982b31a51e8b47bd64bc0678",
+    "hostname": "production2-monitor-apollo",
+    "ips": [
+      "127.0.0.1",
+      "18.130.150.200",
+      "2a05:d014:1000:11a3:53da:6f78:adf:809f"
+    ],
+    "macs": [
+      "d4:be:d9:c4:a5:5d",
+      "d4:be:d9:fe:35:59"
     ],
     "ports-listening": [
       22,
@@ -882,204 +1482,114 @@
       "yum"
     ],
     "local-users": [
-      "daemon",
       "grafana",
+      "lp",
+      "nobody",
       "prometheus",
       "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=939ff44585e3cb4aa6d9e6ae8549cb8f3072381c018ab776df31dbc5ee477725",
-    "hostname": "staging-delta",
-    "ips": [
-      "127.0.0.1",
-      "18.130.27.191",
-      "2a05:d014:1000:1b48:157f:7e2c:ed7c:ed37",
-      "3.120.112.196",
-      "3.120.175.149",
-      "34.240.3.167",
-      "34.240.92.80",
-      "54.93.124.151",
-      "54.93.160.23",
-      "54.93.232.230",
-      "54.93.30.203"
-    ],
-    "macs": [
-      "06:1f:3b:a1:0f:44"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "mail",
-      "root"
-    ]
-  },
-  {
-    "os": "Windows 2016",
-    "id": "SHA=666ff4d66f12cc4741315f0f3465e8acac4b6592383cfa99659ecf1f4908a46c",
-    "hostname": "staging-dns-carol",
-    "ips": [
-      "10.0.164.127",
-      "127.0.0.1",
-      "18.130.135.249",
-      "18.130.242.20",
-      "3.120.5.211",
-      "54.93.59.162"
-    ],
-    "macs": [
-      "0a:58:0a:b6:60:72",
-      "0a:58:0a:e7:95:74"
-    ],
-    "ports-listening": [
-      22,
-      53,
-      5308
-    ],
-    "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "Guest",
-      "SYSTEM"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=cc49f2d337be35ee225345ae246b17ab02bd984e81205d1807b5589b620c33b1",
-    "hostname": "staging-db-mercury",
-    "ips": [
-      "127.0.0.1",
-      "54.93.193.126"
-    ],
-    "macs": [
-      "02:42:ac:c3:66:4a",
-      "06:1f:3b:fd:36:7c"
-    ],
-    "ports-listening": [
-      22,
-      3306,
-      5308,
-      5432
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "mysql",
-      "openssh",
-      "postgresql",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "mysql",
-      "postgres",
-      "root",
+      "sshd",
       "syslog"
     ]
   },
   {
-    "os": "Ubuntu 20",
-    "id": "SHA=5bc8ff76f885781936fedca4b224f5021ec53fb563b792d31668b6394b59b363",
-    "hostname": "staging4-client-zeus",
+    "os": "RHEL 8",
+    "id": "SHA=5845d7db70330e804281261617b8ba2bf6bb1a8903424847e6db1cd77b3e2e55",
+    "hostname": "dev-monitor-saturn",
     "ips": [
       "127.0.0.1",
-      "13.48.242.20",
-      "172.31.228.215",
-      "2a05:d014:1000:1509:9781:fa51:cd07:2a93",
-      "2a05:d014:1000:ce9e:6663:3c5f:bb7d:6f29",
-      "3.120.167.184"
+      "2a05:d014:1000:1ca0:6357:2929:d6ae:682e",
+      "2a05:d014:1000:94c6:a99e:dcbe:9edc:835f",
+      "3.120.96.154"
     ],
     "macs": [
-      "d4:be:d9:e7:1e:a3"
+      "00:1b:21:76:48:e6"
     ],
     "ports-listening": [
       22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "root"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=4fd8874efd023c273982e14a74c3819f1d3f1593572a1397fd9a70b048ff0ffb",
-    "hostname": "dev-delta",
-    "ips": [
-      "127.0.0.1",
-      "18.130.119.189",
-      "34.240.205.25"
-    ],
-    "macs": [
-      "00:50:56:15:05:9e"
-    ],
-    "ports-listening": [
-      22,
-      5308
+      3000,
+      5308,
+      9090
     ],
     "software": [
       "cron",
       "curl",
       "dnf",
+      "grafana",
       "openssh",
+      "prometheus",
       "rpm",
       "rsyslog",
       "wget",
       "yum"
     ],
     "local-users": [
-      "daemon",
+      "grafana",
+      "lp",
       "mail",
-      "root"
+      "nobody",
+      "prometheus",
+      "root",
+      "syslog"
     ]
   },
   {
-    "os": "Ubuntu 24",
-    "id": "SHA=3282004f5142fc6b63e2cc3dc860d0840005034c4ae02f2296b01ea36df2170d",
-    "hostname": "testing-firewall-jupiter",
+    "os": "Ubuntu 26",
+    "id": "SHA=56e2689a5ee129a45b2faef6f5f76c1dd29f33862a225d99cedd13436def23ed",
+    "hostname": "dev4-mail-neptune",
     "ips": [
       "127.0.0.1",
-      "2a05:d014:1000:e88b:e6e9:6eb6:28f:1086",
-      "34.240.56.242",
-      "52.28.9.62"
+      "172.31.184.245",
+      "172.31.188.149",
+      "2a05:d014:1000:1b:3764:efd6:b035:f0d4",
+      "2a05:d014:1000:fa8b:797f:105:1465:1aac",
+      "54.93.45.111"
     ],
     "macs": [
-      "06:1f:3b:7b:92:e9"
+      "00:1b:21:28:e0:b0"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dovecot",
+      "dpkg",
+      "openssh",
+      "postfix",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "dovecot",
+      "postfix",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 20",
+    "id": "SHA=9a40bfa5fd6b071eb9fadd1118f6cf67e5e91c21b2862f39504217b217b73a29",
+    "hostname": "production4-delta",
+    "ips": [
+      "10.0.133.110",
+      "127.0.0.1",
+      "13.48.120.158",
+      "13.48.141.21",
+      "2a05:d014:1000:ac97:71e0:ddfd:e802:b8bf"
+    ],
+    "macs": [
+      "00:50:56:78:37:1a"
     ],
     "ports-listening": [
       22,
@@ -1096,68 +1606,22 @@
       "wget"
     ],
     "local-users": [
-      "daemon",
-      "lp",
-      "mail",
+      "nobody",
       "root",
       "syslog"
     ]
   },
   {
-    "os": "Debian 11",
-    "id": "SHA=8c060ba7bc1bd0227c57070f88496f270bf5c1c06db834c4bd118cec2da7d7ab",
-    "hostname": "production-db-mercury",
+    "os": "Debian 12",
+    "id": "SHA=f3cc7bb22d6b85b667cbc1ffa3be829f4950a14a2dbc9beeb33680a3a86fbff2",
+    "hostname": "dev3-ntp-hera",
     "ips": [
       "127.0.0.1",
-      "172.31.216.218",
-      "172.31.53.131",
-      "2a05:d014:1000:f6bd:3788:6fa8:801e:51e2",
-      "54.93.108.94",
-      "54.93.4.12"
+      "2a05:d014:1000:f619:719c:abec:13a2:3328",
+      "52.28.229.144"
     ],
     "macs": [
-      "00:1b:21:60:e3:91",
-      "00:50:56:51:0f:6f",
-      "0a:58:0a:61:33:ef"
-    ],
-    "ports-listening": [
-      22,
-      3306,
-      5308,
-      5432
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "mysql",
-      "openssh",
-      "postgresql",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "mysql",
-      "nobody",
-      "postgres",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Debian 11",
-    "id": "SHA=7c059d0d721024341624457ee42f385b2c362f441c33c66b6fd54441eabac4e5",
-    "hostname": "testing1-ntp-echo",
-    "ips": [
-      "127.0.0.1",
-      "34.240.157.224"
-    ],
-    "macs": [
-      "d4:be:d9:6e:a5:a5"
+      "d4:be:d9:59:44:f2"
     ],
     "ports-listening": [
       22,
@@ -1178,27 +1642,22 @@
     "local-users": [
       "daemon",
       "lp",
-      "mail",
       "root",
       "syslog"
     ]
   },
   {
-    "os": "RHEL 8",
-    "id": "SHA=429e730297683fbb2ef5fe05aa269f2be9062f03a1d6bd0268cdac1b84a2e519",
-    "hostname": "dev6-lb-charlie",
+    "os": "Ubuntu 24",
+    "id": "SHA=9d0f9f500c613a8d4a250239cee4e7fd6eb942daf4fdee1e3064525001ca382a",
+    "hostname": "staging-hub-alice",
     "ips": [
       "127.0.0.1",
-      "13.48.116.46",
-      "172.31.135.8",
-      "18.130.164.155",
-      "3.120.88.5",
-      "52.28.124.131",
-      "52.28.241.177"
+      "2a05:d014:1000:6f6e:2c33:42d2:145a:2380",
+      "2a05:d014:1000:b34d:c00:fdb6:c2f7:d558",
+      "54.93.87.5"
     ],
     "macs": [
-      "d4:be:d9:1c:d6:24",
-      "d4:be:d9:3e:dd:fb"
+      "06:1f:3b:0c:cf:6b"
     ],
     "ports-listening": [
       22,
@@ -1207,132 +1666,196 @@
       5308
     ],
     "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "haproxy",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "haproxy",
-      "lp",
-      "mail",
-      "nobody",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Ubuntu 26",
-    "id": "SHA=33bfef0a4dee57b46b03e2317f58702f29fb82bb091d20f0597326d5cc374a11",
-    "hostname": "dev-lb-carol",
-    "ips": [
-      "127.0.0.1",
-      "172.31.162.152",
-      "172.31.208.1",
-      "2a05:d014:1000:3120:5c39:d52b:2fb0:1998",
-      "2a05:d014:1000:4e2d:808d:74d0:5f8d:b8dd"
-    ],
-    "macs": [
-      "00:1b:21:e2:cb:08",
-      "0a:58:0a:00:21:0e",
-      "d4:be:d9:3b:04:29"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
+      "apache",
       "apt",
       "apt-get",
       "cron",
       "curl",
       "dpkg",
-      "haproxy",
       "openssh",
+      "postgresql",
       "rsyslog",
       "wget"
     ],
     "local-users": [
-      "haproxy",
+      "mail",
       "nobody",
+      "postgres",
       "root",
       "sshd",
+      "syslog",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Windows 2022",
+    "id": "SHA=79b1f83ba7436f17e4c23d6fc57b6e866f9e943386a85f814969d447262f2bb6",
+    "hostname": "production6-ntp-bob",
+    "ips": [
+      "127.0.0.1",
+      "13.48.54.110",
+      "2a05:d014:1000:8156:864f:a062:3ded:e16b",
+      "3.120.166.71",
+      "54.93.116.223"
+    ],
+    "macs": [
+      "02:42:ac:32:bd:05"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Windows 2022",
+    "id": "SHA=cc5b51a6b6cb572c71262373025a5033ef950619594dee0de70ba9c4662645c4",
+    "hostname": "production-dns-carol",
+    "ips": [
+      "127.0.0.1",
+      "52.28.138.167"
+    ],
+    "macs": [
+      "0a:58:0a:98:cd:ce"
+    ],
+    "ports-listening": [
+      22,
+      53,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Ubuntu 20",
+    "id": "SHA=ab3dfa148b749eadffcae19e31f25c329d10a7581eaa4527c09e0352337ff84c",
+    "hostname": "dev5-ntp-saturn",
+    "ips": [
+      "10.0.0.15",
+      "10.0.182.91",
+      "127.0.0.1",
+      "3.120.14.124"
+    ],
+    "macs": [
+      "00:50:56:85:8f:e2"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "chrony",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "root",
       "syslog"
     ]
   },
   {
     "os": "RHEL 8",
-    "id": "SHA=be3127d774caf63b914a99349208c6f4ca1fe0d1a325a1f02604e302399e908c",
-    "hostname": "staging-mail-hera",
+    "id": "SHA=3545f11ad898a40fb940dc678125a915a2a2a13b0a0501249859bcb4a02de689",
+    "hostname": "staging1-proxy-echo",
     "ips": [
-      "10.0.90.41",
       "127.0.0.1",
-      "13.48.234.45",
-      "172.31.224.99",
-      "18.130.132.53"
+      "13.48.30.25",
+      "2a05:d014:1000:5c13:37ca:3a99:9849:8292",
+      "2a05:d014:1000:71a9:519d:dab:b834:1ce8"
     ],
     "macs": [
-      "00:50:56:89:a6:80",
-      "0a:58:0a:24:01:f6",
-      "0a:58:0a:75:64:e8"
+      "06:1f:3b:bb:17:1d"
     ],
     "ports-listening": [
       22,
-      25,
-      143,
-      465,
-      587,
-      993,
+      80,
+      443,
+      3128,
       5308
     ],
     "software": [
       "cron",
       "curl",
       "dnf",
-      "dovecot",
       "openssh",
-      "postfix",
       "rpm",
       "rsyslog",
+      "squid",
       "wget",
       "yum"
     ],
     "local-users": [
-      "daemon",
-      "dovecot",
-      "nobody",
-      "postfix",
-      "root",
-      "sshd"
+      "lp",
+      "mail",
+      "proxy",
+      "root"
     ]
   },
   {
-    "os": "Debian 12",
-    "id": "SHA=36b553f5f72c0788332c804c0eec3e881d51d7bc5c03b51ce9e33dd7ff82f378",
-    "hostname": "production4-mail-beta",
+    "os": "Windows 2022",
+    "id": "SHA=b888bbe0aaea6b8f79ce0cdce125c4a8196ffc3149a64dea1d9fd4f6588d14d0",
+    "hostname": "staging-client-bob",
     "ips": [
       "127.0.0.1",
-      "52.28.74.32",
-      "54.93.213.252"
+      "172.31.102.87",
+      "2a05:d014:1000:1c41:8c16:1dcd:ed12:e48a",
+      "2a05:d014:1000:a676:be94:65b5:aa9:4239"
     ],
     "macs": [
-      "00:50:56:04:47:0b",
-      "0a:58:0a:3d:b4:96"
+      "0a:58:0a:28:81:50"
     ],
     "ports-listening": [
       22,
-      25,
-      143,
-      465,
-      587,
-      993,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=e3b28c7a679ad381d46d19fe8d995fe1c487e62b0709085f0c2b2b0cd5eaa397",
+    "hostname": "testing3-client-charlie",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "00:50:56:1a:09:87"
+    ],
+    "ports-listening": [
+      22,
       5308
     ],
     "software": [
@@ -1340,39 +1863,30 @@
       "apt-get",
       "cron",
       "curl",
-      "dovecot",
       "dpkg",
       "openssh",
-      "postfix",
       "rsyslog",
       "wget"
     ],
     "local-users": [
-      "daemon",
-      "dovecot",
       "lp",
-      "mail",
       "nobody",
-      "postfix",
       "root"
     ]
   },
   {
     "os": "Debian 12",
-    "id": "SHA=3d2a5f3169d33e2ed838c31584e3eb7cfc9bfe265666498965d562b0258bd8d7",
-    "hostname": "dev-webserver-jupiter",
+    "id": "SHA=e2029cd33e8452d773167b2ca11267598aaf9d0a91f6ffae412144b68c3011bd",
+    "hostname": "staging4-webserver-athena",
     "ips": [
-      "10.0.12.51",
       "127.0.0.1",
-      "13.48.116.7",
-      "13.48.77.49",
-      "172.31.11.117",
-      "172.31.18.229",
-      "2a05:d014:1000:3d13:a4b7:24d2:3810:aa01",
-      "52.28.2.227"
+      "13.48.21.213",
+      "2a05:d014:1000:8d9b:2186:c2c6:754f:c7df",
+      "3.120.224.137",
+      "52.28.219.168"
     ],
     "macs": [
-      "0a:58:0a:67:f7:02"
+      "02:42:ac:e0:45:7d"
     ],
     "ports-listening": [
       22,
@@ -1394,25 +1908,25 @@
     ],
     "local-users": [
       "daemon",
-      "lp",
+      "nobody",
       "root",
+      "sshd",
+      "syslog",
       "www-data"
     ]
   },
   {
-    "os": "RHEL 9",
-    "id": "SHA=1b56ce3899cbeb5fa38edaf02b771f3aeaf31dc9c4a9c4befb22ebb8c0c0e2d5",
-    "hostname": "testing4-firewall-zeus",
+    "os": "RHEL 8",
+    "id": "SHA=b67d2491e29bfb34a95e571762f7cdac84b6e6cec6e3e9f7050fdd303f976d83",
+    "hostname": "testing8-beta",
     "ips": [
       "127.0.0.1",
-      "13.48.168.172",
-      "13.48.94.144",
-      "18.130.19.166",
-      "34.240.87.146"
+      "172.31.189.160",
+      "172.31.231.11",
+      "52.28.137.193"
     ],
     "macs": [
-      "00:1b:21:12:62:7a",
-      "02:42:ac:db:96:9d"
+      "06:1f:3b:f3:06:15"
     ],
     "ports-listening": [
       22,
@@ -1429,250 +1943,23 @@
       "yum"
     ],
     "local-users": [
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=2929f6f67231d23be2edcec1d90adcf90bfb16d4c622a71c12298b5b10249fe2",
-    "hostname": "testing-client-charlie",
-    "ips": [
-      "10.0.170.205",
-      "127.0.0.1",
-      "13.48.13.80",
-      "13.48.165.34",
-      "3.120.142.56",
-      "52.28.143.246"
-    ],
-    "macs": [
-      "d4:be:d9:fe:85:a9"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
       "daemon",
-      "mail",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Windows 2019",
-    "id": "SHA=32b44f214470e255513989902ae1d76c9c174eebfec9115ca6030781fa0c4cd7",
-    "hostname": "testing-db-delta",
-    "ips": [
-      "127.0.0.1",
-      "13.48.223.154",
-      "172.31.217.108",
-      "172.31.227.156",
-      "172.31.25.65",
-      "2a05:d014:1000:9b35:1a2d:a98a:3679:331c",
-      "3.120.174.134",
-      "3.120.97.65",
-      "34.240.168.119",
-      "54.93.95.59"
-    ],
-    "macs": [
-      "06:1f:3b:25:88:ca",
-      "d4:be:d9:2a:bf:33"
-    ],
-    "ports-listening": [
-      22,
-      3306,
-      5308,
-      5432
-    ],
-    "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "Guest"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=d10729a401f05dab21659a2697bf2ccef7f9c739e37321f094b8f8ececde310a",
-    "hostname": "staging9-alpha",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:5240:9f98:c51:f761:c3af",
-      "3.120.86.25",
-      "54.93.217.170",
-      "54.93.220.65",
-      "54.93.24.43"
-    ],
-    "macs": [
-      "02:42:ac:a6:72:c5",
-      "0a:58:0a:cd:25:cc"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "Ubuntu 20",
-    "id": "SHA=bd8e6f3ead2f29339cdd47347f8980085e7f5e39c66896036c2a795de4f49755",
-    "hostname": "dev7-backup-athena",
-    "ips": [
-      "127.0.0.1",
-      "13.48.120.109",
-      "172.31.14.193",
-      "172.31.163.213",
-      "3.120.193.114",
-      "34.240.129.105",
-      "52.28.121.14"
-    ],
-    "macs": [
-      "00:1b:21:42:e1:78"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsync",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
       "nobody",
       "root",
-      "sshd",
-      "syslog"
+      "sshd"
     ]
   },
   {
-    "os": "Debian 11",
-    "id": "SHA=accf724386c610a854a975acfba975e4146e5d35f9d26e339b867ebf0f69141b",
-    "hostname": "dev1-backup-mars",
+    "os": "Windows 2022",
+    "id": "SHA=fd33cc25c645048f2a1ff7422fd0e2012bc5f66dd9b916cefd3f6a5124d7a37d",
+    "hostname": "production9-monitor-apollo",
     "ips": [
+      "10.0.106.31",
       "127.0.0.1",
-      "3.120.121.46",
-      "3.120.180.249"
+      "54.93.1.113"
     ],
     "macs": [
-      "0a:58:0a:25:f6:68"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsync",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=83dbb989b3edfe741d7db1e881aeb99910d1a215b8b29ad8c3bc3b3e2604b37a",
-    "hostname": "staging3-backup-alice",
-    "ips": [
-      "127.0.0.1",
-      "18.130.40.224",
-      "2a05:d014:1000:ad3a:1eac:2e63:9e98:5f88",
-      "2a05:d014:1000:c68d:817e:e419:bc72:c8b7",
-      "52.28.20.135"
-    ],
-    "macs": [
-      "02:42:ac:da:24:b3"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsync",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Windows 2016",
-    "id": "SHA=cfe5835060e6397bbcf1d29e5695e84d3da35a1b418344b0f4f7922b2709c713",
-    "hostname": "production5-monitor-charlie",
-    "ips": [
-      "10.0.188.228",
-      "10.0.31.56",
-      "10.0.68.214",
-      "127.0.0.1",
-      "13.48.253.43",
-      "2a05:d014:1000:80f7:4f0:d693:27b4:a9e7",
-      "2a05:d014:1000:dfc5:16a4:dbdb:b87:9f41",
-      "2a05:d014:1000:e024:49ec:f250:c4e2:3636",
-      "34.240.247.253"
-    ],
-    "macs": [
-      "d4:be:d9:1b:b0:2b"
+      "02:42:ac:dd:b7:8f"
     ],
     "ports-listening": [
       22,
@@ -1687,25 +1974,233 @@
     ],
     "local-users": [
       "Administrator",
+      "DefaultAccount",
       "SYSTEM"
     ]
   },
   {
-    "os": "RHEL 8",
-    "id": "SHA=0298c48f59cc4942a834d254e2684c8205b8db16d0ca4349b5f73e635265d0f0",
-    "hostname": "testing-webserver-jupiter",
+    "os": "Ubuntu 24",
+    "id": "SHA=c60623fb9ff4682ec7ce21aab2babe6aa71046ce982e63ac790b2ed882097af6",
+    "hostname": "production-dns-venus",
     "ips": [
-      "10.0.175.56",
-      "10.0.27.173",
-      "10.0.79.226",
       "127.0.0.1",
-      "13.48.253.19",
-      "2a05:d014:1000:6e31:a3c0:d316:b9d2:deb2",
-      "3.120.99.25",
-      "54.93.134.109"
+      "2a05:d014:1000:f5d2:3a6b:ff5a:5b75:f621"
     ],
     "macs": [
-      "06:1f:3b:ee:d7:64"
+      "00:50:56:d0:96:e1"
+    ],
+    "ports-listening": [
+      22,
+      53,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "bind",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "bind",
+      "daemon",
+      "mail",
+      "root"
+    ]
+  },
+  {
+    "os": "Windows 2022",
+    "id": "SHA=eb488b039cc2ff3a8ca13b4e07de9c3b16d197434d9a76fa82c59047fc507729",
+    "hostname": "dev-mail-neptune",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:4704:8b3b:f7a3:d98f:9ef6"
+    ],
+    "macs": [
+      "00:1b:21:c2:76:ff"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "Guest",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Ubuntu 26",
+    "id": "SHA=502cad4ff90353d590dacd6646470b581d2609f516f3164f16b36baf456dad57",
+    "hostname": "dev4-webserver-echo",
+    "ips": [
+      "127.0.0.1",
+      "13.48.71.196",
+      "2a05:d014:1000:c3c2:3f5f:a859:c607:63a9",
+      "54.93.237.138"
+    ],
+    "macs": [
+      "02:42:ac:42:03:bd"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "nginx",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "nobody",
+      "root",
+      "sshd",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 20",
+    "id": "SHA=4082dd0fe669a3f232e7b0c0446af1714f168aa009aa76a261a9f4c8c24acee5",
+    "hostname": "testing-hub-beta",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:eaf7:7468:9522:92ba:7025"
+    ],
+    "macs": [
+      "02:42:ac:7e:5e:b1"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "postgres",
+      "root",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=c76633366f3cdf3a8590a501399ec61c93f6e5099a635faece7188d20c609219",
+    "hostname": "dev-carol",
+    "ips": [
+      "127.0.0.1",
+      "13.48.192.240",
+      "2a05:d014:1000:53d5:53a5:caeb:544d:e70b",
+      "2a05:d014:1000:c693:57db:63ff:29ce:9ab5"
+    ],
+    "macs": [
+      "06:1f:3b:94:8f:0c"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
+      "nobody",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=52e0c64173856dd398ff2cdadb298467ac42dfab5e805e1b2da06512981a27a9",
+    "hostname": "production9-ntp-mars",
+    "ips": [
+      "127.0.0.1",
+      "13.48.235.245"
+    ],
+    "macs": [
+      "06:1f:3b:04:84:e7"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "chrony",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=706c2836506f61cfcac32b1b0472ee9a769d85d970e0e178336ee17f5d5b2c1d",
+    "hostname": "production9-hub-beta",
+    "ips": [
+      "127.0.0.1",
+      "172.31.204.94",
+      "18.130.140.180"
+    ],
+    "macs": [
+      "d4:be:d9:78:15:b0"
     ],
     "ports-listening": [
       22,
@@ -1718,12 +2213,1208 @@
       "cron",
       "curl",
       "dnf",
-      "nginx",
+      "openssh",
+      "postgresql",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "lp",
+      "postgres",
+      "root",
+      "sshd",
+      "syslog",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=bae252df236ea47870bced4c53b11afef33524c8bc50eae7a3fe645e77e43175",
+    "hostname": "staging2-proxy-saturn",
+    "ips": [
+      "127.0.0.1",
+      "3.120.68.164"
+    ],
+    "macs": [
+      "06:1f:3b:7b:72:e1"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      3128,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "squid",
+      "wget"
+    ],
+    "local-users": [
+      "mail",
+      "nobody",
+      "proxy",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=9b9478e929d0e0abc2626ed394accbcb349fe5106fa5e8f599dcd4e9ba3901a9",
+    "hostname": "staging-mail-saturn",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:1ca6:e535:b77b:c3cc:7e04",
+      "34.240.24.43"
+    ],
+    "macs": [
+      "00:1b:21:5d:f3:11"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "dovecot",
+      "openssh",
+      "postfix",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "daemon",
+      "dovecot",
+      "nobody",
+      "postfix",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=6dd428cf0f907020677a296e79004e63aeaaa81bdd91503d6dad5cba18c7f99e",
+    "hostname": "testing-db-athena",
+    "ips": [
+      "127.0.0.1",
+      "13.48.198.196",
+      "2a05:d014:1000:7581:159a:505a:d97e:196b",
+      "52.28.214.160"
+    ],
+    "macs": [
+      "0a:58:0a:6e:f4:be"
+    ],
+    "ports-listening": [
+      22,
+      3306,
+      5308,
+      5432
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "mysql",
+      "openssh",
+      "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "mail",
+      "mysql",
+      "postgres",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=e0771c00eadd763181470b67da50c55e500abf87d3065a77ff67419387f3e8d4",
+    "hostname": "dev4-mercury",
+    "ips": [
+      "127.0.0.1",
+      "172.31.49.167",
+      "2a05:d014:1000:2d6d:b8f0:1fb1:11f9:d1aa"
+    ],
+    "macs": [
+      "00:50:56:f8:a2:20"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "nobody",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=96a4f5829c4e7276cdd86758dae632c6ece88cb93e46ae6062d209a4c6220347",
+    "hostname": "production-hub-jupiter",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "d4:be:d9:22:f1:6b"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "postgresql",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "nobody",
+      "postgres",
+      "root",
+      "sshd",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=995fb7fe244971a3f05d1e7de16ca86ed6f2ec3253f43e963efdde40e86cbd3f",
+    "hostname": "staging-backup-apollo",
+    "ips": [
+      "127.0.0.1",
+      "13.48.241.119",
+      "172.31.186.153",
+      "172.31.92.241",
+      "2a05:d014:1000:8948:2ee7:7f8e:d92a:2990"
+    ],
+    "macs": [
+      "00:50:56:1b:86:43"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsync",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=02f9e071863a33ee3a4342edfae51315d07de717ae1f6e74d1f36c2c569900cf",
+    "hostname": "staging-mail-delta",
+    "ips": [
+      "127.0.0.1",
+      "18.130.124.184",
+      "18.130.218.98",
+      "3.120.81.25"
+    ],
+    "macs": [
+      "02:42:ac:73:3b:74"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dovecot",
+      "dpkg",
+      "openssh",
+      "postfix",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "dovecot",
+      "lp",
+      "nobody",
+      "postfix",
+      "root"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=a7ed4af226b6f9342a951757a8e95ce65fdbcd937d6bab32db4a91e3c670c528",
+    "hostname": "staging-delta",
+    "ips": [
+      "127.0.0.1",
+      "18.130.213.232",
+      "2a05:d014:1000:23b9:fdf:9a8f:c48b:9227"
+    ],
+    "macs": [
+      "06:1f:3b:2c:05:83"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Windows 2022",
+    "id": "SHA=4e10232264105cac819df8e60a888131fd98dc4b156da72b73e05904761acf7a",
+    "hostname": "testing8-ntp-venus",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "0a:58:0a:90:4a:09",
+      "d4:be:d9:dd:f6:b8"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "Guest",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Fedora 40",
+    "id": "SHA=ea4a6b61e827fdb5a4064339c5c990cd245a7c6567bc5ee2f94ffc5164572b44",
+    "hostname": "dev-hub-delta",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:872f:20f1:c9a8:508:c9c6"
+    ],
+    "macs": [
+      "00:1b:21:10:37:00",
+      "d4:be:d9:9a:cd:5d"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "postgresql",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "postgres",
+      "root",
+      "sshd",
+      "syslog",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=a2a981968a02a84c62b81083ace5747dbfc3cd2f64b6efaf30d267e90d421950",
+    "hostname": "testing1-lb-mars",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:bf0d:4420:cbd4:e4a0:f008",
+      "52.28.156.170"
+    ],
+    "macs": [
+      "06:1f:3b:61:40:58"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "haproxy",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "haproxy",
+      "mail",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Windows 2016",
+    "id": "SHA=57e2a0ac8caa5aa1458e0fc778c47f4c7e098e9c02ba1ad6f381098fc68f8772",
+    "hostname": "testing-backup-mars",
+    "ips": [
+      "10.0.68.197",
+      "127.0.0.1",
+      "34.240.114.234",
+      "52.28.186.101"
+    ],
+    "macs": [
+      "0a:58:0a:3a:7c:16"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "Guest",
+      "SYSTEM"
+    ]
+  },
+  {
+    "os": "Debian 11",
+    "id": "SHA=52c863f7f7fe76867bf9ee662ee338992ddbb3d6ce83ded3157d326657324880",
+    "hostname": "dev1-lb-beta",
+    "ips": [
+      "10.0.180.24",
+      "127.0.0.1",
+      "172.31.127.14",
+      "172.31.189.112"
+    ],
+    "macs": [
+      "00:50:56:91:62:68",
+      "02:42:ac:15:ed:dc"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "haproxy",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "haproxy",
+      "lp",
+      "mail",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=8d7c094070aa99924385f4eb4899fe59594f21a19e71068835f1504e89a27ab3",
+    "hostname": "dev-backup-mercury",
+    "ips": [
+      "127.0.0.1",
+      "3.120.42.53",
+      "54.93.148.95",
+      "54.93.181.9"
+    ],
+    "macs": [
+      "0a:58:0a:6a:3b:24"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsync",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "nobody",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=bf0da2b51b92ba7c480d70e7676611ec86af43c97c9a2b56e63ead8bdfc7b90c",
+    "hostname": "dev-proxy-athena",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:c992:4e7b:c252:1ccf:7603"
+    ],
+    "macs": [
+      "06:1f:3b:b9:c0:65"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      3128,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "squid",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "nobody",
+      "proxy",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=063d3fd5ac022ac00fc8dd43f3ad69c19afcfaa71643f75d26b54712bb1833f4",
+    "hostname": "production-backup-mercury",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "00:1b:21:a2:40:f8"
+    ],
+    "ports-listening": [
+      22,
+      873,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsync",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=afdf464c05ad19af9c7dbe433164fa19c4827194d28cf1ac446bc6d7f4e8b111",
+    "hostname": "production7-mail-neptune",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "02:42:ac:be:32:93"
+    ],
+    "ports-listening": [
+      22,
+      25,
+      143,
+      465,
+      587,
+      993,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "dovecot",
+      "openssh",
+      "postfix",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "dovecot",
+      "lp",
+      "nobody",
+      "postfix",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=ef1cf46cd17a1381736331b14acb5f3492fd16f1f26cebd926136fb426bbedab",
+    "hostname": "testing-db-charlie",
+    "ips": [
+      "127.0.0.1",
+      "18.130.52.88",
+      "2a05:d014:1000:b59f:2d0e:a85a:339d:b38c",
+      "3.120.251.10"
+    ],
+    "macs": [
+      "0a:58:0a:49:7f:a2"
+    ],
+    "ports-listening": [
+      22,
+      3306,
+      5308,
+      5432
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "mysql",
+      "openssh",
+      "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "mysql",
+      "postgres",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=8c6ce5fa26616886e6168d07326680d0513b7b7d1739aef3db8828a7c6fe0c31",
+    "hostname": "production-bob",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:ac8c:7a00:ad4b:6d43:b57e"
+    ],
+    "macs": [
+      "d4:be:d9:63:e8:ce",
+      "d4:be:d9:97:60:36"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 20",
+    "id": "SHA=8f97dcd5f892da8a8548c4eda13e52df8367daa324ee5591c0fae4d259655899",
+    "hostname": "dev-firewall-venus",
+    "ips": [
+      "127.0.0.1",
+      "13.48.33.140",
+      "52.28.166.127"
+    ],
+    "macs": [
+      "00:50:56:f2:88:26",
+      "02:42:ac:d7:27:ac"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "mail",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=d999184891a7f1492b9c335074aa39e439014dbef6d95c28284c5ebc52eb79d3",
+    "hostname": "testing7-client-mercury",
+    "ips": [
+      "127.0.0.1",
+      "172.31.60.102",
+      "2a05:d014:1000:a5ad:f366:bf78:afe2:471c"
+    ],
+    "macs": [
+      "00:1b:21:28:5e:56"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=7198c0acfe68b6bec48db4aa6a93e361ebff7cbe68c172b002c65687960affd0",
+    "hostname": "testing-hub-delta",
+    "ips": [
+      "127.0.0.1",
+      "13.48.126.11",
+      "172.31.254.193"
+    ],
+    "macs": [
+      "d4:be:d9:4b:b7:07"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "postgresql",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "lp",
+      "mail",
+      "postgres",
+      "root",
+      "sshd",
+      "syslog",
+      "www-data"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=140d7a23997f39136cd322cd0027fb9553dfff97562faf621d7bfe36ccd4cfee",
+    "hostname": "testing-client-jupiter",
+    "ips": [
+      "127.0.0.1"
+    ],
+    "macs": [
+      "0a:58:0a:d7:84:0d"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Windows 2022",
+    "id": "SHA=a733830f8dcf00b5ed2953c4490da0cac9d03d0e07c365d58af18193236a30d0",
+    "hostname": "dev7-client-jupiter",
+    "ips": [
+      "127.0.0.1",
+      "172.31.231.77",
+      "2a05:d014:1000:25eb:c841:9944:dce2:9490",
+      "3.120.123.67"
+    ],
+    "macs": [
+      "02:42:ac:c7:e6:54"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "chocolatey",
+      "powershell",
+      "windows-defender"
+    ],
+    "local-users": [
+      "Administrator",
+      "DefaultAccount",
+      "Guest"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=ec65d48b4e17a197f1fba7ff827b096eb95db8d1d707d611a52a0ae9dff5ff1a",
+    "hostname": "production9-neptune",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:93b:3c30:125:6ccd:7270",
+      "2a05:d014:1000:e2c:9bf8:2aa8:6797:113a"
+    ],
+    "macs": [
+      "00:50:56:9a:b4:82"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
       "openssh",
       "rpm",
       "rsyslog",
       "wget",
       "yum"
+    ],
+    "local-users": [
+      "lp",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "RHEL 8",
+    "id": "SHA=dcfcd55755a6b024736a89d083c2ab01831b43cbc067b8b57490b14d9c37d5ae",
+    "hostname": "testing5-ntp-apollo",
+    "ips": [
+      "10.0.10.234",
+      "10.0.63.44",
+      "127.0.0.1",
+      "2a05:d014:1000:2e3b:5693:4dc6:550a:9f30",
+      "3.120.159.122"
+    ],
+    "macs": [
+      "0a:58:0a:e0:a6:e5"
+    ],
+    "ports-listening": [
+      22,
+      123,
+      5308
+    ],
+    "software": [
+      "chrony",
+      "cron",
+      "curl",
+      "dnf",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "daemon",
+      "mail",
+      "nobody",
+      "root"
+    ]
+  },
+  {
+    "os": "Ubuntu 26",
+    "id": "SHA=8558bff7f04d56f4556c6df823243b5766d523261af72f176ae0486f7d3f6130",
+    "hostname": "staging-dns-saturn",
+    "ips": [
+      "10.0.106.237",
+      "127.0.0.1"
+    ],
+    "macs": [
+      "00:1b:21:0a:2d:56"
+    ],
+    "ports-listening": [
+      22,
+      53,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "bind",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "bind",
+      "daemon",
+      "lp",
+      "mail",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Ubuntu 22",
+    "id": "SHA=d1688eaf95fa906b40711013e27febdb7658ae9870b4bd1d51ea8416c38dac76",
+    "hostname": "production-lb-alpha",
+    "ips": [
+      "10.0.221.213",
+      "10.0.85.47",
+      "127.0.0.1"
+    ],
+    "macs": [
+      "06:1f:3b:ca:8a:0f",
+      "d4:be:d9:3a:ff:93"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "haproxy",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "haproxy",
+      "mail",
+      "nobody",
+      "root",
+      "sshd"
+    ]
+  },
+  {
+    "os": "Debian 12",
+    "id": "SHA=e9312e4c33538be095c7c4194cf028f9ee9b06e63e3aa51ff2d5bb0c850b5d88",
+    "hostname": "production-monitor-venus",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:c39a:6d74:b6ad:1629:37d0"
+    ],
+    "macs": [
+      "d4:be:d9:e8:84:50"
+    ],
+    "ports-listening": [
+      22,
+      3000,
+      5308,
+      9090
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "grafana",
+      "openssh",
+      "prometheus",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "grafana",
+      "lp",
+      "prometheus",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 26",
+    "id": "SHA=2a333a8b0d103278cdc668d247430cbd8e35eeaebcdfb2bb065eb70f9d85e86d",
+    "hostname": "dev6-monitor-neptune",
+    "ips": [
+      "127.0.0.1",
+      "13.48.191.217",
+      "18.130.148.128",
+      "2a05:d014:1000:dab8:f8b8:b65:eee4:735a"
+    ],
+    "macs": [
+      "00:50:56:bc:a7:2f"
+    ],
+    "ports-listening": [
+      22,
+      3000,
+      5308,
+      9090
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "grafana",
+      "openssh",
+      "prometheus",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "grafana",
+      "mail",
+      "nobody",
+      "prometheus",
+      "root",
+      "syslog"
+    ]
+  },
+  {
+    "os": "RHEL 9",
+    "id": "SHA=6224a5d3fe1f34f686682153c12042d3972fcbd6ca5bfa00a4730a8588592ba0",
+    "hostname": "testing-lb-zeus",
+    "ips": [
+      "10.0.243.89",
+      "127.0.0.1",
+      "13.48.226.20",
+      "2a05:d014:1000:8bde:d3a1:9667:1f96:304c",
+      "34.240.141.200"
+    ],
+    "macs": [
+      "0a:58:0a:d2:6b:4d"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "cron",
+      "curl",
+      "dnf",
+      "haproxy",
+      "openssh",
+      "rpm",
+      "rsyslog",
+      "wget",
+      "yum"
+    ],
+    "local-users": [
+      "haproxy",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Ubuntu 24",
+    "id": "SHA=2a411ed534ffd813ef6928d08066f0d87e0bfcf11053f310b4ebb47aa95ede86",
+    "hostname": "testing-firewall-neptune",
+    "ips": [
+      "127.0.0.1",
+      "172.31.229.31",
+      "18.130.76.195",
+      "54.93.37.92"
+    ],
+    "macs": [
+      "02:42:ac:86:84:7a"
+    ],
+    "ports-listening": [
+      22,
+      5308
+    ],
+    "software": [
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "openssh",
+      "rsyslog",
+      "wget"
+    ],
+    "local-users": [
+      "daemon",
+      "lp",
+      "root",
+      "sshd",
+      "syslog"
+    ]
+  },
+  {
+    "os": "Debian 11",
+    "id": "SHA=30ccbfaedb6c7a8c875040a982820065b0b4279e1a8430d58c824fbac9089e24",
+    "hostname": "staging-webserver-jupiter",
+    "ips": [
+      "127.0.0.1",
+      "2a05:d014:1000:b75d:7fb7:71f:d829:96f7"
+    ],
+    "macs": [
+      "02:42:ac:d7:d9:2f"
+    ],
+    "ports-listening": [
+      22,
+      80,
+      443,
+      5308
+    ],
+    "software": [
+      "apache",
+      "apt",
+      "apt-get",
+      "cron",
+      "curl",
+      "dpkg",
+      "nginx",
+      "openssh",
+      "rsyslog",
+      "wget"
     ],
     "local-users": [
       "daemon",
@@ -1736,105 +3427,17 @@
   },
   {
     "os": "Ubuntu 24",
-    "id": "SHA=0777c721af1fdbed1c1b687e059f403aeccb8eeebc78d067474c97686ae20008",
-    "hostname": "testing-hub-zeus",
-    "ips": [
-      "10.0.72.167",
-      "10.0.78.201",
-      "127.0.0.1",
-      "172.31.212.33",
-      "18.130.128.16",
-      "18.130.46.12",
-      "2a05:d014:1000:ca2a:fd58:2de3:2de2:42f9",
-      "3.120.194.163",
-      "3.120.60.105",
-      "54.93.182.32"
-    ],
-    "macs": [
-      "0a:58:0a:36:be:ad"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "apache",
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "postgresql",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "postgres",
-      "root",
-      "www-data"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=6f9344f0ba98c0d5b3073a3304b5562b6339d56bb73bf9efcc016ba86319fa43",
-    "hostname": "staging-proxy-athena",
+    "id": "SHA=4523ffdf873be47ae7d6850981abd9b2a077c77516bfc7ef0d48ebb9f6319c77",
+    "hostname": "testing-db-beta",
     "ips": [
       "127.0.0.1",
-      "13.48.134.240",
-      "18.130.243.156",
-      "3.120.67.12"
+      "18.130.123.57",
+      "2a05:d014:1000:5120:7a61:5b70:e7c2:4be8",
+      "3.120.124.18",
+      "52.28.200.180"
     ],
     "macs": [
-      "02:42:ac:ef:88:99",
-      "06:1f:3b:6b:af:ef"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "squid",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "mail",
-      "proxy",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=91ce9039a869031227c63bfcbbbb8932998320b71bb002b674c73a329602fdda",
-    "hostname": "dev-db-saturn",
-    "ips": [
-      "10.0.245.23",
-      "127.0.0.1",
-      "2a05:d014:1000:211:c804:9291:c68:6b38",
-      "2a05:d014:1000:79af:bbc2:6235:8cc0:6230",
-      "3.120.175.179",
-      "3.120.206.114",
-      "34.240.81.26",
-      "54.93.152.252",
-      "54.93.202.16"
-    ],
-    "macs": [
-      "06:1f:3b:31:80:c8"
+      "0a:58:0a:38:70:a5"
     ],
     "ports-listening": [
       22,
@@ -1855,216 +3458,27 @@
       "wget"
     ],
     "local-users": [
+      "daemon",
       "mail",
       "mysql",
       "postgres",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=a97fe1cd1bed1738901bafe0f993f322096dc01dcc7bc1a04ab58ae3841638d5",
-    "hostname": "dev3-backup-charlie",
-    "ips": [
-      "10.0.25.205",
-      "127.0.0.1",
-      "2a05:d014:1000:4ec3:c54f:dc1c:6c22:edb6"
-    ],
-    "macs": [
-      "02:42:ac:0b:88:48",
-      "d4:be:d9:7c:43:ab"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsync",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=7e4d154d87342b04b600aa5426e21afe28dfa6543363b3598cf4a422c6c42515",
-    "hostname": "staging-charlie",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:b532:88c8:b949:9dee:ca34",
-      "2a05:d014:1000:e2dc:e0af:612a:15df:fce3",
-      "2a05:d014:1000:f531:7a7e:455f:c26b:52c2",
-      "34.240.64.44"
-    ],
-    "macs": [
-      "06:1f:3b:37:5d:a4"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=534246a8d4cc552edc90c74c36d0796d7f5bd77b717d83f70abe378a728dedf9",
-    "hostname": "staging8-firewall-athena",
-    "ips": [
-      "10.0.75.67",
-      "127.0.0.1",
-      "172.31.109.134",
-      "18.130.125.96",
-      "18.130.46.192",
-      "2a05:d014:1000:2db1:3e24:daab:9d82:3b28",
-      "2a05:d014:1000:8c2b:d0ae:ef17:2a58:7145",
-      "2a05:d014:1000:dc4:2e39:f3ec:1fd1:e911",
-      "34.240.112.133",
-      "34.240.131.218",
-      "54.93.141.174"
-    ],
-    "macs": [
-      "d4:be:d9:6a:b0:f4"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=3b83098f27b71499ab8bb5fed0c3a7ac27c0ac520d8c25499d4d8b43c34fd411",
-    "hostname": "testing9-jupiter",
-    "ips": [
-      "127.0.0.1",
-      "13.48.108.246",
-      "172.31.138.116",
-      "172.31.86.235",
-      "18.130.22.175",
-      "2a05:d014:1000:825:d26a:a653:fcc0:96ef",
-      "2a05:d014:1000:b885:d19e:1b52:b75c:a9cf",
-      "2a05:d014:1000:ffa3:465d:c8c7:9741:cced",
-      "34.240.178.21",
-      "54.93.248.165"
-    ],
-    "macs": [
-      "06:1f:3b:4c:a4:29"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
       "root",
       "sshd",
       "syslog"
     ]
   },
   {
-    "os": "RHEL 8",
-    "id": "SHA=5dc731cbbc01dc1d9de958f0896b5207e48f91588dde3232b15f25cb5cffa833",
-    "hostname": "production-proxy-carol",
-    "ips": [
-      "127.0.0.1",
-      "52.28.150.21",
-      "52.28.31.184",
-      "52.28.68.161",
-      "52.28.91.85",
-      "54.93.128.44",
-      "54.93.25.78"
-    ],
-    "macs": [
-      "00:1b:21:a4:dc:45"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "squid",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "proxy",
-      "root",
-      "sshd"
-    ]
-  },
-  {
     "os": "Ubuntu 22",
-    "id": "SHA=bcdb7491dac13bb04c76d8f75618fdb443b5a4b9a86f099e5ef4b8d0cff28ada",
-    "hostname": "production-venus",
+    "id": "SHA=8970d61d4347ce322d554e57ae1c147e7a3471f76359592beaa89de044e9d71a",
+    "hostname": "production5-venus",
     "ips": [
+      "10.0.21.50",
       "127.0.0.1",
-      "172.31.27.208",
-      "3.120.201.52"
+      "54.93.99.155"
     ],
     "macs": [
-      "00:1b:21:cd:7f:1a",
-      "00:50:56:62:3c:52"
+      "00:1b:21:2e:2f:f9",
+      "02:42:ac:dd:43:94"
     ],
     "ports-listening": [
       22,
@@ -2081,7 +3495,7 @@
       "wget"
     ],
     "local-users": [
-      "daemon",
+      "lp",
       "mail",
       "nobody",
       "root",
@@ -2089,64 +3503,21 @@
     ]
   },
   {
-    "os": "Ubuntu 22",
-    "id": "SHA=c86c12798d9638345c7d375ef94b3ad1e8684f47a70c67cdf713d2aa01e448b2",
-    "hostname": "testing9-alpha",
-    "ips": [
-      "10.0.205.146",
-      "127.0.0.1",
-      "172.31.128.89",
-      "172.31.239.166",
-      "172.31.96.122",
-      "3.120.53.112"
-    ],
-    "macs": [
-      "02:42:ac:f5:f2:18"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "nobody",
-      "root",
-      "sshd"
-    ]
-  },
-  {
     "os": "Windows 2022",
-    "id": "SHA=ebbcf0b3a25f08f1cdf1d2f5dfdbdb5fd2408302fcc358feab81ecab67030784",
-    "hostname": "staging8-webserver-bob",
+    "id": "SHA=adec16450380e1c88bec3c2e380fd8ed654e7d2690638088053aa4f8638ce251",
+    "hostname": "staging-charlie",
     "ips": [
       "127.0.0.1",
-      "13.48.194.81",
-      "13.48.246.87",
-      "18.130.24.247",
-      "2a05:d014:1000:6217:3375:f9fd:770:f0cf",
-      "34.240.117.132",
-      "34.240.145.236",
-      "52.28.164.175",
-      "52.28.60.36"
+      "2a05:d014:1000:1359:411:d56:4435:b386",
+      "34.240.197.239",
+      "52.28.42.191"
     ],
     "macs": [
-      "02:42:ac:a1:d6:3b"
+      "00:50:56:12:8f:7f",
+      "0a:58:0a:77:94:a0"
     ],
     "ports-listening": [
       22,
-      80,
-      443,
       5308
     ],
     "software": [
@@ -2162,219 +3533,19 @@
     ]
   },
   {
-    "os": "RHEL 8",
-    "id": "SHA=d358607a297c51e9decc9e107e94fb0ea83e494b21365297b601e4cc548f1aa0",
-    "hostname": "testing-firewall-beta",
-    "ips": [
-      "127.0.0.1",
-      "13.48.14.12",
-      "18.130.224.234",
-      "3.120.169.39",
-      "54.93.114.191"
-    ],
-    "macs": [
-      "00:1b:21:6f:9f:b4",
-      "00:50:56:93:b0:7c",
-      "0a:58:0a:30:30:85"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "lp",
-      "root",
-      "sshd"
-    ]
-  },
-  {
     "os": "Ubuntu 24",
-    "id": "SHA=15facad508c76f31f7878522a4d2e64c2f9287e3e3d21388be12b647b8c71843",
-    "hostname": "staging-proxy-mars",
-    "ips": [
-      "10.0.171.45",
-      "127.0.0.1",
-      "2a05:d014:1000:2447:fbec:73b6:6f7b:eeec",
-      "2a05:d014:1000:8b99:122e:bd52:c1f0:97f4",
-      "2a05:d014:1000:d1c0:691d:6d13:bba9:e4ca",
-      "3.120.227.188",
-      "3.120.38.40",
-      "34.240.98.100"
-    ],
-    "macs": [
-      "00:50:56:4d:c2:9a",
-      "0a:58:0a:03:8a:18"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "squid",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "proxy",
-      "root"
-    ]
-  },
-  {
-    "os": "Windows 2016",
-    "id": "SHA=007a64b525bfcb06d7633b0f91454b076f4f22d1bbaa8d47849e6e30708341a1",
-    "hostname": "dev-webserver-charlie",
-    "ips": [
-      "10.0.171.115",
-      "127.0.0.1",
-      "13.48.119.86",
-      "13.48.45.155",
-      "18.130.101.48",
-      "18.130.123.198",
-      "2a05:d014:1000:6769:2b28:ab49:6d12:be6",
-      "2a05:d014:1000:afca:9265:7bbd:9527:1a00",
-      "3.120.133.118",
-      "34.240.79.93",
-      "54.93.115.48"
-    ],
-    "macs": [
-      "02:42:ac:6c:02:28"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "DefaultAccount",
-      "SYSTEM"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=9e0f9614c851c877084902c7129e7d8292b8cbbbd071872b463297586426edda",
-    "hostname": "dev-athena",
+    "id": "SHA=f504608a10ce854ebb2a795c2e0de950c6fc6d4f081c45060fe57bb2187429b3",
+    "hostname": "production-client-saturn",
     "ips": [
       "127.0.0.1",
-      "13.48.18.182",
-      "172.31.58.129",
-      "18.130.73.81",
-      "2a05:d014:1000:79d0:4a70:664c:d120:b879",
-      "2a05:d014:1000:cece:a86c:480d:5062:437c",
-      "2a05:d014:1000:d03d:e6b0:1917:975e:f216",
-      "2a05:d014:1000:d567:a646:c260:19f:9b97"
+      "2a05:d014:1000:34d8:819c:4818:46d8:af17",
+      "2a05:d014:1000:8e83:ae54:2824:964b:ee9c",
+      "3.120.235.15",
+      "3.120.29.217"
     ],
     "macs": [
-      "00:1b:21:2c:00:5f",
-      "00:50:56:88:b8:23"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "lp",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=6ca670426463ee599e0b702ae10c5164c5c1fe93d48b406bcdc3df518dc72fb1",
-    "hostname": "dev-webserver-neptune",
-    "ips": [
-      "127.0.0.1",
-      "13.48.71.172",
-      "172.31.159.49",
-      "172.31.9.156",
-      "34.240.233.207",
-      "34.240.50.101"
-    ],
-    "macs": [
-      "00:50:56:5b:48:9f",
-      "00:50:56:9d:41:e2"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "apache",
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "nginx",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "nobody",
-      "root",
-      "sshd",
-      "www-data"
-    ]
-  },
-  {
-    "os": "Ubuntu 26",
-    "id": "SHA=0e8ef0e4fa335a8bac6393d3cb3c3fad32abdbd38a15b581c29014e5463f7262",
-    "hostname": "dev-venus",
-    "ips": [
-      "127.0.0.1",
-      "13.48.65.48",
-      "172.31.38.50",
-      "18.130.165.66",
-      "18.130.35.158",
-      "34.240.76.2",
-      "54.93.142.40"
-    ],
-    "macs": [
-      "d4:be:d9:6b:56:b8"
+      "d4:be:d9:04:33:da",
+      "d4:be:d9:35:92:62"
     ],
     "ports-listening": [
       22,
@@ -2391,8 +3562,6 @@
       "wget"
     ],
     "local-users": [
-      "daemon",
-      "lp",
       "mail",
       "root",
       "sshd"
@@ -2400,1185 +3569,14 @@
   },
   {
     "os": "Debian 12",
-    "id": "SHA=ae327b6c3d1962d339e5896ab7828426c9168a693e6baf00be9e5371a4c66928",
-    "hostname": "staging7-dns-bob",
+    "id": "SHA=db70c114ba49f8d4ba57be6f6e714bd3ef63d1f7be878db07745e07217ce0766",
+    "hostname": "production-hub-alpha",
     "ips": [
       "127.0.0.1",
-      "13.48.70.160",
-      "2a05:d014:1000:efc6:be91:256:8a2:7a26",
-      "34.240.108.120",
-      "54.93.13.20"
+      "18.130.18.89"
     ],
     "macs": [
-      "06:1f:3b:6a:6e:3a"
-    ],
-    "ports-listening": [
-      22,
-      53,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "bind",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "bind",
-      "lp",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=bccd3c3649b9ea99f12f54ec4d0d212f8bbb106bc609e7178ce062e78d0cb2d3",
-    "hostname": "testing2-firewall-apollo",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:a99b:7a6b:4ee1:c932:1326",
-      "3.120.94.195"
-    ],
-    "macs": [
-      "02:42:ac:26:20:6f"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=23036e548b9ac94a0197d072e3a1aa291ef75ef7ca2f5276b9ebfe322e2bff96",
-    "hostname": "production8-firewall-carol",
-    "ips": [
-      "10.0.36.110",
-      "127.0.0.1",
-      "13.48.177.152",
-      "172.31.39.23",
-      "172.31.7.227",
-      "34.240.158.217"
-    ],
-    "macs": [
-      "d4:be:d9:57:13:4c"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=8e18eda726b85a2f90da2663ab40e02a82b5d8fdcf9d3b28b9569502997ca1dd",
-    "hostname": "dev-mars",
-    "ips": [
-      "10.0.127.31",
-      "127.0.0.1",
-      "172.31.170.2",
-      "18.130.230.155",
-      "2a05:d014:1000:e3a0:ce63:1064:83d1:b200",
-      "52.28.135.102",
-      "52.28.224.9",
-      "52.28.33.48"
-    ],
-    "macs": [
-      "00:50:56:54:25:41"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "root"
-    ]
-  },
-  {
-    "os": "CentOS 7",
-    "id": "SHA=0d151808b47e0b7d4896dc3f13e54f1174bf98ef87c7113134c74cd625db3f7f",
-    "hostname": "testing5-jupiter",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:77e0:8609:b0e2:ba33:9186"
-    ],
-    "macs": [
-      "02:42:ac:f6:40:2e"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "SUSE 15",
-    "id": "SHA=f41e6d142e7066debb913fa03296bb8375df4d2a076349a2cafa46ead28bede0",
-    "hostname": "dev-lb-charlie",
-    "ips": [
-      "127.0.0.1",
-      "13.48.98.1",
-      "172.31.105.129",
-      "172.31.27.139",
-      "18.130.128.236",
-      "18.130.7.45",
-      "2a05:d014:1000:141c:1d33:a136:f2ed:3d7f",
-      "52.28.166.8",
-      "54.93.156.246",
-      "54.93.45.228"
-    ],
-    "macs": [
-      "02:42:ac:c7:c6:6c"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "haproxy",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "zypper"
-    ],
-    "local-users": [
-      "daemon",
-      "haproxy",
-      "mail",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=1d325843755c1114b48604808238d0333abaa56ad67657dfc612bc7e6d7137bc",
-    "hostname": "testing2-firewall-alpha",
-    "ips": [
-      "127.0.0.1",
-      "13.48.252.245"
-    ],
-    "macs": [
-      "d4:be:d9:05:2a:1e"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "Fedora 40",
-    "id": "SHA=6ebba739f36ecf62504b4b3783b7597c638944e0923825c5cb46bccff401afbb",
-    "hostname": "testing-client-beta",
-    "ips": [
-      "127.0.0.1",
-      "172.31.211.129",
-      "2a05:d014:1000:3b60:dc67:fd09:523b:d939",
-      "2a05:d014:1000:e34e:b927:aab0:e004:e8e2",
-      "3.120.132.236",
-      "3.120.197.50",
-      "54.93.167.220"
-    ],
-    "macs": [
-      "00:50:56:6b:00:36"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "lp",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=8995e5ef0c9f354f2837403d63a3edb2c88edf548803353257e75b1a37913318",
-    "hostname": "staging-saturn",
-    "ips": [
-      "127.0.0.1",
-      "172.31.135.49",
-      "3.120.36.119"
-    ],
-    "macs": [
-      "0a:58:0a:b0:02:a0"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=b895df46128119e1156cda4dc450092ba316694f441796b80a5a8b4fb964adb2",
-    "hostname": "dev-alice",
-    "ips": [
-      "127.0.0.1",
-      "172.31.83.104",
-      "2a05:d014:1000:f4c6:fce8:ea89:96b6:11af",
-      "54.93.188.81"
-    ],
-    "macs": [
-      "02:42:ac:2a:c5:6d"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=6017a300e694107df26b847c836355072c0975de177e1bc47cf86b795974fd0f",
-    "hostname": "dev-proxy-mars",
-    "ips": [
-      "127.0.0.1",
-      "172.31.73.236",
-      "18.130.244.236"
-    ],
-    "macs": [
-      "00:1b:21:1f:d3:7b"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "squid",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "nobody",
-      "proxy",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=fb0228b87f2b6757249a488e8abde4629776198d312300630852aa7ff12f9b16",
-    "hostname": "production-webserver-neptune",
-    "ips": [
-      "10.0.56.124",
-      "127.0.0.1",
-      "18.130.9.207",
-      "2a05:d014:1000:1f75:de29:29c0:26ec:69b6",
-      "2a05:d014:1000:5515:5a07:98c2:d727:28c5",
-      "3.120.174.158"
-    ],
-    "macs": [
-      "00:50:56:01:7e:47",
-      "02:42:ac:d1:89:38"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "apache",
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "nginx",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "www-data"
-    ]
-  },
-  {
-    "os": "Fedora 40",
-    "id": "SHA=dda4e56d2c2113d1aaf487e2a2735879b82de437462092378cfcf9647b8af7f1",
-    "hostname": "testing-mail-zeus",
-    "ips": [
-      "10.0.63.143",
-      "127.0.0.1",
-      "13.48.253.113",
-      "18.130.117.134",
-      "52.28.171.214",
-      "52.28.234.241",
-      "52.28.50.43",
-      "52.28.52.127",
-      "54.93.216.253",
-      "54.93.5.195"
-    ],
-    "macs": [
-      "06:1f:3b:38:cc:b8"
-    ],
-    "ports-listening": [
-      22,
-      25,
-      143,
-      465,
-      587,
-      993,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "dovecot",
-      "openssh",
-      "postfix",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "dovecot",
-      "mail",
-      "postfix",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=0877dc9f354c410a9369ab8187681d53d50afddc37f51a4a378a6a0b5da09656",
-    "hostname": "dev-lb-venus",
-    "ips": [
-      "10.0.167.239",
-      "127.0.0.1",
-      "13.48.196.157",
-      "13.48.200.59",
-      "172.31.139.248",
-      "172.31.174.6",
-      "172.31.193.215",
-      "2a05:d014:1000:24fd:700d:bf50:a612:5816",
-      "52.28.20.48"
-    ],
-    "macs": [
-      "00:1b:21:ea:30:0b"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "haproxy",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "haproxy",
-      "lp",
-      "nobody",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=0e9bac5fa8c8233578a1b519dc3b2d4351e8a2a0523d7ac19e5ba4535992c52e",
-    "hostname": "staging-dns-saturn",
-    "ips": [
-      "10.0.108.45",
-      "127.0.0.1"
-    ],
-    "macs": [
-      "0a:58:0a:92:2a:45"
-    ],
-    "ports-listening": [
-      22,
-      53,
-      5308
-    ],
-    "software": [
-      "bind",
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "bind",
-      "daemon",
-      "lp",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Fedora 40",
-    "id": "SHA=f6100669dedbf66335162ec2443bec999a77f34c65ad9f9c18c4da08896051a3",
-    "hostname": "dev6-neptune",
-    "ips": [
-      "10.0.169.191",
-      "10.0.65.239",
-      "127.0.0.1",
-      "13.48.178.49",
-      "172.31.191.32",
-      "34.240.129.162",
-      "34.240.13.249"
-    ],
-    "macs": [
-      "0a:58:0a:f5:12:90"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "root"
-    ]
-  },
-  {
-    "os": "Windows 2019",
-    "id": "SHA=fbb48868127fa22e1aea0232e358c92e1d2613a3e65e2dafe943f146cedf9c1b",
-    "hostname": "dev-mercury",
-    "ips": [
-      "10.0.174.100",
-      "127.0.0.1",
-      "13.48.165.171",
-      "13.48.226.246",
-      "172.31.97.98",
-      "2a05:d014:1000:2185:74c0:2773:9c2f:5df9",
-      "2a05:d014:1000:45c0:dfe3:870e:6a4b:a795",
-      "2a05:d014:1000:47a3:f4f8:d9dc:10c7:e016",
-      "2a05:d014:1000:4a1b:a133:9284:dbae:7466",
-      "2a05:d014:1000:e0b0:1361:8681:e812:2c11",
-      "54.93.221.33"
-    ],
-    "macs": [
-      "00:1b:21:e5:0c:ea",
-      "00:50:56:be:f5:29"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "DefaultAccount"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=c0c4efec65fe43d9e4729da4c5824be81505a3a78df1950dc1ac9fc02b6b0db9",
-    "hostname": "dev-backup-athena",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:9172:1b93:64d7:97f8:61bd",
-      "3.120.85.159"
-    ],
-    "macs": [
-      "02:42:ac:61:88:ce",
-      "0a:58:0a:ae:da:b5"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsync",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 26",
-    "id": "SHA=87d0f97383d60adf4279de528b65906cec83ce6b4b8f1deeec027df8fc464bdf",
-    "hostname": "testing-monitor-apollo",
-    "ips": [
-      "10.0.19.21",
-      "127.0.0.1",
-      "18.130.151.12",
-      "18.130.212.87",
-      "2a05:d014:1000:9d50:e15e:ffc:4186:5cfb",
-      "34.240.158.67",
-      "34.240.74.216",
-      "52.28.116.112"
-    ],
-    "macs": [
-      "02:42:ac:f4:e4:0f"
-    ],
-    "ports-listening": [
-      22,
-      3000,
-      5308,
-      9090
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "grafana",
-      "openssh",
-      "prometheus",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "grafana",
-      "lp",
-      "prometheus",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=ea17bcdabf16d914a20df2677d619058bf96c390e537f59686bc6fbd6c2c8ffd",
-    "hostname": "staging4-neptune",
-    "ips": [
-      "127.0.0.1",
-      "18.130.134.91",
-      "2a05:d014:1000:5c18:bc6a:51bc:affe:a0ba",
-      "2a05:d014:1000:9a4d:8af7:5f29:c4a7:6946",
-      "2a05:d014:1000:a0c9:29f7:175b:9185:b215",
-      "3.120.97.61",
-      "34.240.96.58",
-      "52.28.1.8"
-    ],
-    "macs": [
-      "d4:be:d9:f2:a6:4e"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "lp",
-      "mail",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "Debian 11",
-    "id": "SHA=7c95694bd0fee9679195ebbb909d5f73816e998d65b381f4b325c8e4b002115b",
-    "hostname": "testing9-proxy-jupiter",
-    "ips": [
-      "127.0.0.1",
-      "18.130.36.35"
-    ],
-    "macs": [
-      "06:1f:3b:74:67:ed"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "squid",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "proxy",
-      "root"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=8c36f81c4116faf62897aba3e6f58b6cec8c355060d8cae1d9ffdccb501cfefa",
-    "hostname": "dev4-lb-carol",
-    "ips": [
-      "10.0.219.51",
-      "127.0.0.1",
-      "172.31.197.37",
-      "172.31.203.212",
-      "34.240.12.69",
-      "54.93.13.79"
-    ],
-    "macs": [
-      "02:42:ac:e4:a7:51"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "haproxy",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "haproxy",
-      "lp",
-      "mail",
-      "nobody",
-      "root"
-    ]
-  },
-  {
-    "os": "Debian 11",
-    "id": "SHA=e49063e125a9a785beb3347c81a29af8eb9bcfe2584c7a1de3007b934db6a53d",
-    "hostname": "production-firewall-echo",
-    "ips": [
-      "127.0.0.1",
-      "13.48.131.194",
-      "18.130.159.123",
-      "34.240.250.40",
-      "54.93.3.152"
-    ],
-    "macs": [
-      "00:1b:21:7e:91:e0"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "nobody",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=1e696c0328e05b79e4217e005b1076776a81feeb428a339be00ce2352e55ab6d",
-    "hostname": "dev7-ntp-carol",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:2666:7a7a:be58:ed13:af53",
-      "2a05:d014:1000:3bf:38c8:6b11:f14:3dcb",
-      "2a05:d014:1000:75c3:61ff:97bc:74db:3419",
-      "3.120.183.72",
-      "34.240.56.169",
-      "54.93.132.129"
-    ],
-    "macs": [
-      "00:1b:21:12:7f:4f"
-    ],
-    "ports-listening": [
-      22,
-      123,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "chrony",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=ca2abda2451aea8693c7762eb0ac20106d3a59e1cc66ced56e5c658128e342dc",
-    "hostname": "staging-proxy-zeus",
-    "ips": [
-      "127.0.0.1",
-      "13.48.27.157",
-      "172.31.111.72",
-      "18.130.163.209",
-      "18.130.97.242",
-      "2a05:d014:1000:957d:eb6d:7017:32b7:31e9",
-      "2a05:d014:1000:9bd3:26f8:c87b:3c2c:4b4c",
-      "2a05:d014:1000:a0dc:2808:df3d:7b29:526"
-    ],
-    "macs": [
-      "06:1f:3b:3c:08:a6",
-      "0a:58:0a:da:82:7c"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "squid",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "nobody",
-      "proxy",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=5d0988859aeaf2b5d0863fcf12dfaa887f4c36b98b8a924f208c153aafe26d44",
-    "hostname": "staging1-backup-mercury",
-    "ips": [
-      "10.0.209.201",
-      "127.0.0.1",
-      "18.130.41.119",
-      "34.240.125.74",
-      "52.28.45.9"
-    ],
-    "macs": [
-      "06:1f:3b:c3:e5:49"
-    ],
-    "ports-listening": [
-      22,
-      873,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsync",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=dfc1e7464cfe11d6fc57fdb7fe9c4684386369877815c78e08415a5911e64164",
-    "hostname": "production-mail-charlie",
-    "ips": [
-      "127.0.0.1",
-      "34.240.245.153",
-      "52.28.43.91"
-    ],
-    "macs": [
-      "00:1b:21:3b:2e:34",
-      "00:50:56:ec:3e:64"
-    ],
-    "ports-listening": [
-      22,
-      25,
-      143,
-      465,
-      587,
-      993,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "dovecot",
-      "openssh",
-      "postfix",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "dovecot",
-      "lp",
-      "nobody",
-      "postfix",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=dabc73d0c0a38ba0d0584600dd7f611f9a564253fa07e407f986169f19fff7c5",
-    "hostname": "dev-proxy-zeus",
-    "ips": [
-      "127.0.0.1",
-      "13.48.56.114",
-      "18.130.233.86",
-      "2a05:d014:1000:271c:851d:a7e7:b4e:fac1",
-      "2a05:d014:1000:2a:d169:d45f:6b0f:ff11",
-      "2a05:d014:1000:5fa6:c303:3900:30ce:25b4",
-      "3.120.121.194",
-      "34.240.252.59",
-      "54.93.116.216",
-      "54.93.231.9"
-    ],
-    "macs": [
-      "0a:58:0a:74:53:a3"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "squid",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "mail",
-      "proxy",
-      "root",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Fedora 40",
-    "id": "SHA=adb2f73a7ec8558ff07bf9849df647dba67d3657b244c81e80810eff3bbe3365",
-    "hostname": "testing8-mail-mars",
-    "ips": [
-      "10.0.110.164",
-      "127.0.0.1",
-      "13.48.255.235",
-      "172.31.211.203",
-      "172.31.224.103",
-      "18.130.155.73",
-      "2a05:d014:1000:b4e8:8735:3cea:809f:8658",
-      "2a05:d014:1000:f32c:5596:85ba:3be4:62ea",
-      "52.28.72.135"
-    ],
-    "macs": [
-      "0a:58:0a:de:ba:5b",
-      "d4:be:d9:4c:6e:fa"
-    ],
-    "ports-listening": [
-      22,
-      25,
-      143,
-      465,
-      587,
-      993,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "dovecot",
-      "openssh",
-      "postfix",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "dovecot",
-      "mail",
-      "nobody",
-      "postfix",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=7b03eb0aab5be1ed6d17bf42de8262077c65c306c47edbfe2cda18f077c03edb",
-    "hostname": "dev-ntp-zeus",
-    "ips": [
-      "10.0.20.180",
-      "10.0.86.162",
-      "127.0.0.1",
-      "2a05:d014:1000:5977:6968:a54c:d696:ce15",
-      "34.240.124.3",
-      "34.240.145.170",
-      "34.240.187.47",
-      "34.240.244.209",
-      "54.93.100.244"
-    ],
-    "macs": [
-      "02:42:ac:de:73:88",
-      "d4:be:d9:40:e8:d3",
-      "d4:be:d9:59:72:5f"
-    ],
-    "ports-listening": [
-      22,
-      123,
-      5308
-    ],
-    "software": [
-      "chrony",
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "daemon",
-      "mail",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 24",
-    "id": "SHA=d7df2ae8a17af08b2c7404dbab492e7119d6a3a5b6dcf6d681051ad5e25a8e2e",
-    "hostname": "staging9-hub-alice",
-    "ips": [
-      "127.0.0.1",
-      "52.28.26.153"
-    ],
-    "macs": [
-      "0a:58:0a:a1:a1:84",
-      "d4:be:d9:e8:27:28"
+      "02:42:ac:35:97:41"
     ],
     "ports-listening": [
       22,
@@ -3603,299 +3601,8 @@
       "postgres",
       "root",
       "sshd",
+      "syslog",
       "www-data"
-    ]
-  },
-  {
-    "os": "Ubuntu 22",
-    "id": "SHA=169691950b5389f87c809e3c1376bef12e9398be3045e4baece3ef53b2e8985b",
-    "hostname": "staging4-echo",
-    "ips": [
-      "127.0.0.1",
-      "54.93.71.149"
-    ],
-    "macs": [
-      "0a:58:0a:1e:82:34"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Debian 11",
-    "id": "SHA=2ea6bd6c381c5629f2991c0afe00ce8572fbd6c3b3f4d1a41d38ac1fa303fb70",
-    "hostname": "testing1-proxy-neptune",
-    "ips": [
-      "10.0.6.101",
-      "127.0.0.1",
-      "2a05:d014:1000:1a08:a131:c5c:a86e:817c",
-      "2a05:d014:1000:4a7f:8fd9:2b99:e023:7604",
-      "2a05:d014:1000:c9b2:c563:445d:e38a:3043",
-      "2a05:d014:1000:d9f9:9feb:79b7:ba80:9079",
-      "2a05:d014:1000:df11:cee3:b99f:1c0a:9ca",
-      "2a05:d014:1000:fa68:c673:9372:630f:e694",
-      "34.240.144.105",
-      "52.28.83.58",
-      "54.93.80.114"
-    ],
-    "macs": [
-      "06:1f:3b:cf:65:59",
-      "d4:be:d9:72:a9:91"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "squid",
-      "wget"
-    ],
-    "local-users": [
-      "mail",
-      "nobody",
-      "proxy",
-      "root",
-      "sshd",
-      "syslog"
-    ]
-  },
-  {
-    "os": "Ubuntu 26",
-    "id": "SHA=0f1ed5a695f6d8703ebcee9b6529305db60af6fe631e4631bad7a29430bada11",
-    "hostname": "production-firewall-carol",
-    "ips": [
-      "127.0.0.1",
-      "18.130.205.97",
-      "2a05:d014:1000:1542:c3fc:7ebb:4a1b:9b56",
-      "2a05:d014:1000:80f8:d82f:c4af:69dc:c656",
-      "3.120.26.254",
-      "52.28.244.4"
-    ],
-    "macs": [
-      "00:50:56:b5:65:26",
-      "06:1f:3b:91:6b:1c"
-    ],
-    "ports-listening": [
-      22,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "wget"
-    ],
-    "local-users": [
-      "nobody",
-      "root",
-      "sshd"
-    ]
-  },
-  {
-    "os": "Debian 12",
-    "id": "SHA=d0b98afb503bb06bcebe6117a74eda02f83c06030c83fa84480b05bdc283a2fc",
-    "hostname": "staging4-proxy-zeus",
-    "ips": [
-      "10.0.104.49",
-      "127.0.0.1",
-      "13.48.227.117",
-      "172.31.203.253",
-      "18.130.62.148",
-      "18.130.76.183",
-      "3.120.155.25",
-      "3.120.200.77",
-      "54.93.68.215"
-    ],
-    "macs": [
-      "06:1f:3b:e1:4c:7c"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      3128,
-      5308
-    ],
-    "software": [
-      "apt",
-      "apt-get",
-      "cron",
-      "curl",
-      "dpkg",
-      "openssh",
-      "rsyslog",
-      "squid",
-      "wget"
-    ],
-    "local-users": [
-      "daemon",
-      "lp",
-      "mail",
-      "nobody",
-      "proxy",
-      "root"
-    ]
-  },
-  {
-    "os": "RHEL 8",
-    "id": "SHA=39812c852a20234fa2d896628168cc61af38e430f84f924e52cab9488355e679",
-    "hostname": "staging-hub-zeus",
-    "ips": [
-      "10.0.111.26",
-      "10.0.132.147",
-      "10.0.176.60",
-      "10.0.48.64",
-      "127.0.0.1",
-      "13.48.57.172",
-      "172.31.151.128",
-      "18.130.22.12",
-      "2a05:d014:1000:7970:e896:fb8d:f561:a92d",
-      "54.93.155.23",
-      "54.93.189.106"
-    ],
-    "macs": [
-      "00:50:56:4a:a7:da",
-      "00:50:56:91:5a:70"
-    ],
-    "ports-listening": [
-      22,
-      80,
-      443,
-      5308
-    ],
-    "software": [
-      "apache",
-      "cron",
-      "curl",
-      "dnf",
-      "openssh",
-      "postgresql",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "lp",
-      "postgres",
-      "root",
-      "sshd",
-      "www-data"
-    ]
-  },
-  {
-    "os": "Windows 2022",
-    "id": "SHA=b9844c2811f635dd1f9686cd2c743b26fa307b0db5d81f3bf3e1304f4a9914b8",
-    "hostname": "production9-mail-charlie",
-    "ips": [
-      "127.0.0.1",
-      "18.130.176.220",
-      "2a05:d014:1000:1e1e:ad78:fae0:730a:3450",
-      "2a05:d014:1000:f817:c8e7:db9c:c43f:a35b"
-    ],
-    "macs": [
-      "02:42:ac:81:47:fc"
-    ],
-    "ports-listening": [
-      22,
-      25,
-      143,
-      465,
-      587,
-      993,
-      5308
-    ],
-    "software": [
-      "chocolatey",
-      "powershell",
-      "windows-defender"
-    ],
-    "local-users": [
-      "Administrator",
-      "Guest"
-    ]
-  },
-  {
-    "os": "RHEL 9",
-    "id": "SHA=8aedb4f6da52d0f08fc23a5003545cab2345ef8f92a4c3ae4cdfd5d5a295dff5",
-    "hostname": "staging-mail-athena",
-    "ips": [
-      "127.0.0.1",
-      "2a05:d014:1000:2b4a:d5db:ede0:3d34:97d",
-      "2a05:d014:1000:78a1:2ead:35e3:4332:aba9",
-      "2a05:d014:1000:8cd2:4f6b:453b:82f1:e688",
-      "3.120.53.232",
-      "34.240.68.13",
-      "34.240.91.129",
-      "52.28.7.225",
-      "52.28.96.196",
-      "54.93.140.50"
-    ],
-    "macs": [
-      "00:50:56:c8:f5:ed",
-      "0a:58:0a:36:d3:4c",
-      "0a:58:0a:65:2b:b1"
-    ],
-    "ports-listening": [
-      22,
-      25,
-      143,
-      465,
-      587,
-      993,
-      5308
-    ],
-    "software": [
-      "cron",
-      "curl",
-      "dnf",
-      "dovecot",
-      "openssh",
-      "postfix",
-      "rpm",
-      "rsyslog",
-      "wget",
-      "yum"
-    ],
-    "local-users": [
-      "dovecot",
-      "mail",
-      "postfix",
-      "root",
-      "sshd",
-      "syslog"
     ]
   }
 ]

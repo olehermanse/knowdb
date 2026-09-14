@@ -162,16 +162,22 @@ def generate_ipv6():
     return f"{IPV6_PREFIX}:1000:{':'.join(groups)}:{random.randint(1, 0xFFFF):x}"
 
 
+MAX_IPV4 = 4  # including 127.0.0.1
+MAX_IPV6 = 2
+
+
 def generate_ips():
-    count = random.randint(1, 10)
-    ips = set()
-    while len(ips) < count:
-        if random.random() < 0.8:
-            ips.add(generate_ipv4())
-        else:
-            ips.add(generate_ipv6())
-    ips.add("127.0.0.1")
-    return sorted(ips)
+    # Every host has loopback, plus 0-3 more IPv4 and 0-2 IPv6 addresses,
+    # so at most MAX_IPV4 IPv4 and MAX_IPV6 IPv6 addresses in total.
+    ipv4 = {"127.0.0.1"}
+    ipv6 = set()
+    ipv4_count = random.randint(1, MAX_IPV4)
+    ipv6_count = random.choices(range(MAX_IPV6 + 1), weights=[50, 35, 15])[0]
+    while len(ipv4) < ipv4_count:
+        ipv4.add(generate_ipv4())
+    while len(ipv6) < ipv6_count:
+        ipv6.add(generate_ipv6())
+    return sorted(ipv4 | ipv6)
 
 
 def generate_mac():
