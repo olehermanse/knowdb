@@ -1,3 +1,4 @@
+import EntryLink from "@/components/EntryLink";
 import OsPieChart from "@/components/OsPieChart";
 import { aggregateOs, Entry, EntryType } from "@/lib/data";
 
@@ -38,6 +39,18 @@ function sectionText(type: EntryType, subject: string, name: string): string {
 export default function OperatingSystems({ entry }: { entry: Entry }) {
   const counts = aggregateOs(entry.hosts);
   const subject = OS_SECTION_SUBJECTS[entry.type] ?? "entry";
+  // A version on a single OS gets one sentence instead of intro + chart.
+  if (entry.type === "version" && counts.length === 1) {
+    const only = counts[0];
+    return (
+      <section data-testid="os-section">
+        <p data-testid="os-summary">
+          The {entry.name} software version is only installed on{" "}
+          <EntryLink type="os" name={only.os} /> ({only.hosts} {only.hosts === 1 ? "host" : "hosts"}).
+        </p>
+      </section>
+    );
+  }
   return (
     <section data-testid="os-section">
       <p className="muted">{sectionText(entry.type, subject, entry.name)}</p>

@@ -1658,6 +1658,37 @@ test("front page buttons list everything of a type", async ({ page }) => {
   await expect(page.getByTestId("search-hint")).toBeVisible();
 });
 
+test("a version on a single operating system gets one plain sentence", async ({
+  page,
+}) => {
+  // Find a software version whose hosts all run the same OS.
+  const byVersion = new Map<string, Host[]>();
+  for (const h of hosts) {
+    const versions = h["software-versions"] as unknown as Record<string, string>;
+    for (const [sw, v] of Object.entries(versions)) {
+      const key = `${sw} ${v}`;
+      byVersion.set(key, [...(byVersion.get(key) ?? []), h]);
+    }
+  }
+  const single = [...byVersion.entries()].find(
+    ([, hs]) => new Set(hs.map((h) => h.os)).size === 1,
+  );
+  test.skip(!single, "every software version spans several operating systems");
+  const [name, hs] = single!;
+  await page.goto(`/entry/version/${encodeURIComponent(name)}`);
+  const summary = page.getByTestId("os-summary");
+  await expect(summary).toHaveText(
+    `The ${name} software version is only installed on ${hs[0].os} (${hs.length} ${hs.length === 1 ? "host" : "hosts"}).`,
+  );
+  await expect(summary.getByRole("link", { name: hs[0].os })).toHaveAttribute(
+    "href",
+    `/entry/os/${encodeURIComponent(hs[0].os)}`,
+  );
+  // No separate intro sentence or chart.
+  await expect(page.getByTestId("os-section").locator("p")).toHaveCount(1);
+  await expect(page.getByTestId("os-pie")).toHaveCount(0);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");
