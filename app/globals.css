@@ -658,7 +658,8 @@ a,
   margin-top: 2rem;
 }
 
-.comment-card {
+/* More specific than `.entry-list li`: author and time above the text. */
+.entry-list li.comment-card {
   display: block;
 }
 

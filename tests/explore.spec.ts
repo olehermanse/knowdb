@@ -2228,6 +2228,10 @@ test("entries have a Comments tab with example comments", async ({ page }) => {
     await expect(cards.nth(i).locator("time")).toHaveAttribute("datetime", c.time);
     await expect(cards.nth(i).locator("time")).toHaveText(/ago$|just now/);
   }
+  // Author and time sit above the text, not beside it.
+  const meta = (await cards.first().locator(".comment-meta").boundingBox())!;
+  const body = (await cards.first().getByTestId("comment-card-text").boundingBox())!;
+  expect(body.y).toBeGreaterThanOrEqual(meta.y + meta.height - 1);
   // Entries without examples still have the tab, saying so.
   await page.goto("/entry/port/5308?tab=comments");
   await expect(page.getByTestId("comments-heading")).toHaveText("Comments (0)");
