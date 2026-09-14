@@ -148,10 +148,10 @@ export default async function EntryPage({
             )}
           </h1>
         </div>
-        {seen && <SeenLine seen={seen} testId="entry" />}
       </header>
       <div className="entry-split">
         <div className="entry-pane entry-pane-left" data-testid="entry-pane">
+          {seen && <SeenLine seen={seen} testId="entry" />}
           <SeeAlso entry={entry} />
           <p className="muted" data-testid="entry-description">
             {describeEntry(entry)}

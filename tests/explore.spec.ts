@@ -1961,6 +1961,9 @@ test("other entries derive first and last seen from their hosts", async ({
   const seeAlsoBox = (await page.getByTestId("see-also").boundingBox())!;
   expect(seenBox.y).toBeGreaterThan(titleBox.y);
   expect(seenBox.y).toBeLessThan(seeAlsoBox.y);
+  // The right pane starts level with the seen line, not below it.
+  const hostsBox = (await page.getByTestId("hosts-heading").boundingBox())!;
+  expect(Math.abs(hostsBox.y - seenBox.y)).toBeLessThan(12);
   await expect(page.getByTestId("entry-first-seen")).toHaveAttribute("datetime", firsts[0]);
   await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
     "datetime",
