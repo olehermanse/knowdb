@@ -190,18 +190,22 @@ test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
   await expect(page.getByTestId("entry-name")).toHaveText(someHost.hostname);
 
   const onlyHostsAndSimilar = async () => {
-    const tabs = page.getByTestId("related-hosts").getByRole("tab");
-    await expect(tabs).toHaveCount(2);
-    await expect(tabs.nth(0)).toHaveText("Hosts (1)");
-    await expect(tabs.nth(1)).toContainText("Similar");
+    // Left: just the Similar tab. Right: the host view itself.
+    const leftTabs = page.getByTestId("entry-tabs").getByRole("tab");
+    await expect(leftTabs).toHaveCount(1);
+    await expect(leftTabs.first()).toContainText("Similar");
+    await expect(page.getByTestId("hosts-tabs")).toHaveCount(0);
     await expect(page.getByTestId("os-heading")).toHaveCount(0);
     await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
     await expect(page.getByTestId("ports-heading")).toHaveCount(0);
-    // Hosts is the default tab and lists the one host.
-    await expect(page.getByTestId("host-item")).toHaveCount(1);
+    await expect(page.getByTestId("hosts-heading")).toHaveCount(0);
+    const pane = page.getByTestId("hosts-pane");
+    await expect(pane.getByTestId("pane-entry-name")).toContainText(someHost.hostname);
+    await expect(pane.getByTestId("pane-entry-summary")).toContainText("This is");
+    await expect(pane.getByTestId("host-details")).toBeVisible();
     await expect(
-      page.getByTestId("host-item").getByRole("link", { name: someHost.hostname, exact: true }),
-    ).toHaveAttribute("href", `/entry/host/${encodeURIComponent(someHost.id)}`);
+      pane.getByTestId("host-details").getByRole("link", { name: someHost.os, exact: true }),
+    ).toBeVisible();
   };
   await onlyHostsAndSimilar();
 
@@ -326,6 +330,7 @@ test("groups are two-way linked: host -> group -> host", async ({ page }) => {
 });
 
 test("every group in groups.json has an entry page", async ({ page }) => {
+  test.slow();
   for (const group of groups) {
     const response = await page.goto(groupHref(group.name));
     expect(response!.status(), group.name).toBe(200);
@@ -365,7 +370,7 @@ test("group page shows an operating system pie chart and ranked list", async ({
   const name = groupWithOsCount((n) => n >= 2 && n <= 7);
   const selected = hostsInGroup(name);
   const expected = osCounts(selected);
-  await page.goto(groupHref(name));
+  await page.goto(`${groupHref(name)}?htab=os`);
 
   await expect(page.getByTestId("os-heading")).toHaveText(
     `Operating systems (${expected.length})`,
@@ -392,10 +397,13 @@ test("group page shows an operating system pie chart and ranked list", async ({
     await expect(items.nth(i)).toContainText(hostsLabel(n));
   }
 
-  // The operating systems tab comes before the ports tab.
-  const osBox = await page.getByTestId("os-heading").boundingBox();
-  const portsBox = await page.getByTestId("ports-heading").boundingBox();
-  expect(osBox!.x).toBeLessThan(portsBox!.x);
+  // On the right side, the hosts tab comes before the operating systems tab,
+  // and the ports tab lives on the left side.
+  const osBox = (await page.getByTestId("os-heading").boundingBox())!;
+  const hostsBox = (await page.getByTestId("hosts-heading").boundingBox())!;
+  const portsBox = (await page.getByTestId("ports-heading").boundingBox())!;
+  expect(hostsBox.x).toBeLessThan(osBox.x);
+  expect(portsBox.x).toBeLessThan(hostsBox.x);
 });
 
 test("operating systems beyond the palette fold into an Other slice", async ({
@@ -403,7 +411,7 @@ test("operating systems beyond the palette fold into an Other slice", async ({
 }) => {
   const name = groupWithOsCount((n) => n > 8);
   const expected = osCounts(hostsInGroup(name));
-  await page.goto(groupHref(name));
+  await page.goto(`${groupHref(name)}?htab=os`);
 
   const slices = page.getByTestId("os-pie").locator("path");
   await expect(slices).toHaveCount(8);
@@ -426,10 +434,13 @@ test("group with a single operating system shows a sentence instead", async ({
 }) => {
   // Prefer a group; fall back to a class (they work the same way), since
   // e.g. the "ubuntu_24" class always has exactly one operating system.
-  const group = groups.find((g) => osCounts(hostsInGroup(g.name)).length === 1);
-  const cls = [...new Set(hosts.flatMap((h) => h.classes))].find(
-    (c) => osCounts(hosts.filter((h) => h.classes.includes(c))).length === 1,
+  const group = groups.find(
+    (g) => hostsInGroup(g.name).length > 1 && osCounts(hostsInGroup(g.name)).length === 1,
   );
+  const cls = [...new Set(hosts.flatMap((h) => h.classes))].find((c) => {
+    const hs = hosts.filter((h) => h.classes.includes(c));
+    return hs.length > 1 && osCounts(hs).length === 1;
+  });
   const subject = group ? "group" : "class";
   const name = group?.name ?? cls!;
   expect(name).toBeTruthy();
@@ -437,7 +448,9 @@ test("group with a single operating system shows a sentence instead", async ({
     ? hostsInGroup(group.name)
     : hosts.filter((h) => h.classes.includes(name));
   const expected = osCounts(selected);
-  await page.goto(group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`);
+  await page.goto(
+    `${group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`}?htab=os`,
+  );
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
   await expect(page.getByTestId("os-list")).toHaveCount(0);
   const [os, n] = expected[0];
@@ -457,17 +470,17 @@ test("operating systems section is reused on software, port and user pages", asy
 }) => {
   const cases: [string, (h: Host) => boolean, string][] = [
     [
-      "/entry/software/dpkg?tab=os",
+      "/entry/software/dpkg?htab=os",
       (h) => h.software.includes("dpkg"),
       "The hosts with dpkg installed run these operating systems:",
     ],
     [
-      "/entry/port/22",
+      "/entry/port/22?htab=os",
       (h) => h["ports-listening"].includes(22),
       "Operating systems of the hosts listening to this port:",
     ],
     [
-      "/entry/user/root",
+      "/entry/user/root?htab=os",
       (h) => h["local-users"].includes("root"),
       "Operating systems of the hosts with this local user:",
     ],
@@ -495,7 +508,8 @@ test("operating systems tab is hidden on OS and host pages", async ({
   await expect(page.getByTestId("hosts-heading")).toBeVisible();
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await expect(page.getByTestId("os-heading")).toHaveCount(0);
-  await expect(page.getByTestId("related-hosts")).toHaveCount(0);
+  await expect(page.getByTestId("entry-tabs")).toHaveCount(0);
+  await expect(page.getByTestId("hosts-tabs")).toHaveCount(0);
   // Ports tab is hidden on port pages, but the other two remain.
   await page.goto("/entry/port/22");
   await expect(page.getByTestId("ports-heading")).toHaveCount(0);
@@ -539,7 +553,7 @@ test("os page aggregates listening ports of its hosts", async ({ page }) => {
 test("hosts and ports sections have short headings and descriptions", async ({
   page,
 }) => {
-  await page.goto("/entry/port/22?tab=hosts");
+  await page.goto("/entry/port/22?htab=hosts");
   await expect(page.getByTestId("hosts-heading")).toHaveText(
     `Hosts (${hosts.length})`,
   );
@@ -548,7 +562,7 @@ test("hosts and ports sections have short headings and descriptions", async ({
   );
   await expect(page.getByText("Linked hosts")).toHaveCount(0);
 
-  await page.goto("/entry/software/dpkg?tab=hosts");
+  await page.goto("/entry/software/dpkg?htab=hosts");
   await expect(page.getByTestId("hosts-description")).toHaveText(
     "Hosts with dpkg installed:",
   );
@@ -647,7 +661,7 @@ test("host lists show abbreviated ID, OS and IP addresses", async ({
   // Hosts are listed 50 per page in host key order; go to our host's page.
   const sortedIds = hosts.map((h) => h.id).sort();
   const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
-  await page.goto(`/entry/port/22?tab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
+  await page.goto(`/entry/port/22?htab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
   const item = page
     .getByTestId("linked-hosts")
     .locator("li", { hasText: someHost.hostname })
@@ -693,24 +707,20 @@ test("MAC addresses are linked both ways", async ({ page }) => {
   await expect(page.getByTestId("entry-description")).toContainText(
     "MAC address",
   );
-  await openTab(page, "hosts");
-  await expect(page.getByTestId("hosts-description")).toHaveText(
-    `Hosts with a network interface with the MAC address ${mac}:`,
-  );
+  // MAC addresses are unique, so the right pane is the host view itself.
   const owners = hosts.filter((h) => h.macs.includes(mac));
-  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
-    owners.length,
-  );
+  expect(owners).toHaveLength(1);
+  const pane = page.getByTestId("hosts-pane");
+  await expect(pane.getByTestId("pane-entry-name")).toContainText(someHost.hostname);
   await expect(
-    page
-      .getByTestId("linked-hosts")
-      .getByRole("link", { name: someHost.hostname, exact: true }),
-  ).toBeVisible();
+    pane.getByTestId("host-details").getByRole("link", { name: mac, exact: true }),
+  ).toHaveAttribute("href", `/entry/mac/${encodeURIComponent(mac)}`);
 });
 
 test("user and OS pages show info.json descriptions or a fallback", async ({
   page,
 }) => {
+  test.slow();
   const users = info.users as Record<string, { description: string }>;
   const oses = info.os as Record<string, { description: string }>;
 
@@ -1113,7 +1123,7 @@ test("host lists are paginated 50 at a time", async ({ page }) => {
   expect(hosts.length).toBeGreaterThan(50);
   const total = hosts.length;
   const lastPage = Math.ceil(total / 50);
-  await page.goto("/entry/port/22?tab=hosts");
+  await page.goto("/entry/port/22?htab=hosts");
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${total})`);
   await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(50);
   await expect(page.getByTestId("pagination-summary")).toHaveText(
@@ -1123,7 +1133,7 @@ test("host lists are paginated 50 at a time", async ({ page }) => {
   await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveCount(0);
 
   await pagination.getByRole("link", { name: "Next →" }).click();
-  await expect(page).toHaveURL(/\/entry\/port\/22\?tab=hosts&page=2$/);
+  await expect(page).toHaveURL(/\/entry\/port\/22\?page=2$/);
   await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
     Math.min(50, total - 50),
   );
@@ -1132,7 +1142,7 @@ test("host lists are paginated 50 at a time", async ({ page }) => {
   );
   await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveAttribute(
     "href",
-    "/entry/port/22?tab=hosts",
+    "/entry/port/22",
   );
   // The two pages show different hosts.
   const firstOnPage2 = await page
@@ -1140,19 +1150,19 @@ test("host lists are paginated 50 at a time", async ({ page }) => {
     .locator("li")
     .first()
     .textContent();
-  await page.goto("/entry/port/22?tab=hosts");
+  await page.goto("/entry/port/22?htab=hosts");
   await expect(page.getByTestId("linked-hosts").locator("li").first()).not.toHaveText(
     firstOnPage2!,
   );
 
   // Out-of-range pages are clamped to the last page.
-  await page.goto("/entry/port/22?tab=hosts&page=999");
+  await page.goto("/entry/port/22?htab=hosts&page=999");
   await expect(page.getByTestId("pagination").locator("[aria-current=page]")).toHaveText(
     String(lastPage),
   );
 
   // Short lists have no pagination.
-  await page.goto(`${groupHref("Windows")}?tab=hosts`);
+  await page.goto(`${groupHref("Windows")}?htab=hosts`);
   await expect(page.getByTestId("pagination")).toHaveCount(0);
 });
 
@@ -1237,7 +1247,7 @@ test("hosts have pixel avatars coloured by operating system", async ({
   // Stable: the same host gets the same pattern in a list.
   const sortedIds = hosts.map((h) => h.id).sort();
   const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
-  await page.goto(`/entry/port/22?tab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
+  await page.goto(`/entry/port/22?htab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
   const item = page.getByTestId("host-item").filter({
     has: page.getByRole("link", { name: someHost.hostname, exact: true }),
   });
@@ -1380,6 +1390,7 @@ test("software has versions which are entries of their own", async ({
   );
   await expect(page.getByTestId("entry-summary")).toHaveCount(0);
   await expect(page.getByTestId("external-links")).toHaveCount(0);
+  await openTab(page, "os");
   await expect(page.getByTestId("os-section")).toContainText(
     `The cfengine ${topVersion} software version is installed on these operating systems:`,
   );
@@ -1443,7 +1454,7 @@ test("avatars show an online/offline dot and about 70% of hosts are online", asy
 
   // Dots appear in host lists too, and the avatar is vertically centred
   // with the badge and the text next to it.
-  await page.goto("/entry/port/22?tab=hosts");
+  await page.goto("/entry/port/22?htab=hosts");
   const item = page.getByTestId("host-item").first();
   await expect(item.getByTestId("host-status")).toHaveCount(1);
   const avatar = (await item.getByTestId("host-avatar-wrap").boundingBox())!;
@@ -1575,6 +1586,7 @@ test("hosts have a cloud provider, or none for their own data center", async ({
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `${awsHosts.length} hosts in your infrastructure run on AWS, across ${pluralize(distinctOs(awsHosts), "operating system")}.`,
   );
+  await openTab(page, "os");
   await expect(page.getByTestId("os-section")).toContainText(
     "The hosts on AWS run these operating systems:",
   );
@@ -1645,12 +1657,12 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
   const byClass = new Map<string, Host[]>();
   for (const h of hosts) for (const c of h.classes) byClass.set(c, [...(byClass.get(c) ?? []), h]);
   const uniform = [...byClass.entries()].find(
-    ([, hs]) => new Set(hs.map(providerOf)).size === 1,
+    ([, hs]) => hs.length > 1 && new Set(hs.map(providerOf)).size === 1,
   );
   if (uniform) {
     const [cls, hs] = uniform;
     const provider = providerOf(hs[0]);
-    await page.goto(`/entry/class/${encodeURIComponent(cls)}?tab=clouds`);
+    await page.goto(`/entry/class/${encodeURIComponent(cls)}?htab=clouds`);
     const subject =
       hs.length === 1 ? "The only host with this class runs" : `All ${hs.length} hosts with this class run`;
     await expect(page.getByTestId("cloud-summary")).toHaveText(
@@ -1723,11 +1735,11 @@ test("a version on a single operating system gets one plain sentence", async ({
     }
   }
   const single = [...byVersion.entries()].find(
-    ([, hs]) => new Set(hs.map((h) => h.os)).size === 1,
+    ([, hs]) => hs.length > 1 && new Set(hs.map((h) => h.os)).size === 1,
   );
   test.skip(!single, "every software version spans several operating systems");
   const [name, hs] = single!;
-  await page.goto(`/entry/version/${encodeURIComponent(name)}`);
+  await page.goto(`/entry/version/${encodeURIComponent(name)}?htab=os`);
   const summary = page.getByTestId("os-summary");
   await expect(summary).toHaveText(
     `The ${name} software version is only installed on ${hs[0].os} (${hs.length} ${hs.length === 1 ? "host" : "hosts"}).`,
@@ -1815,7 +1827,7 @@ test("similar tab is disabled when nothing is similar", async ({ page }) => {
   await expect(tab.getByRole("link")).toHaveCount(0);
   // Asking for the disabled tab falls back to the first tab.
   await page.goto("/entry/port/22?tab=similar");
-  await expect(page.getByTestId("tab-os")).toBeVisible();
+  await expect(page.getByTestId("tab-hosts")).toBeVisible();
   await expect(page.getByTestId("similar")).toHaveCount(0);
 });
 
@@ -1923,7 +1935,7 @@ test("hosts show first and last seen as relative times with full tooltips", asyn
   expect(Math.min(...online.map(Date.parse))).toBeGreaterThan(Math.max(...offline.map(Date.parse)));
 
   // Host cards in lists show the last seen time too.
-  await page.goto("/entry/port/22?tab=hosts");
+  await page.goto("/entry/port/22?htab=hosts");
   const firstCard = page.getByTestId("host-item").first();
   await expect(firstCard).toContainText("Last seen:");
   await expect(firstCard.locator("time")).toHaveAttribute("title", /UTC$/);

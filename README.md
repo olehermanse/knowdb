@@ -17,8 +17,12 @@ from the host's operating system (the `color` field of the OS entry in
 green or gray dot in the avatar's bottom right corner shows whether the
 host is online.
 
-Every entry page except a host's shows the hosts related to the entry in
-tabs: the operating systems they run (a pie chart and ranked list), the
+Every entry page except a host's is split in two. The left side holds the
+entry's own information and its Ports, Similar and (for software) Versions
+tabs. The right side is about the entry's hosts: when exactly one host
+matches it shows that host exactly as on the host page, and when several
+match it shows the Hosts, Operating systems and Clouds tabs. In detail, the
+tabs are: the operating systems they run (a pie chart and ranked list), the
 cloud providers they run on (likewise, with hosts outside any cloud as
 their own slice), the ports they listen on, and the host list itself.
 Software pages have a Versions tab as well, and every page has a Similar

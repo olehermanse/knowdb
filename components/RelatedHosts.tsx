@@ -14,7 +14,6 @@ import {
   aggregateVersions,
   Entry,
   entryHref,
-  EntryType,
   filterSearchHref,
   getHost,
   getPortInfo,
@@ -23,10 +22,9 @@ import {
   versionEntryName,
 } from "@/lib/data";
 
-// The hosts related to an entry, in three tabs: the operating systems they
-// run (pie chart), the ports they listen on, and the paginated host list.
-// The operating systems tab is hidden on OS pages and the ports tab on
-// port pages, where it would only repeat the entry itself.
+// Tabs of an entry page. The entry's own tabs (versions, ports, similar)
+// sit on the left; the tabs about its hosts (hosts, operating systems,
+// clouds) on the right, when it matches more than one host.
 export type Tab = "versions" | "os" | "clouds" | "ports" | "hosts" | "similar";
 const TAB_ORDER: Tab[] = ["versions", "os", "clouds", "ports", "hosts", "similar"];
 
@@ -35,33 +33,49 @@ export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   return (TAB_ORDER as string[]).includes(value ?? "") ? (value as Tab) : undefined;
 }
 
-// The versions tab exists only for software; the operating systems tab is
-// hidden on OS pages, the clouds tab on cloud pages and the ports tab on
-// port pages. (Host pages do not show this component at all.)
-const ADDRESS_TYPES: EntryType[] = ["ip", "mac", "hostname"];
-
-export function visibleTabs(entry: Entry): Tab[] {
-  // An address or hostname belonging to a single host: just that host, and
-  // similar entries. Operating systems, clouds and ports would only repeat it.
-  if (ADDRESS_TYPES.includes(entry.type) && entry.hosts.length === 1) {
-    return ["hosts", "similar"];
-  }
-  return TAB_ORDER.filter(
-    (tab) =>
-      !(tab === "versions" && entry.type !== "software") &&
-      !(tab === "os" && entry.type === "os") &&
-      !(tab === "clouds" && entry.type === "cloud") &&
-      !(tab === "ports" && entry.type === "port"),
-  );
+// Left side of an entry page: the entry's own tabs. Versions only for
+// software; ports unless the entry is a port or matches a single host
+// (whose ports are already shown in the host view on the right).
+export function leftTabs(entry: Entry): Tab[] {
+  const tabs: Tab[] = [];
+  if (entry.type === "software") tabs.push("versions");
+  if (entry.type !== "port" && entry.hosts.length > 1) tabs.push("ports");
+  tabs.push("similar");
+  return tabs;
 }
 
-// Link to a tab of an entry; the first visible tab needs no query.
-export function tabHref(entry: Entry, tab: Tab, page = 1): string {
+// Right side: the hosts, and what they run, when there are several.
+export function rightTabs(entry: Entry): Tab[] {
+  if (entry.hosts.length <= 1) return [];
+  const tabs: Tab[] = ["hosts"];
+  if (entry.type !== "os") tabs.push("os");
+  if (entry.type !== "cloud") tabs.push("clouds");
+  return tabs;
+}
+
+export type TabParam = "tab" | "htab";
+export interface TabQuery {
+  tab?: Tab;
+  htab?: Tab;
+}
+
+// Link to a tab of an entry, keeping the other side's tab. The first tab
+// of a side needs no query parameter.
+export function tabHref(
+  entry: Entry,
+  tabs: Tab[],
+  param: TabParam,
+  query: TabQuery,
+  tab: Tab,
+  page = 1,
+): string {
   const params = new URLSearchParams();
-  if (tab !== visibleTabs(entry)[0]) params.set("tab", tab);
+  const next: TabQuery = { ...query, [param]: tab };
+  if (next.tab && next.tab !== leftTabs(entry)[0]) params.set("tab", next.tab);
+  if (next.htab && next.htab !== rightTabs(entry)[0]) params.set("htab", next.htab);
   if (page > 1) params.set("page", String(page));
-  const query = params.toString();
-  return `${entryHref(entry)}${query ? `?${query}` : ""}`;
+  const q = params.toString();
+  return `${entryHref(entry)}${q ? `?${q}` : ""}`;
 }
 
 function hostsLabel(n: number): string {
@@ -241,7 +255,19 @@ function describeLinkedHosts(entry: Entry): string {
   }
 }
 
-function HostsPanel({ entry, page }: { entry: Entry; page: number }) {
+function HostsPanel({
+  entry,
+  page,
+  tabs,
+  param,
+  query,
+}: {
+  entry: Entry;
+  page: number;
+  tabs: Tab[];
+  param: TabParam;
+  query: TabQuery;
+}) {
   const hosts = entry.hosts
     .map((hostkey) => getHost(hostkey))
     .filter((host): host is Host => host !== undefined);
@@ -253,7 +279,7 @@ function HostsPanel({ entry, page }: { entry: Entry; page: number }) {
       <HostList
         hosts={hosts}
         page={page}
-        hrefForPage={(n) => tabHref(entry, "hosts", n)}
+        hrefForPage={(n) => tabHref(entry, tabs, param, query, "hosts", n)}
       />
     </>
   );
@@ -262,18 +288,25 @@ function HostsPanel({ entry, page }: { entry: Entry; page: number }) {
 
 export default function RelatedHosts({
   entry,
-  tab,
+  tabs,
+  param,
+  query,
   page,
+  testId,
 }: {
   entry: Entry;
-  tab?: Tab;
+  tabs: Tab[];
+  param: TabParam;
+  query: TabQuery;
   page: number;
+  testId: string;
 }) {
-  const tabs = visibleTabs(entry);
   const similarCount = similarEntries(entry).length;
   // Tabs with nothing to show are disabled: visible, gray, not clickable.
   const disabled = new Set<Tab>(similarCount === 0 ? ["similar"] : []);
-  const current = tab && tabs.includes(tab) && !disabled.has(tab) ? tab : tabs[0];
+  const requested = query[param];
+  const enabled = tabs.filter((t) => !disabled.has(t));
+  const current = requested && enabled.includes(requested) ? requested : enabled[0];
   const counts: Record<Tab, number> = {
     similar: similarCount,
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
@@ -299,8 +332,8 @@ export default function RelatedHosts({
     similar: "similar-heading",
   };
   return (
-    <section className="related-hosts" data-testid="related-hosts">
-      <nav className="tabs" role="tablist" aria-label="Related hosts">
+    <section className="related-hosts" data-testid={testId}>
+      <nav className="tabs" role="tablist" aria-label="Related information">
         {tabs.map((t) =>
           disabled.has(t) ? (
             <span
@@ -316,7 +349,7 @@ export default function RelatedHosts({
           ) : (
             <Link
               key={t}
-              href={tabHref(entry, t)}
+              href={tabHref(entry, tabs, param, query, t)}
               role="tab"
               aria-selected={t === current}
               className={`tab${t === current ? " tab-current" : ""}`}
@@ -327,14 +360,18 @@ export default function RelatedHosts({
           ),
         )}
       </nav>
-      <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
-        {current === "versions" && <VersionsPanel entry={entry} />}
-        {current === "os" && <OperatingSystems entry={entry} />}
-        {current === "clouds" && <CloudProviders entry={entry} />}
-        {current === "ports" && <PortsPanel entry={entry} />}
-        {current === "hosts" && <HostsPanel entry={entry} page={page} />}
-        {current === "similar" && <SimilarPanel entry={entry} />}
-      </div>
+      {current && (
+        <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
+          {current === "versions" && <VersionsPanel entry={entry} />}
+          {current === "os" && <OperatingSystems entry={entry} />}
+          {current === "clouds" && <CloudProviders entry={entry} />}
+          {current === "ports" && <PortsPanel entry={entry} />}
+          {current === "hosts" && (
+            <HostsPanel entry={entry} page={page} tabs={tabs} param={param} query={query} />
+          )}
+          {current === "similar" && <SimilarPanel entry={entry} />}
+        </div>
+      )}
     </section>
   );
 }

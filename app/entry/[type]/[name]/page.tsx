@@ -2,15 +2,13 @@ import { Fragment } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
-import HostAvatar from "@/components/HostAvatar";
-import ListModal from "@/components/ListModal";
+import HostView from "@/components/HostView";
 import Timestamp from "@/components/Timestamp";
 import { parsePage } from "@/components/HostList";
-import RelatedHosts, { parseTab } from "@/components/RelatedHosts";
+import RelatedHosts, { leftTabs, parseTab, rightTabs } from "@/components/RelatedHosts";
 import {
   describeEntry,
   Entry,
-  entryHref,
   entrySeen,
   externalLinkLabel,
   getEntry,
@@ -18,139 +16,13 @@ import {
   getEntryLogo,
   getGroup,
   getHost,
-  getHostGroups,
   getPortInfo,
   getSeeAlso,
   Group,
-  Host,
   isEntryType,
   seeAlsoLabel,
   summarizeEntry,
-  versionEntryName,
 } from "@/lib/data";
-
-// "22 (ssh)" for well-known ports, just the number otherwise.
-function portLabel(port: number): string {
-  const info = getPortInfo(port);
-  return info ? `${port} (${info.name})` : String(port);
-}
-
-function HostDetails({ host }: { host: Host }) {
-  const groups = getHostGroups(host.id);
-  return (
-    <div data-testid="host-details">
-      <div className="host-columns">
-        <dl className="host-details" data-testid="host-details-left">
-          <dt>Hostname</dt>
-          <dd>
-            <EntryLink type="hostname" name={host.hostname} />
-          </dd>
-          <dt>Operating system</dt>
-          <dd>
-            <EntryLink type="os" name={host.os} />
-          </dd>
-          <dt>Cloud provider</dt>
-          <dd className="inline-links" data-testid="host-cloud">
-            {host["cloud-provider"] ? (
-              <EntryLink type="cloud" name={host["cloud-provider"]} />
-            ) : (
-              <span className="muted">None</span>
-            )}
-          </dd>
-          <dt>First seen</dt>
-        <dd>
-          <Timestamp iso={host["first-seen"]} testId="host-first-seen" />
-        </dd>
-        <dt>Last seen</dt>
-        <dd>
-          <Timestamp iso={host["last-seen"]} testId="host-last-seen" />
-        </dd>
-        <dt>Local users</dt>
-          <dd className="inline-links">
-            {host["local-users"].map((user) => (
-              <EntryLink key={user} type="user" name={user} />
-            ))}
-          </dd>
-          <dt>Groups</dt>
-          <dd className="inline-links" data-testid="host-groups">
-            {groups.length === 0 && <span className="muted">None</span>}
-            {groups.map((group) => (
-              <EntryLink key={group} type="group" name={group} />
-            ))}
-          </dd>
-        </dl>
-        <dl className="host-details" data-testid="host-details-right">
-          <dt>IP addresses</dt>
-          <dd className="inline-links">
-            {host.ips.map((ip) => (
-              <EntryLink key={ip} type="ip" name={ip} />
-            ))}
-          </dd>
-          <dt>MAC addresses</dt>
-          <dd className="inline-links">
-            {host.macs.map((mac) => (
-              <EntryLink key={mac} type="mac" name={mac} />
-            ))}
-          </dd>
-          <dt>Listening ports</dt>
-          <dd className="inline-links">
-            {host["ports-listening"].map((port) => (
-              <EntryLink
-                key={port}
-                type="port"
-                name={String(port)}
-                label={portLabel(port)}
-              />
-            ))}
-          </dd>
-        </dl>
-      </div>
-      <dl className="host-details host-details-wide" data-testid="host-details-wide">
-          <dt>Software</dt>
-        <dd data-testid="host-software">
-          <ListModal
-            title={`Software on ${host.hostname}`}
-            singular="software package"
-            plural="software packages"
-            verb="installed"
-            testId="software-modal"
-            rows={host.software.map((sw) => {
-              const version = host["software-versions"]?.[sw];
-              return {
-                key: sw,
-                type: "software",
-                label: sw,
-                href: entryHref({ type: "software", name: sw }),
-                extra: version
-                  ? {
-                      label: version,
-                      href: entryHref({ type: "version", name: versionEntryName(sw, version) }),
-                    }
-                  : undefined,
-              };
-            })}
-          />
-        </dd>
-        <dt>Classes</dt>
-        <dd data-testid="host-classes">
-          <ListModal
-            title={`Classes of ${host.hostname}`}
-            singular="class"
-            plural="classes"
-            verb="defined"
-            testId="classes-modal"
-            rows={host.classes.map((cls) => ({
-              key: cls,
-              type: "class",
-              label: cls,
-              href: entryHref({ type: "class", name: cls }),
-            }))}
-          />
-        </dd>
-      </dl>
-    </div>
-  );
-}
 
 // The matching rules of a group, so a user can see why hosts are in it.
 function GroupRules({ group }: { group: Group }) {
@@ -218,6 +90,7 @@ export default async function EntryPage({
   const query = await searchParams;
   const page = parsePage(query.page);
   const tab = parseTab(query.tab);
+  const htab = parseTab(query.htab);
   const name = decodeURIComponent(encodedName);
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
@@ -231,59 +104,91 @@ export default async function EntryPage({
   const summary = summarizeEntry(entry);
   const seen = entrySeen(entry);
 
+  if (host) {
+    return (
+      <>
+        <p>
+          <span className="type-badge">host</span>
+        </p>
+        <HostView host={host} />
+      </>
+    );
+  }
+
+  // Everything else splits in two: the entry's own information on the left,
+  // its host(s) on the right. A single matching host is shown as the host
+  // view itself; several hosts get the hosts, operating systems and clouds
+  // tabs.
+  const tabQuery = { tab, htab };
+  const singleHost = entry.hosts.length === 1 ? getHost(entry.hosts[0]) : undefined;
   return (
-    <>
-      <p>
-        <span className="type-badge">{entry.type}</span>
-      </p>
-      <div className="entry-title">
-        {host && <HostAvatar host={host} size={48} />}
-        {logo && (
-          <Image
-            className="entry-logo"
-            src={logo}
-            alt={`${entry.name} logo`}
-            width={40}
-            height={40}
-            unoptimized
-            data-testid="entry-logo"
-          />
-        )}
-        <h1 data-testid="entry-name">
-          {host ? (
-            <>
-              {host.hostname}{" "}
-              <span className="muted host-id">({host.id})</span>
-            </>
-          ) : type === "port" && portName ? (
-            <>
-              {entry.name} <span className="muted">({portName})</span>
-            </>
-          ) : (
-            entry.name
+    <div className="entry-split">
+      <div className="entry-pane entry-pane-left" data-testid="entry-pane">
+        <p>
+          <span className="type-badge">{entry.type}</span>
+        </p>
+        <div className="entry-title">
+          {logo && (
+            <Image
+              className="entry-logo"
+              src={logo}
+              alt={`${entry.name} logo`}
+              width={40}
+              height={40}
+              unoptimized
+              data-testid="entry-logo"
+            />
           )}
-        </h1>
-      </div>
-      <SeeAlso entry={entry} />
-      {!host && (
+          <h1 data-testid="entry-name">
+            {type === "port" && portName ? (
+              <>
+                {entry.name} <span className="muted">({portName})</span>
+              </>
+            ) : (
+              entry.name
+            )}
+          </h1>
+        </div>
+        <SeeAlso entry={entry} />
         <p className="muted" data-testid="entry-description">
           {describeEntry(entry)}
         </p>
-      )}
-      {summary && <p data-testid="entry-summary">{summary}</p>}
-      {!host && seen && (
-        <p className="muted" data-testid="entry-seen">
-          First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
-          <Timestamp iso={seen.last} testId="entry-last-seen" />.
-        </p>
-      )}
-      <ExternalLinks entry={entry} />
-      {group && <GroupRules group={group} />}
-      {host ? (
-        <HostDetails host={host} />
-      ) : (
-        <RelatedHosts entry={entry} tab={tab} page={page} />
-      )}
-    </>
+        {summary && <p data-testid="entry-summary">{summary}</p>}
+        {seen && (
+          <p className="muted" data-testid="entry-seen">
+            First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
+            <Timestamp iso={seen.last} testId="entry-last-seen" />.
+          </p>
+        )}
+        <ExternalLinks entry={entry} />
+        {group && <GroupRules group={group} />}
+        <RelatedHosts
+          entry={entry}
+          tabs={leftTabs(entry)}
+          param="tab"
+          query={tabQuery}
+          page={page}
+          testId="entry-tabs"
+        />
+      </div>
+      <aside className="entry-pane entry-pane-right" data-testid="hosts-pane">
+        {singleHost ? (
+          <HostView host={singleHost} embedded />
+        ) : entry.hosts.length > 1 ? (
+          <RelatedHosts
+            entry={entry}
+            tabs={rightTabs(entry)}
+            param="htab"
+            query={tabQuery}
+            page={page}
+            testId="hosts-tabs"
+          />
+        ) : (
+          <p className="muted" data-testid="no-hosts">
+            No hosts in your infrastructure have this {entry.type}.
+          </p>
+        )}
+      </aside>
+    </div>
   );
 }

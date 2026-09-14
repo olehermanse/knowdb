@@ -101,7 +101,7 @@ body {
 }
 
 .site-main {
-  max-width: 56rem;
+  max-width: 90rem;
   width: 100%;
   margin: 0 auto;
   padding: 1.5rem;
@@ -524,4 +524,42 @@ a,
 /* The flex rule on list items would otherwise defeat the hidden attribute. */
 .list-modal-list li[hidden] {
   display: none;
+}
+
+/* Entry pages: the entry on the left, its host(s) on the right. */
+.entry-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem 3rem;
+  align-items: start;
+}
+
+.entry-pane {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.entry-pane-right {
+  border-left: 1px solid var(--border);
+  padding-left: 3rem;
+}
+
+@media (max-width: 64rem) {
+  .entry-split {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-pane-right {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+}
+
+/* Inside a narrow pane the host details fall back to one column. */
+@container (max-width: 40rem) {
+  .host-columns {
+    grid-template-columns: 1fr;
+  }
 }
