@@ -403,6 +403,9 @@ test("hosts and ports sections have short headings and descriptions", async ({
     "Hosts with dpkg installed.",
   );
   await expect(page.getByTestId("ports-heading")).toHaveText(/^Ports \(\d+\)$/);
+  await expect(page.getByTestId("ports-description")).toHaveText(
+    "The hosts are listening to these ports:",
+  );
   await expect(page.getByText("Listening ports")).toHaveCount(0);
 });
 

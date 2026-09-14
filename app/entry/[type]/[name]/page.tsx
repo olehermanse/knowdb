@@ -129,9 +129,8 @@ function AggregatedPorts({ entry }: { entry: Entry }) {
       <h2 data-testid="ports-heading">
         Ports <span className="muted">({ports.length})</span>
       </h2>
-      <p className="muted">
-        Ports the hosts below are listening on, with the number of hosts
-        listening on each.
+      <p className="muted" data-testid="ports-description">
+        The hosts are listening to these ports:
       </p>
       <div className="inline-links" data-testid="aggregated-ports">
         {ports.length === 0 && <span className="muted">None</span>}
