@@ -104,6 +104,7 @@ test("front page always shows at least one entry of each type", async ({
     "group",
     "class",
     "version",
+    "cloud",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
@@ -1008,8 +1009,10 @@ test("the summary sentence sits between description and read more links", async 
   expect(described).toBeTruthy();
   await page.goto(`/entry/host/${encodeURIComponent(described.host.id)}`);
   const article = /^[aeiou]/i.test(described.host.os) ? "an" : "a";
+  const provider = (described.host as unknown as { "cloud-provider": string })["cloud-provider"];
+  const where = provider ? `running on ${provider}` : "running in your own data center";
   await expect(page.getByTestId("entry-summary")).toHaveText(
-    `This is ${article} ${described.host.os} host in the ${described.env} environment. It looks like ${described.role}.`,
+    `This is ${article} ${described.host.os} host in the ${described.env} environment, ${where}. It looks like ${described.role}.`,
   );
 });
 
@@ -1040,7 +1043,10 @@ test("host summary covers environments and roles from hostnames", async ({
     picked.add(roleWord);
     await page.goto(`/entry/host/${encodeURIComponent(host.id)}`);
     await expect(page.getByTestId("entry-summary")).toContainText(
-      `host in the ${env} environment. It looks like ${roles[roleWord]}.`,
+      `host in the ${env} environment, running `,
+    );
+    await expect(page.getByTestId("entry-summary")).toContainText(
+      `It looks like ${roles[roleWord]}.`,
     );
     if (picked.size >= 3) break;
   }
@@ -1489,6 +1495,60 @@ test("port page title includes the common name in parenthesis", async ({
     await page.goto(`/entry/port/${unnamed}`);
     await expect(page.getByTestId("entry-name")).toHaveText(String(unnamed));
   }
+});
+
+test("hosts have a cloud provider, or none for their own data center", async ({
+  page,
+}) => {
+  const providerOf = (h: Host) => (h as unknown as { "cloud-provider": string })["cloud-provider"];
+  const withProvider = hosts.filter((h) => providerOf(h));
+  const without = hosts.filter((h) => !providerOf(h));
+  expect(withProvider.length).toBeGreaterThan(0);
+  expect(without.length).toBeGreaterThan(0);
+  const providers = new Set(withProvider.map(providerOf));
+  expect(providers.has("AWS")).toBe(true);
+
+  // A host on a provider links to it; a host without shows "None".
+  const aws = withProvider.find((h) => providerOf(h) === "AWS")!;
+  await page.goto(`/entry/host/${encodeURIComponent(aws.id)}`);
+  await expect(page.getByTestId("host-cloud").getByRole("link", { name: "AWS" })).toHaveAttribute(
+    "href",
+    "/entry/cloud/AWS",
+  );
+  await expect(page.getByTestId("entry-summary")).toContainText("running on AWS.");
+  await page.goto(`/entry/host/${encodeURIComponent(without[0].id)}`);
+  await expect(page.getByTestId("host-cloud")).toHaveText("None (own data center)");
+  await expect(page.getByTestId("host-cloud").getByRole("link")).toHaveCount(0);
+  await expect(page.getByTestId("entry-summary")).toContainText(
+    "running in your own data center.",
+  );
+
+  // The provider page: description, logo, summary and tabs with its hosts.
+  const awsHosts = withProvider.filter((h) => providerOf(h) === "AWS");
+  await page.goto("/entry/cloud/AWS");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    (info["cloud-providers"] as Record<string, { description: string }>)["AWS"].description,
+  );
+  await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", /Amazon_Web_Services/);
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `${awsHosts.length} hosts in your infrastructure run on AWS, across ${pluralize(distinctOs(awsHosts), "operating system")}.`,
+  );
+  await expect(page.getByTestId("os-section")).toContainText(
+    "The hosts on AWS run these operating systems:",
+  );
+  await openTab(page, "ports");
+  await expect(page.getByTestId("ports-description")).toHaveText(
+    "The hosts on AWS are listening to these ports:",
+  );
+  await openTab(page, "hosts");
+  await expect(page.getByTestId("hosts-description")).toHaveText("Hosts running on AWS:");
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${awsHosts.length})`);
+
+  // Cloud providers work as search filters.
+  await page.goto(`/search?q=${encodeURIComponent("cloud:AWS port:22")}`);
+  await expect(page.getByTestId("search-summary")).toContainText(
+    `${awsHosts.length} hosts matching cloud AWS, port 22`,
+  );
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

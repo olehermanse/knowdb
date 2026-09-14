@@ -142,6 +142,8 @@ function portsDescription(entry: Entry): string {
       return `The hosts with ${entry.name} are listening to these ports:`;
     case "os":
       return `The ${entry.name} hosts are listening to these ports:`;
+    case "cloud":
+      return `The hosts on ${entry.name} are listening to these ports:`;
     default:
       return "The hosts are listening to these ports:";
   }
@@ -186,6 +188,8 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts in the group ${entry.name}:`;
     case "class":
       return `Hosts with the class ${entry.name} set:`;
+    case "cloud":
+      return `Hosts running on ${entry.name}:`;
     case "version": {
       const { software, version } = parseVersionEntryName(entry.name);
       return `Hosts with ${software} version ${version} installed:`;

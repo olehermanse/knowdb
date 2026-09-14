@@ -95,6 +95,14 @@ function HostDetails({ host }: { host: Host }) {
           <EntryLink key={user} type="user" name={user} />
         ))}
       </dd>
+      <dt>Cloud provider</dt>
+      <dd className="inline-links" data-testid="host-cloud">
+        {host["cloud-provider"] ? (
+          <EntryLink type="cloud" name={host["cloud-provider"]} />
+        ) : (
+          <span className="muted">None (own data center)</span>
+        )}
+      </dd>
       <dt>Classes</dt>
       <dd className="inline-links" data-testid="host-classes">
         {host.classes.map((cls) => (

@@ -122,6 +122,10 @@ RHEL_LIKE_SOFTWARE = ["yum", "rpm", "dnf"]
 SUSE_SOFTWARE = ["zypper", "rpm"]
 WINDOWS_SOFTWARE = ["powershell", "chocolatey", "windows-defender"]
 COMMON_LINUX_SOFTWARE = ["curl", "wget", "openssh", "cron", "rsyslog"]
+# Cloud providers with weights. The empty string means no cloud provider:
+# the host runs in your own data center or similar.
+CLOUD_PROVIDERS = [("AWS", 40), ("", 25), ("Azure", 12), ("GCP", 10), ("Hetzner", 8), ("DigitalOcean", 5)]
+
 # Installed on every host, Linux and Windows alike.
 UNIVERSAL_SOFTWARE = ["cfengine"]
 
@@ -298,6 +302,12 @@ def generate_classes(os_name, hostname):
     return classes
 
 
+def generate_cloud_provider():
+    return random.choices(
+        [name for name, _ in CLOUD_PROVIDERS], weights=[w for _, w in CLOUD_PROVIDERS]
+    )[0]
+
+
 def generate_host(used_hostnames, used_macs):
     os_name = random.choices(
         OPERATING_SYSTEMS, weights=list(OPERATING_SYSTEM_WEIGHTS.values())
@@ -315,6 +325,7 @@ def generate_host(used_hostnames, used_macs):
         "software-versions": generate_software_versions(software),
         "local-users": generate_users(os_name, hostname),
         "classes": generate_classes(os_name, hostname),
+        "cloud-provider": generate_cloud_provider(),
         # Roughly 70% of hosts are online (have reported recently).
         "online": random.random() < 0.7,
     }

@@ -13,6 +13,7 @@ export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
   hostname: "hostname",
   ip: "IP address",
   mac: "MAC address",
+  cloud: "cloud provider",
 };
 
 // Text under the heading, per entry type.
@@ -22,6 +23,9 @@ function sectionText(type: EntryType, subject: string, name: string): string {
   }
   if (type === "software") {
     return `The hosts with ${name} installed run these operating systems:`;
+  }
+  if (type === "cloud") {
+    return `The hosts on ${name} run these operating systems:`;
   }
   if (type === "version") {
     return `The ${name} software version is installed on these operating systems:`;

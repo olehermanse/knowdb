@@ -17,6 +17,8 @@ export interface Host {
   classes: string[];
   // Whether the host has reported in recently.
   online: boolean;
+  // Cloud provider the host runs on, or "" for your own data center.
+  "cloud-provider": string;
 }
 
 export type EntryType =
@@ -31,7 +33,9 @@ export type EntryType =
   | "group"
   | "class"
   // A specific version of a piece of software, named "<software> <version>".
-  | "version";
+  | "version"
+  // A cloud provider hosts run on (AWS, Azure, ...).
+  | "cloud";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -102,7 +106,7 @@ export function normalizeName(name: string): string {
 }
 
 // Entry types whose names are worth matching against each other.
-const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port"];
+const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud"];
 
 function buildIndex() {
   const hostsByKey = new Map<string, Host>();
@@ -141,6 +145,7 @@ function buildIndex() {
     }
     for (const user of host["local-users"]) link("user", user, host.id);
     for (const cls of host.classes ?? []) link("class", cls, host.id);
+    if (host["cloud-provider"]) link("cloud", host["cloud-provider"], host.id);
     const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
     for (const name of hostGroups) link("group", name, host.id);
     groupsByHost.set(host.id, hostGroups);
@@ -349,6 +354,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "group",
   "class",
   "version",
+  "cloud",
 ];
 
 export function isEntryType(value: string): value is EntryType {
@@ -411,6 +417,7 @@ interface Info {
   ips: Record<string, DescribedInfo>;
   "ip-ranges": IpRangeInfo[];
   classes: Record<string, DescribedInfo>;
+  "cloud-providers": Record<string, DescribedInfo>;
 }
 
 
@@ -469,6 +476,10 @@ export function getIpInfo(address: string): DescribedInfo | undefined {
   return info["ip-ranges"].find((range) => inCidr(address, range.cidr));
 }
 
+export function getCloudProviderInfo(name: string): DescribedInfo | undefined {
+  return info["cloud-providers"][name];
+}
+
 export function getClassInfo(name: string): DescribedInfo | undefined {
   return info.classes[name];
 }
@@ -517,6 +528,8 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getIpInfo(entry.name);
     case "class":
       return getClassInfo(entry.name);
+    case "cloud":
+      return getCloudProviderInfo(entry.name);
     case "version":
       // Versions share the software's description, links and logo.
       return getSoftwareInfo(parseVersionEntryName(entry.name).software);
@@ -576,6 +589,7 @@ export function seeAlsoLabel(ref: EntryRef): string {
 export const NO_USER_INFO = "No information available about this user.";
 export const NO_OS_INFO = "No information available about this operating system.";
 export const NO_CLASS_INFO = "No information available about this class.";
+export const NO_CLOUD_INFO = "No information available about this cloud provider.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -589,6 +603,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   group: "A group of hosts, defined in groups.json.",
   class: "A CFEngine class reported by hosts, describing something true about them.",
   version: "A specific version of a piece of software.",
+  cloud: "A cloud provider that hosts run on.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -616,6 +631,9 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "class") {
     return getClassInfo(entry.name)?.description ?? NO_CLASS_INFO;
+  }
+  if (entry.type === "cloud") {
+    return getCloudProviderInfo(entry.name)?.description ?? NO_CLOUD_INFO;
   }
   if (entry.type === "version") {
     const { software, version } = parseVersionEntryName(entry.name);
@@ -698,6 +716,8 @@ export function summarizeEntry(entry: Entry): string {
       return `This group has ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
     case "class":
       return `This class is set on ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
+    case "cloud":
+      return `${hosts} in your infrastructure ${n === 1 ? "runs" : "run"} on ${entry.name}, across ${oses()}.`;
     case "ip":
       return `This IP address is used by ${hosts} in your infrastructure.`;
     case "mac":
@@ -863,7 +883,8 @@ export function describeHost(host: Host): string {
   const role = hostRole(host);
   let text = `This is ${withArticle(host.os)} host`;
   if (env) text += ` in the ${env} environment`;
-  text += ".";
+  const cloud = host["cloud-provider"];
+  text += cloud ? `, running on ${cloud}.` : ", running in your own data center.";
   if (role) text += ` It looks like ${withArticle(role)}.`;
   return text;
 }

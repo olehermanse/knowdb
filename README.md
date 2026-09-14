@@ -151,6 +151,14 @@ with host counts, and a version page links back to the software and lists
 the hosts on it.
 `cfengine` is installed on every host.
 
+## Cloud providers
+
+Each host reports the cloud provider it runs on in `cloud-provider`, or an
+empty string for hosts in your own data center or similar. Cloud providers
+are their own entry type: a provider page lists the hosts on it with their
+operating systems and ports, and a host page links to its provider. Common
+providers are described in `data/info.json` under `cloud-providers`.
+
 ## Host data format
 
 The relevant information from a host looks like this:
@@ -167,7 +175,8 @@ The relevant information from a host looks like this:
   "software-versions": {"apache": "2.4.62", "cfengine": "3.27.0", "dpkg": "1.22.6"},
   "local-users": ["root", "nickanderson"],
   "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"],
-  "online": true
+  "online": true,
+  "cloud-provider": "AWS"
 }
 ```
 
@@ -189,6 +198,7 @@ Some guidelines for generating random hosts:
 - `software` should also be based on name - all Ubuntu should have dpkg, apt and apt-get, RHEL should have yum, rpm, dnf, and so on.
 - `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
+- `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `online` is whether the host has reported in recently. Around 70% of hosts should be online.
 - `local-users` should include root on all Linux machines, and Administrator on Windows.
   Make sure to include some common system / application users for things like email software, printing, etc.
