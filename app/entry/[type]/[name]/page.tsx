@@ -19,6 +19,7 @@ import {
   Group,
   Host,
   isEntryType,
+  summarizeEntry,
   uniqueHostForHostname,
 } from "@/lib/data";
 
@@ -238,6 +239,7 @@ export default async function EntryPage({
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>
+      <p data-testid="entry-summary">{summarizeEntry(entry)}</p>
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
       {hasOsSection(type) && <OperatingSystems entry={entry} />}

@@ -407,3 +407,47 @@ export function searchEntries(query: string, limit = 200): SearchResult[] {
   );
   return results.slice(0, limit).map(({ entry, description }) => ({ entry, description }));
 }
+
+function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : pluralForm}`;
+}
+
+// One sentence with numbers from your infrastructure, shown below the
+// description of an entry, e.g. "cron is installed on 87 hosts in your
+// infrastructure, across 10 operating systems."
+export function summarizeEntry(entry: Entry): string {
+  const n = entry.hosts.length;
+  const hosts = plural(n, "host");
+  const oses = () => plural(aggregateOs(entry.hosts).length, "operating system");
+  const ports = () => plural(aggregatePorts(entry.hosts).length, "different port");
+  switch (entry.type) {
+    case "software":
+      return `${entry.name} is installed on ${hosts} in your infrastructure, across ${oses()}.`;
+    case "os":
+      return `In your infrastructure, you have ${entry.name} installed on ${hosts}, and these hosts are listening to ${ports()}.`;
+    case "port":
+      return `Port ${entry.name} is open on ${hosts} in your infrastructure, across ${oses()}.`;
+    case "user":
+      return `The user ${entry.name} exists on ${hosts} in your infrastructure, across ${oses()}.`;
+    case "group":
+      return `This group has ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
+    case "ip":
+      return `This IP address is used by ${hosts} in your infrastructure.`;
+    case "mac":
+      return `This MAC address belongs to ${hosts} in your infrastructure.`;
+    case "hostname":
+      return `${hosts} in your infrastructure ${n === 1 ? "has" : "share"} this hostname.`;
+    case "host": {
+      const host = hostsByKey.get(entry.name);
+      if (!host) return "";
+      return (
+        `This host has ${plural(host.ips.length, "IP address", "IP addresses")} and ` +
+        `${plural(host.macs.length, "MAC address", "MAC addresses")}, listens on ` +
+        `${plural(host["ports-listening"].length, "port")}, has ` +
+        `${plural(host.software.length, "software package")} and ` +
+        `${plural(host["local-users"].length, "local user")}, and is in ` +
+        `${plural(getHostGroups(host.id).length, "group")}.`
+      );
+    }
+  }
+}

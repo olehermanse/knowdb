@@ -696,6 +696,64 @@ test("search handles empty queries and no results", async ({ page }) => {
   await expect(page.getByTestId("search-results")).toHaveCount(0);
 });
 
+const pluralize = (n: number, one: string, many = `${one}s`) =>
+  `${n} ${n === 1 ? one : many}`;
+const distinctOs = (selected: Host[]) => new Set(selected.map((h) => h.os)).size;
+const distinctPorts = (selected: Host[]) =>
+  new Set(selected.flatMap((h) => h["ports-listening"])).size;
+
+test("entries show a sentence with numbers from the infrastructure", async ({
+  page,
+}) => {
+  // Software: hosts and operating systems.
+  const cronHosts = hosts.filter((h) => h.software.includes("cron"));
+  await page.goto("/entry/software/cron");
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `cron is installed on ${pluralize(cronHosts.length, "host")} in your infrastructure, across ${pluralize(distinctOs(cronHosts), "operating system")}.`,
+  );
+
+  // OS: hosts and different ports.
+  const os = someHost.os;
+  const osHosts = hosts.filter((h) => h.os === os);
+  await page.goto(`/entry/os/${encodeURIComponent(os)}`);
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `In your infrastructure, you have ${os} installed on ${pluralize(osHosts.length, "host")}, and these hosts are listening to ${pluralize(distinctPorts(osHosts), "different port")}.`,
+  );
+
+  // Port 22 is on every host.
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `Port 22 is open on ${hosts.length} hosts in your infrastructure, across ${pluralize(distinctOs(hosts), "operating system")}.`,
+  );
+
+  // Group: hosts, operating systems and ports.
+  const windows = hostsInGroup("Windows");
+  await page.goto(groupHref("Windows"));
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `This group has ${pluralize(windows.length, "host")} in your infrastructure, running ${pluralize(distinctOs(windows), "operating system")} and listening to ${pluralize(distinctPorts(windows), "different port")}.`,
+  );
+});
+
+test("the summary sentence sits between description and read more links", async ({
+  page,
+}) => {
+  await page.goto("/entry/port/22");
+  const description = await page.getByTestId("entry-description").boundingBox();
+  const summary = await page.getByTestId("entry-summary").boundingBox();
+  const links = await page.getByTestId("external-links").boundingBox();
+  expect(description!.y).toBeLessThan(summary!.y);
+  expect(summary!.y).toBeLessThan(links!.y);
+
+  // Hosts get a summary of their own details.
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("entry-summary")).toContainText(
+    `listens on ${pluralize(someHost["ports-listening"].length, "port")}`,
+  );
+  await expect(page.getByTestId("entry-summary")).toContainText(
+    pluralize(someHost.ips.length, "IP address", "IP addresses"),
+  );
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");
