@@ -13,8 +13,7 @@ so all `npm` and `docker` commands are run from the repository root.
 ### With the npm dev server
 
 ```bash
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
 Then open http://localhost:3000.
@@ -22,8 +21,7 @@ Then open http://localhost:3000.
 ### With Docker
 
 ```bash
-docker build -t knowdb .
-docker run --rm -p 3000:3000 knowdb
+docker build -t knowdb . && docker run --rm -p 3000:3000 knowdb
 ```
 
 Then open http://localhost:3000.
@@ -34,9 +32,7 @@ The frontend has Playwright tests in `tests/` (the test runner starts the
 dev server for you):
 
 ```bash
-npm install
-npx playwright install chromium
-npm test
+npm install && npx playwright install chromium && npm test
 ```
 
 ## Generating host data
@@ -46,8 +42,7 @@ npm test
 `data/hosts.json`:
 
 ```bash
-python3 scripts/generate_hosts.py
-cp tmp/hosts.json data/hosts.json
+python3 scripts/generate_hosts.py && cp tmp/hosts.json data/hosts.json
 ```
 
 ## Descriptions of ports and software
