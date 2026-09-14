@@ -280,7 +280,9 @@ test("port and software descriptions come from info.json", async ({
   await expect(page.getByTestId("entry-description")).toContainText(
     info.ports["22"].description,
   );
-  await expect(page.getByTestId("entry-description")).toContainText("(ssh)");
+  // The title already says "22 (ssh)", so the description is just the text.
+  await expect(page.getByTestId("entry-description")).toHaveText(info.ports["22"].description);
+  await expect(page.getByTestId("entry-description")).not.toContainText("Port 22");
 
   await page.goto("/entry/software/dpkg");
   await expect(page.getByTestId("entry-description")).toHaveText(

@@ -717,7 +717,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
 export function describeEntry(entry: EntryRef): string {
   if (entry.type === "port") {
     const known = getPortInfo(entry.name);
-    if (known) return `Port ${entry.name} (${known.name}): ${known.description}`;
+    if (known) return known.description;
   }
   if (entry.type === "software") {
     const known = getSoftwareInfo(entry.name);
