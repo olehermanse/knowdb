@@ -157,14 +157,44 @@ export function allEntries(): EntryRef[] {
   return [...entries.values()].map(({ type, name }) => ({ type, name }));
 }
 
-export function randomEntries(count: number): EntryRef[] {
-  const all = allEntries();
-  // Fisher-Yates shuffle, then take the first `count`.
-  for (let i = all.length - 1; i > 0; i--) {
+function shuffle<T>(items: T[]): T[] {
+  // Fisher-Yates shuffle, in place.
+  for (let i = items.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [all[i], all[j]] = [all[j], all[i]];
+    [items[i], items[j]] = [items[j], items[i]];
   }
-  return all.slice(0, count);
+  return items;
+}
+
+// A random sample of `count` entries which is guaranteed to include at least
+// one entry of every type (as long as `count` allows for it and the type has
+// any entries). The remaining slots are filled from all other entries.
+export function randomEntries(count: number): EntryRef[] {
+  const byType = new Map<EntryType, EntryRef[]>();
+  for (const entry of allEntries()) {
+    let list = byType.get(entry.type);
+    if (!list) {
+      list = [];
+      byType.set(entry.type, list);
+    }
+    list.push(entry);
+  }
+
+  const picked: EntryRef[] = [];
+  const pickedKeys = new Set<string>();
+  for (const type of shuffle([...ENTRY_TYPES])) {
+    const list = byType.get(type);
+    if (!list || picked.length >= count) continue;
+    const entry = list[Math.floor(Math.random() * list.length)];
+    picked.push(entry);
+    pickedKeys.add(entryKey(entry.type, entry.name));
+  }
+
+  const rest = shuffle(
+    allEntries().filter((e) => !pickedKeys.has(entryKey(e.type, e.name))),
+  );
+  picked.push(...rest.slice(0, Math.max(0, count - picked.length)));
+  return shuffle(picked);
 }
 
 // If a hostname belongs to exactly one host, return that host's key so

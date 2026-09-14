@@ -65,6 +65,22 @@ test("front page shows 10 random entries", async ({ page }) => {
   await expect(items.locator("a.entry-link")).toHaveCount(10);
 });
 
+test("front page always shows at least one entry of each type", async ({
+  page,
+}) => {
+  const allTypes = ["host", "hostname", "os", "ip", "port", "software", "user", "group"];
+  // The sample is random, so check several page loads.
+  for (let i = 0; i < 5; i++) {
+    await page.goto("/");
+    const badges = page.getByTestId("entry-list").locator(".type-badge");
+    await expect(badges).toHaveCount(10);
+    const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
+    for (const type of allTypes) {
+      expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
+    }
+  }
+});
+
 test("clicking a front page entry navigates to its page", async ({ page }) => {
   await page.goto("/");
   const firstLink = page
