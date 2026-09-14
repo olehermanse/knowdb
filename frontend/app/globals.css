@@ -60,6 +60,11 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.host-id {
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
 a,
 .entry-link {
   color: var(--link);

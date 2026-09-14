@@ -88,7 +88,16 @@ export default async function EntryPage({
       <p>
         <span className="type-badge">{entry.type}</span>
       </p>
-      <h1 data-testid="entry-name">{entry.name}</h1>
+      <h1 data-testid="entry-name">
+        {host ? (
+          <>
+            {host.hostname}{" "}
+            <span className="muted host-id">({host.id})</span>
+          </>
+        ) : (
+          entry.name
+        )}
+      </h1>
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>

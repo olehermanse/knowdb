@@ -21,12 +21,24 @@ test("clicking a front page entry navigates to its page", async ({ page }) => {
   const name = await firstLink.textContent();
   await firstLink.click();
   await expect(page).toHaveURL(/\/entry\//);
-  await expect(page.getByTestId("entry-name")).toHaveText(name!);
+  await expect(page.getByTestId("entry-name")).toContainText(name!);
+});
+
+test("host page title is the hostname with the ID in parenthesis", async ({
+  page,
+}) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("entry-name")).toHaveText(
+    `${someHost.hostname} (${someHost.id})`,
+  );
+  await expect(page.getByTestId("entry-name")).toHaveText(
+    `${someHost.hostname} (${someHost.id})`,
+  );
 });
 
 test("host page shows clickable details", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
-  await expect(page.getByTestId("entry-name")).toHaveText(someHost.id);
+  await expect(page.getByTestId("entry-name")).toContainText(someHost.hostname);
   const details = page.getByTestId("host-details");
   await expect(
     details.getByRole("link", { name: someHost.hostname, exact: true }),
@@ -56,7 +68,7 @@ test("entries are two-way linked: host -> port -> host", async ({ page }) => {
     .getByTestId("linked-hosts")
     .getByRole("link", { name: someHost.id, exact: true })
     .click();
-  await expect(page.getByTestId("entry-name")).toHaveText(someHost.id);
+  await expect(page.getByTestId("entry-name")).toContainText(someHost.id);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {
