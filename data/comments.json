@@ -1,0 +1,64 @@
+{
+  "_comment": "Example comments for the demo, keyed by '<type>:<name>'. Comments written in the app are stored in the browser's local storage only; there is no backend.",
+  "port:22": [
+    {
+      "author": "Nick",
+      "time": "2026-09-10T08:12:00Z",
+      "text": "We should restrict SSH to the bastion hosts only. Most of these do not need it open to the world."
+    },
+    {
+      "author": "Ole",
+      "time": "2026-09-11T14:30:00Z",
+      "text": "Agreed. I have a policy draft that limits it to the 10.0.0.0/8 range; will share it this week."
+    }
+  ],
+  "software:cfengine": [
+    {
+      "author": "Craig",
+      "time": "2026-09-01T09:00:00Z",
+      "text": "Upgrade to 3.27 is going well. The remaining 3.18 hosts are the old CentOS 7 boxes."
+    }
+  ],
+  "group:Linux": [
+    {
+      "author": "Nick",
+      "time": "2026-08-28T16:45:00Z",
+      "text": "Reminder: the Linux group is defined by OS name matching in groups.json, so new distributions need to be added there."
+    }
+  ],
+  "class:any": [
+    {
+      "author": "Ole",
+      "time": "2026-09-05T11:20:00Z",
+      "text": "Every host has this class, which makes it handy for checking that all hosts report in."
+    }
+  ],
+  "os:Ubuntu 24": [
+    {
+      "author": "Craig",
+      "time": "2026-09-12T07:55:00Z",
+      "text": "Ubuntu 24.04 is our default for new machines from now on."
+    }
+  ],
+  "user:root": [
+    {
+      "author": "Nick",
+      "time": "2026-09-08T13:05:00Z",
+      "text": "Direct root login over SSH is disabled everywhere except the hubs. Let's fix the hubs too."
+    }
+  ],
+  "cloud:AWS": [
+    {
+      "author": "Ole",
+      "time": "2026-09-13T10:00:00Z",
+      "text": "Most of the AWS fleet is in eu-north-1. The metadata service is reachable on 169.254.169.254 as usual."
+    }
+  ],
+  "host:SHA=94752d811cf4205f4876804a6c5b7271a2b67c37f74712122c60e41b486cd4b1": [
+    {
+      "author": "Craig",
+      "time": "2026-09-14T06:40:00Z",
+      "text": "staging8-dns-alice was rebuilt last week; the old hardware went to the lab."
+    }
+  ]
+}

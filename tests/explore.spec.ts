@@ -33,7 +33,7 @@ const SECTIONS: Record<string, string> = {
 };
 async function openTab(
   page: import("@playwright/test").Page,
-  tab: "os" | "clouds" | "ports" | "hosts" | "similar" | "resources",
+  tab: "os" | "clouds" | "ports" | "hosts" | "similar" | "resources" | "comments",
 ) {
   if (tab === "hosts") {
     // The host list is the "List" tab on the right.
@@ -212,9 +212,12 @@ test("single-host hostnames, IPs and MACs show the host view and only entry tabs
   const onlyHostsAndSimilar = async () => {
     // Left: just the Similar and Resources tabs. Right: the host view itself.
     const leftTabs = page.getByTestId("entry-tabs").getByRole("tab");
-    await expect(leftTabs).toHaveCount(2);
+    await expect(leftTabs).toHaveCount(3);
     await expect(leftTabs.nth(0)).toContainText("Similar");
     await expect(leftTabs.nth(1)).toContainText("Resources");
+    await expect(leftTabs.nth(2)).toContainText("Comments");
+    // The host preview has no comments; the host's own page does.
+    await expect(page.getByTestId("hosts-pane").getByTestId("comments")).toHaveCount(0);
     await expect(page.getByTestId("hosts-sections")).toHaveCount(0);
     await expect(page.getByTestId("os-heading")).toHaveCount(0);
     await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
@@ -2200,6 +2203,83 @@ test("tab lists are paginated like host lists", async ({ page }) => {
   await expect(left).toContainText(`Showing ${PAGE_SIZE + 1}–`);
   const right = page.getByTestId("hosts-sections").getByTestId("pagination-summary");
   await expect(right).toContainText(`Showing ${2 * PAGE_SIZE + 1}–`);
+});
+
+import commentsJson from "../data/comments.json";
+const exampleComments = commentsJson as unknown as Record<
+  string,
+  { author: string; time: string; text: string }[] | string
+>;
+
+test("entries have a Comments tab with example comments", async ({ page }) => {
+  const examples = exampleComments["port:22"] as { author: string; time: string; text: string }[];
+  await page.goto("/entry/port/22");
+  const tab = page.getByTestId("comments-heading");
+  await expect(tab).toHaveText(`Comments (${examples.length})`);
+  // Last tab, after Similar and Resources.
+  const tabs = page.getByTestId("entry-tabs").getByRole("tab");
+  await expect(tabs.last()).toContainText("Comments");
+  await openTab(page, "comments");
+  const cards = page.getByTestId("comment-card");
+  await expect(cards).toHaveCount(examples.length);
+  for (const [i, c] of examples.entries()) {
+    await expect(cards.nth(i).getByTestId("comment-card-author")).toHaveText(c.author);
+    await expect(cards.nth(i).getByTestId("comment-card-text")).toHaveText(c.text);
+    await expect(cards.nth(i).locator("time")).toHaveAttribute("datetime", c.time);
+    await expect(cards.nth(i).locator("time")).toHaveText(/ago$|just now/);
+  }
+  // Entries without examples still have the tab, saying so.
+  await page.goto("/entry/port/5308?tab=comments");
+  await expect(page.getByTestId("comments-heading")).toHaveText("Comments (0)");
+  await expect(page.getByTestId("comment-card")).toHaveCount(0);
+  await expect(page.getByTestId("comments-list").locator(".comments-empty")).toBeVisible();
+  await expect(page.getByTestId("comments-list")).toContainText("No comments yet.");
+});
+
+test("posting a comment stores it in the browser only", async ({ page }) => {
+  await page.goto("/entry/port/5308?tab=comments");
+  await page.getByTestId("comment-author").fill("Tester");
+  await page.getByTestId("comment-text").fill("Should this really be open on Windows hosts?");
+  await page.getByTestId("comment-submit").click();
+  // Still on the same page (no navigation), the comment appears at once.
+  await expect(page).toHaveURL(/\/entry\/port\/5308/);
+  const card = page.getByTestId("comment-card").last();
+  await expect(card.getByTestId("comment-card-author")).toHaveText("Tester");
+  await expect(card.getByTestId("comment-card-text")).toHaveText(
+    "Should this really be open on Windows hosts?",
+  );
+  await expect(card.locator("time")).toHaveText("just now");
+  await expect(page.getByTestId("comments-heading")).toHaveText("Comments (1)");
+  await expect(page.getByTestId("comment-text")).toHaveValue("");
+  await expect(page.getByTestId("comments-list").locator(".comments-empty")).toBeHidden();
+
+  // It survives a reload (local storage), alongside the examples elsewhere.
+  await page.reload();
+  await expect(page.getByTestId("comment-card").last().getByTestId("comment-card-text")).toHaveText(
+    "Should this really be open on Windows hosts?",
+  );
+  await expect(page.getByTestId("comment-author")).toHaveValue("Tester");
+  await page.goto("/entry/port/22?tab=comments");
+  await expect(page.getByTestId("comment-card")).toHaveCount(
+    (exampleComments["port:22"] as unknown[]).length,
+  );
+  // And it is only in this browser.
+  const stored = await page.evaluate(() => localStorage.getItem("knowdb-comments:port:5308"));
+  expect(JSON.parse(stored!)).toHaveLength(1);
+});
+
+test("host pages have a comments section, host previews do not", async ({ page }) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const section = page.getByTestId("comments");
+  await expect(section.getByTestId("comments-heading")).toContainText("Comments");
+  const details = (await page.getByTestId("host-details").boundingBox())!;
+  const box = (await section.boundingBox())!;
+  expect(box.y).toBeGreaterThan(details.y + details.height - 1);
+  const examples = exampleComments[`host:${someHost.id}`];
+  if (Array.isArray(examples)) {
+    await expect(page.getByTestId("comment-card")).toHaveCount(examples.length);
+  }
+  await expect(page.getByTestId("comment-form")).toBeVisible();
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

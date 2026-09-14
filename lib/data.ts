@@ -1,6 +1,7 @@
 import hostsJson from "@/data/hosts.json";
 import infoJson from "@/data/info.json";
 import groupsJson from "@/data/groups.json";
+import commentsJson from "@/data/comments.json";
 
 export interface Host {
   os: string;
@@ -1006,4 +1007,25 @@ export function describeHost(host: Host): string {
   text += cloud ? `, running in ${cloud}.` : ", running in your own data center.";
   if (role) text += ` It looks like ${withArticle(role)}.`;
   return text;
+}
+
+// Example comments for the demo (data/comments.json), keyed by
+// "<type>:<name>". Comments written in the app live in the browser's local
+// storage under the same key; there is no backend.
+export interface Comment {
+  author: string;
+  // ISO 8601 timestamp.
+  time: string;
+  text: string;
+}
+
+const comments = commentsJson as unknown as Record<string, Comment[] | string>;
+
+export function commentKey(entry: EntryRef): string {
+  return `${entry.type}:${entry.name}`;
+}
+
+export function getComments(entry: EntryRef): Comment[] {
+  const list = comments[commentKey(entry)];
+  return Array.isArray(list) ? list : [];
 }

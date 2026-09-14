@@ -34,6 +34,83 @@ export const LIST_MODAL_SCRIPT = `
         "hosts-tab=" + tab.getAttribute("data-hosts-tab") + "; path=/; max-age=31536000; SameSite=Lax";
     }
   });
+  // Comments (components/Comments.tsx): show the ones stored in this
+  // browser and store new ones. Demo only, nothing leaves the browser.
+  function relative(iso) {
+    var seconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+    if (seconds < 45) return "just now";
+    var units = [[31536000, "year"], [2592000, "month"], [604800, "week"], [86400, "day"], [3600, "hour"], [60, "minute"]];
+    for (var i = 0; i < units.length; i++) {
+      if (seconds >= units[i][0]) {
+        var n = Math.round(seconds / units[i][0]);
+        return n + " " + units[i][1] + (n === 1 ? "" : "s") + " ago";
+      }
+    }
+    return "less than a minute ago";
+  }
+  function commentStorageKey(section) { return "knowdb-comments:" + section.getAttribute("data-comments"); }
+  function loadComments(section) {
+    try { return JSON.parse(localStorage.getItem(commentStorageKey(section)) || "[]"); } catch (err) { return []; }
+  }
+  function appendComment(section, comment) {
+    var list = section.querySelector("[data-testid=comments-list]");
+    var empty = section.querySelector("[data-comments-empty]");
+    var li = document.createElement("li");
+    li.className = "comment-card comment-card-local";
+    li.setAttribute("data-testid", "comment-card");
+    var meta = document.createElement("div");
+    meta.className = "comment-meta";
+    var author = document.createElement("strong");
+    author.setAttribute("data-testid", "comment-card-author");
+    author.textContent = comment.author;
+    var time = document.createElement("time");
+    time.className = "muted";
+    time.setAttribute("datetime", comment.time);
+    time.title = new Date(comment.time).toUTCString();
+    time.textContent = relative(comment.time);
+    meta.appendChild(author);
+    meta.appendChild(document.createTextNode(" "));
+    meta.appendChild(time);
+    var body = document.createElement("p");
+    body.className = "comment-body";
+    body.setAttribute("data-testid", "comment-card-text");
+    body.textContent = comment.text;
+    li.appendChild(meta);
+    li.appendChild(body);
+    list.insertBefore(li, empty);
+    if (empty) empty.hidden = true;
+    var count = section.querySelector("[data-comments-count]");
+    if (count) count.textContent = "(" + list.querySelectorAll(".comment-card").length + ")";
+    var tab = document.querySelector("[data-testid=comments-heading] [data-comments-count]");
+    if (tab && tab !== count) tab.textContent = "(" + list.querySelectorAll(".comment-card").length + ")";
+  }
+  function initComments() {
+    var sections = document.querySelectorAll("[data-comments]");
+    for (var i = 0; i < sections.length; i++) {
+      var stored = loadComments(sections[i]);
+      for (var j = 0; j < stored.length; j++) appendComment(sections[i], stored[j]);
+      var input = sections[i].querySelector("input[name=author]");
+      if (input && !input.value) input.value = localStorage.getItem("knowdb-comment-author") || "";
+    }
+  }
+  document.addEventListener("submit", function (e) {
+    var form = e.target && e.target.closest && e.target.closest("[data-comment-form]");
+    if (!form) return;
+    e.preventDefault();
+    var section = form.closest("[data-comments]");
+    var text = form.querySelector("textarea[name=text]").value.trim();
+    if (!text) return;
+    var author = form.querySelector("input[name=author]").value.trim() || "Anonymous";
+    var comment = { author: author, time: new Date().toISOString(), text: text };
+    var stored = loadComments(section);
+    stored.push(comment);
+    localStorage.setItem(commentStorageKey(section), JSON.stringify(stored));
+    localStorage.setItem("knowdb-comment-author", author);
+    appendComment(section, comment);
+    form.querySelector("textarea[name=text]").value = "";
+  });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initComments);
+  else initComments();
   document.addEventListener("input", function (e) {
     var modal = e.target && e.target.closest && e.target.closest("[data-list-modal]");
     if (modal) update(modal);

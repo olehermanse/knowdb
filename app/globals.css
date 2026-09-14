@@ -652,3 +652,61 @@ a,
     grid-template-columns: 1fr;
   }
 }
+
+/* Comments: simple cards and a form. Demo only, stored in the browser. */
+.comments h2 {
+  margin-top: 2rem;
+}
+
+.comment-card {
+  display: block;
+}
+
+/* The flex rule on list items would otherwise defeat the hidden attribute. */
+.comments-list li[hidden] {
+  display: none;
+}
+
+.comment-meta {
+  margin-bottom: 0.25rem;
+}
+
+.comment-body {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.comment-form {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 36rem;
+}
+
+.comment-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+}
+
+.comment-form input,
+.comment-form textarea {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.comment-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.comment-form-note {
+  font-size: 0.85rem;
+}

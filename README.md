@@ -39,6 +39,16 @@ host shows only the Hosts and Similar tabs.
 Lists show at most 10 items at a time, with pagination links below the
 list: hosts, but also the ports, versions and similar entries in the tabs.
 
+## Comments
+
+Every entry has a Comments tab (the last tab on the left), and a host page
+has a Comments section at the bottom; the host preview on the right of
+other entries has none. Each comment is a small card with the author, the
+time and the text. Example comments live in `data/comments.json`, keyed by
+`<type>:<name>`. The form at the bottom lets you post a comment, but this
+is demo only: there is no backend, and comments you write are kept in your
+browser's local storage and shown together with the examples.
+
 ## Front page
 
 The front page has a button for each entry type (hosts, ports, software,

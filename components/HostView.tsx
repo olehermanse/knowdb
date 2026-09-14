@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Comments from "@/components/Comments";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
@@ -148,6 +149,7 @@ export default function HostView({ host, embedded = false }: { host: Host; embed
       </div>
       <p data-testid={tid("entry-summary")}>{describeHost(host)}</p>
       <HostDetails host={host} />
+      {!embedded && <Comments entry={{ type: "host", name: host.id }} heading />}
       {embedded && (
         <Link
           href={entryHref({ type: "host", name: host.id })}

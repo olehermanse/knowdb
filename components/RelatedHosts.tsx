@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import EntryLink from "@/components/EntryLink";
+import Comments from "@/components/Comments";
 import Pagination, { paginate } from "@/components/Pagination";
 import {
   describeEntry,
@@ -11,6 +12,7 @@ import {
   Entry,
   entryHref,
   externalLinkLabel,
+  getComments,
   getEntryLinks,
   filterSearchHref,
   getPortInfo,
@@ -19,8 +21,8 @@ import {
 
 // The entry's own tabs, shown on the left of an entry page: versions (for
 // software), the ports its hosts listen on, and similar entries.
-export type Tab = "versions" | "ports" | "similar" | "resources";
-const TAB_ORDER: Tab[] = ["versions", "ports", "similar", "resources"];
+export type Tab = "versions" | "ports" | "similar" | "resources" | "comments";
+const TAB_ORDER: Tab[] = ["versions", "ports", "similar", "resources", "comments"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -33,7 +35,7 @@ export function entryTabs(entry: Entry): Tab[] {
   const tabs: Tab[] = [];
   if (entry.type === "software") tabs.push("versions");
   if (entry.type !== "port" && entry.hosts.length > 1) tabs.push("ports");
-  tabs.push("similar", "resources");
+  tabs.push("similar", "resources", "comments");
   return tabs;
 }
 
@@ -336,6 +338,7 @@ export default function RelatedHosts({
   const counts: Record<Tab, number> = {
     similar: similarCount,
     resources: resourceCount,
+    comments: getComments(entry).length,
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     ports: aggregatePorts(entry.hosts).length,
   };
@@ -344,12 +347,14 @@ export default function RelatedHosts({
     ports: "Ports",
     similar: "Similar",
     resources: "Resources",
+    comments: "Comments",
   };
   const testIds: Record<Tab, string> = {
     versions: "versions-heading",
     ports: "ports-heading",
     similar: "similar-heading",
     resources: "resources-heading",
+    comments: "comments-heading",
   };
   return (
     <section className="related-hosts" data-testid={testId}>
@@ -375,7 +380,10 @@ export default function RelatedHosts({
               className={`tab${t === current ? " tab-current" : ""}`}
               data-testid={testIds[t]}
             >
-              {labels[t]} <span className="muted">({counts[t]})</span>
+              {labels[t]}{" "}
+              <span className="muted" {...(t === "comments" ? { "data-comments-count": "" } : {})}>
+                ({counts[t]})
+              </span>
             </Link>
           ),
         )}
@@ -390,6 +398,7 @@ export default function RelatedHosts({
             <SimilarPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}
           {current === "resources" && <ResourcesPanel entry={entry} />}
+          {current === "comments" && <Comments entry={entry} />}
         </div>
       )}
     </section>
