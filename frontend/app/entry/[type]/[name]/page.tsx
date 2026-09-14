@@ -6,10 +6,17 @@ import {
   entryHref,
   getEntry,
   getHost,
+  getPortInfo,
   Host,
   isEntryType,
   uniqueHostForHostname,
 } from "@/lib/data";
+
+// "22 (ssh)" for well-known ports, just the number otherwise.
+function portLabel(port: number): string {
+  const info = getPortInfo(port);
+  return info ? `${port} (${info.name})` : String(port);
+}
 
 function HostDetails({ host }: { host: Host }) {
   return (
@@ -31,7 +38,12 @@ function HostDetails({ host }: { host: Host }) {
       <dt>Listening ports</dt>
       <dd className="inline-links">
         {host["ports-listening"].map((port) => (
-          <EntryLink key={port} type="port" name={String(port)} />
+          <EntryLink
+            key={port}
+            type="port"
+            name={String(port)}
+            label={portLabel(port)}
+          />
         ))}
       </dd>
       <dt>Software</dt>

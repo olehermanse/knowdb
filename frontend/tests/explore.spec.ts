@@ -48,8 +48,20 @@ test("host page shows clickable details", async ({ page }) => {
     details.getByRole("link", { name: someHost.os, exact: true }),
   ).toBeVisible();
   await expect(
-    details.getByRole("link", { name: "22", exact: true }),
+    details.getByRole("link", { name: "22 (ssh)", exact: true }),
   ).toBeVisible();
+});
+
+test("host page shows common port names in parenthesis", async ({ page }) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const details = page.getByTestId("host-details");
+  for (const port of someHost["ports-listening"]) {
+    const known = info.ports[String(port) as keyof typeof info.ports];
+    const label = known ? `${port} (${known.name})` : String(port);
+    const link = details.getByRole("link", { name: label, exact: true });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", `/entry/port/${port}`);
+  }
 });
 
 test("clicking a unique hostname goes directly to the host", async ({
@@ -79,7 +91,7 @@ test("entries are two-way linked: host -> port -> host", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await page
     .getByTestId("host-details")
-    .getByRole("link", { name: "22", exact: true })
+    .getByRole("link", { name: "22 (ssh)", exact: true })
     .click();
   await expect(page).toHaveURL("/entry/port/22");
   await expect(page.getByTestId("entry-description")).toContainText("SSH");
