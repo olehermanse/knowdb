@@ -275,7 +275,8 @@ a,
 .slice-7 { fill: var(--series-7); background: var(--series-7); }
 .slice-8 { fill: var(--series-8); background: var(--series-8); }
 
-.os-list {
+.os-list,
+.ports-list {
   list-style: none;
   padding: 0;
   margin: 0;

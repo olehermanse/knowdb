@@ -64,7 +64,7 @@ function AggregatedPort({
     { type: entry.type, name: entry.name },
   ]);
   return (
-    <span className="aggregated-port" data-testid="aggregated-port">
+    <li className="aggregated-port" data-testid="aggregated-port">
       <EntryLink type="port" name={String(port)} />{" "}
       <span className="muted">
         ({info && <>{info.name}, </>}
@@ -73,10 +73,11 @@ function AggregatedPort({
         </Link>
         )
       </span>
-    </span>
+    </li>
   );
 }
 
+// The ports the related hosts listen on, one per line, ascending.
 function PortsPanel({ entry }: { entry: Entry }) {
   const ports = aggregatePorts(entry.hosts);
   return (
@@ -84,12 +85,12 @@ function PortsPanel({ entry }: { entry: Entry }) {
       <p className="muted" data-testid="ports-description">
         The hosts are listening to these ports:
       </p>
-      <div className="inline-links" data-testid="aggregated-ports">
-        {ports.length === 0 && <span className="muted">None</span>}
+      <ul className="ports-list" data-testid="aggregated-ports">
+        {ports.length === 0 && <li className="muted">None</li>}
         {ports.map(({ port, hosts }) => (
           <AggregatedPort key={port} entry={entry} port={port} hosts={hosts} />
         ))}
-      </div>
+      </ul>
     </>
   );
 }
