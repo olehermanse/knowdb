@@ -584,3 +584,19 @@ a,
 .see-also {
   font-style: italic;
 }
+
+/* Type badge on the left, "First seen ..., last seen ..." on the right. */
+.entry-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.seen-line {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  text-align: right;
+}

@@ -184,8 +184,9 @@ the hosts on it.
 Every host records when it first and most recently reported in. Other
 entries derive their timestamps from their hosts: first seen is the
 earliest of the hosts' first-seen times and last seen the latest last-seen.
-Pages show these as relative times ("3 minutes ago") with the full date and
-time in UTC as a tooltip.
+Pages show them at the top right, level with the type badge, as a faded
+italic sentence in relative times ("First seen 3 years ago, last seen 34
+minutes ago."), with the full date and time in UTC as a tooltip.
 
 ## Cloud providers
 

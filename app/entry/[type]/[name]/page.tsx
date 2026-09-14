@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
-import Timestamp from "@/components/Timestamp";
+import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import { cookies } from "next/headers";
 import HostsSections, { HOSTS_TAB_COOKIE, parseHostsTab } from "@/components/HostsSections";
@@ -109,16 +109,7 @@ export default async function EntryPage({
   const summary = summarizeEntry(entry);
   const seen = entrySeen(entry);
 
-  if (host) {
-    return (
-      <>
-        <p>
-          <span className="type-badge">host</span>
-        </p>
-        <HostView host={host} />
-      </>
-    );
-  }
+  if (host) return <HostView host={host} />;
 
   // Everything else: the title above, then two panes. The entry's own
   // information and tabs on the left; its host(s) on the right. A single
@@ -128,9 +119,10 @@ export default async function EntryPage({
   return (
     <>
       <header className="entry-header" data-testid="entry-header">
-        <p>
+        <div className="entry-topline">
           <span className="type-badge">{entry.type}</span>
-        </p>
+          {seen && <SeenLine seen={seen} testId="entry" />}
+        </div>
         <div className="entry-title">
           {logo && (
             <Image
@@ -161,12 +153,6 @@ export default async function EntryPage({
             {describeEntry(entry)}
           </p>
           {summary && <p data-testid="entry-summary">{summary}</p>}
-          {seen && (
-            <p className="muted" data-testid="entry-seen">
-              First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
-              <Timestamp iso={seen.last} testId="entry-last-seen" />.
-            </p>
-          )}
           <ExternalLinks entry={entry} />
           {group && <GroupRules group={group} />}
           <RelatedHosts

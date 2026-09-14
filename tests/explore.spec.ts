@@ -1854,8 +1854,6 @@ test("host page has two columns with software and classes below", async ({
     "Hostname",
     "Operating system",
     "Cloud provider",
-    "First seen",
-    "Last seen",
     "Local users",
     "Groups",
   ]);
@@ -1946,6 +1944,19 @@ test("hosts show first and last seen as relative times with full tooltips", asyn
   await expect(lastSeen).toHaveAttribute("datetime", last);
   await expect(lastSeen).toHaveAttribute("title", fullTime(last));
   await expect(lastSeen).toHaveText(/ago$|just now/);
+  // Top right: level with the type badge, above the title, italic and faded.
+  const seenLine = page.getByTestId("host-seen");
+  await expect(seenLine).toHaveText(/^First seen .*, last seen .*\.$/);
+  await expect(seenLine).toHaveCSS("font-style", "italic");
+  await expect(seenLine).toHaveClass(/muted/);
+  const badge = (await page.locator(".type-badge").first().boundingBox())!;
+  const seenBox = (await seenLine.boundingBox())!;
+  const title = (await page.getByTestId("entry-name").boundingBox())!;
+  const main = (await page.locator("main").boundingBox())!;
+  expect(Math.abs(seenBox.y + seenBox.height / 2 - (badge.y + badge.height / 2))).toBeLessThan(3);
+  expect(seenBox.y + seenBox.height).toBeLessThanOrEqual(title.y + 1);
+  expect(seenBox.x).toBeGreaterThan(badge.x + badge.width);
+  expect(main.x + main.width - (seenBox.x + seenBox.width)).toBeLessThan(40);
 
   // Online hosts were seen after offline ones in the generated data.
   const online = hosts.filter((h) => h.online).map((h) => seenOf(h)["last-seen"]);
@@ -1966,7 +1977,14 @@ test("other entries derive first and last seen from their hosts", async ({
   const firsts = hosts.map((h) => seenOf(h)["first-seen"]).sort();
   const lasts = hosts.map((h) => seenOf(h)["last-seen"]).sort();
   await page.goto("/entry/port/22");
-  await expect(page.getByTestId("entry-seen")).toContainText("First seen");
+  await expect(page.getByTestId("entry-seen")).toHaveText(/^First seen .*, last seen .*\.$/);
+  // Top right, level with the type badge and above the title.
+  const badge = (await page.locator(".type-badge").first().boundingBox())!;
+  const seenBox = (await page.getByTestId("entry-seen").boundingBox())!;
+  const title = (await page.getByTestId("entry-name").boundingBox())!;
+  expect(Math.abs(seenBox.y + seenBox.height / 2 - (badge.y + badge.height / 2))).toBeLessThan(3);
+  expect(seenBox.y + seenBox.height).toBeLessThanOrEqual(title.y + 1);
+  expect(seenBox.x).toBeGreaterThan(badge.x + badge.width);
   await expect(page.getByTestId("entry-first-seen")).toHaveAttribute("datetime", firsts[0]);
   await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
     "datetime",

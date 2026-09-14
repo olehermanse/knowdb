@@ -1,7 +1,7 @@
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
-import Timestamp from "@/components/Timestamp";
+import SeenLine from "@/components/SeenLine";
 import {
   describeHost,
   entryHref,
@@ -39,15 +39,7 @@ function HostDetails({ host }: { host: Host }) {
               <span className="muted">None</span>
             )}
           </dd>
-          <dt>First seen</dt>
-        <dd>
-          <Timestamp iso={host["first-seen"]} testId="host-first-seen" />
-        </dd>
-        <dt>Last seen</dt>
-        <dd>
-          <Timestamp iso={host["last-seen"]} testId="host-last-seen" />
-        </dd>
-        <dt>Local users</dt>
+          <dt>Local users</dt>
           <dd className="inline-links">
             {host["local-users"].map((user) => (
               <EntryLink key={user} type="user" name={user} />
@@ -143,11 +135,10 @@ export default function HostView({ host, embedded = false }: { host: Host; embed
   const tid = (id: string) => (embedded ? `pane-${id}` : id);
   return (
     <div className="host-view" data-testid={tid("host-view")}>
-      {embedded && (
-        <p>
-          <span className="type-badge">host</span>
-        </p>
-      )}
+      <div className="entry-topline">
+        <span className="type-badge">host</span>
+        <SeenLine seen={{ first: host["first-seen"], last: host["last-seen"] }} testId={tid("host")} />
+      </div>
       <div className="entry-title">
         <HostAvatar host={host} size={48} />
         <h1 data-testid={tid("entry-name")}>
