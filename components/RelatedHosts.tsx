@@ -140,7 +140,9 @@ function PortsPanel({ entry }: { entry: Entry }) {
   return (
     <>
       <p className="muted" data-testid="ports-description">
-        The hosts are listening to these ports:
+        {entry.type === "software"
+          ? `The ${entry.name} hosts are listening to these ports:`
+          : "The hosts are listening to these ports:"}
       </p>
       {ports.length === 0 && <p className="muted">None</p>}
       <ul className="entry-list" data-testid="aggregated-ports">
