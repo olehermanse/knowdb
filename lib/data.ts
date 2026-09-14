@@ -499,6 +499,7 @@ export function getOsColor(os: string): string {
 // External links for an entry, from info.json. Empty for entry types
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
+  if (entry.type === "version") return [];
   return infoFor(entry)?.links ?? [];
 }
 
@@ -562,13 +563,12 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
   return related.filter((ref) => entries.has(entryKey(ref.type, ref.name)));
 }
 
-// "port 5432 (postgresql)", "software postgresql", "Ubuntu 24 (OS)", ...
+// "port 5432 (postgresql)", "postgresql (software)", "Ubuntu 24 (OS)", ...
 export function seeAlsoLabel(ref: EntryRef): string {
   if (ref.type === "port") {
     const name = getPortInfo(ref.name)?.name;
     return name ? `port ${ref.name} (${name})` : `port ${ref.name}`;
   }
-  if (ref.type === "software") return `software ${ref.name}`;
   const typeLabel = ref.type === "os" ? "OS" : ref.type;
   return `${ref.name} (${typeLabel})`;
 }
@@ -619,8 +619,7 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "version") {
     const { software, version } = parseVersionEntryName(entry.name);
-    const known = getSoftwareInfo(software)?.description;
-    return `Version ${version} of ${software}.${known ? ` ${known}` : ""}`;
+    return `Version ${version} of ${software}.`;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
@@ -686,10 +685,9 @@ export function summarizeEntry(entry: Entry): string {
       const versionsText = versions > 0 ? `, in ${plural(versions, "different version")}` : "";
       return `${entry.name} is installed on ${hosts} in your infrastructure, across ${oses()}${versionsText}.`;
     }
-    case "version": {
-      const { software, version } = parseVersionEntryName(entry.name);
-      return `${software} ${version} is installed on ${hosts} in your infrastructure, across ${oses()}.`;
-    }
+    case "version":
+      // Version pages are kept short: the software page has the numbers.
+      return "";
     case "os":
       return `In your infrastructure, you have ${entry.name} installed on ${hosts}, and these hosts are listening to ${ports()}.`;
     case "port":

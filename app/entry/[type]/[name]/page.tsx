@@ -193,6 +193,7 @@ export default async function EntryPage({
   const group = type === "group" ? getGroup(name) : undefined;
   const logo = getEntryLogo(entry);
   const portName = type === "port" ? getPortInfo(name)?.name : undefined;
+  const summary = summarizeEntry(entry);
 
   return (
     <>
@@ -231,7 +232,7 @@ export default async function EntryPage({
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>
-      <p data-testid="entry-summary">{summarizeEntry(entry)}</p>
+      {summary && <p data-testid="entry-summary">{summary}</p>}
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
       {host ? (

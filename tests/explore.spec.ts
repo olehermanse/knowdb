@@ -1127,7 +1127,7 @@ test("software and ports link to each other with See also", async ({
   await expect(page).toHaveURL("/entry/port/5432");
   await expect(
     page.getByTestId("see-also").getByRole("link", {
-      name: "software postgresql",
+      name: "postgresql (software)",
       exact: true,
     }),
   ).toHaveAttribute("href", "/entry/software/postgresql");
@@ -1141,8 +1141,8 @@ test("software and ports link to each other with See also", async ({
   ]);
   await page.goto("/entry/port/80");
   const port80 = page.getByTestId("see-also");
-  await expect(port80).toContainText("software apache");
-  await expect(port80).toContainText("software nginx");
+  await expect(port80).toContainText("apache (software)");
+  await expect(port80).toContainText("nginx (software)");
 
   // Entries with nothing related have no See also line.
   await page.goto("/entry/software/curl");
@@ -1303,8 +1303,14 @@ test("software has versions which are entries of their own", async ({
     `Version ${topVersion} of cfengine.`,
   );
   await expect(
-    page.getByTestId("see-also").getByRole("link", { name: "software cfengine", exact: true }),
+    page.getByTestId("see-also").getByRole("link", { name: "cfengine (software)", exact: true }),
   ).toHaveAttribute("href", "/entry/software/cfengine");
+  // Version pages are kept short: only the See also line and one sentence.
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `Version ${topVersion} of cfengine.`,
+  );
+  await expect(page.getByTestId("entry-summary")).toHaveCount(0);
+  await expect(page.getByTestId("external-links")).toHaveCount(0);
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${topCount})`);
   await expect(page.getByTestId("os-heading")).toBeVisible();
   await openTab(page, "hosts");
@@ -1391,7 +1397,7 @@ test("See also links entries of different types with matching names", async ({
 
   // Class "cfengine" <-> software "cfengine", and the port named cfengine.
   await page.goto("/entry/class/cfengine");
-  await expect(seeAlsoLink("software cfengine")).toHaveAttribute(
+  await expect(seeAlsoLink("cfengine (software)")).toHaveAttribute(
     "href",
     "/entry/software/cfengine",
   );
