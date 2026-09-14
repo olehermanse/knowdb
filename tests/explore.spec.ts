@@ -31,8 +31,9 @@ async function openTab(
   await expect(page.getByTestId(`tab-${tab}`)).toBeVisible();
 }
 
-// Expected "22 (ssh, 50 hosts)" labels for a set of hosts, ascending by port.
-function expectedPortLabels(selected: Host[]): string[] {
+// Expected ports of a set of hosts, ascending by port number, with the
+// number of hosts listening on each.
+function expectedPorts(selected: Host[]) {
   const counts = new Map<number, number>();
   for (const host of selected) {
     for (const port of new Set(host["ports-listening"])) {
@@ -41,30 +42,36 @@ function expectedPortLabels(selected: Host[]): string[] {
   }
   return [...counts.entries()]
     .sort(([a], [b]) => a - b)
-    .map(([port, n]) => {
-      const known = info.ports[String(port) as keyof typeof info.ports];
-      const count = `${n} ${n === 1 ? "host" : "hosts"}`;
-      return known ? `${port} (${known.name}, ${count})` : `${port} (${count})`;
-    });
+    .map(([port, n]) => ({
+      port,
+      name: (info.ports[String(port) as keyof typeof info.ports] as { name?: string } | undefined)
+        ?.name,
+      hosts: `${n} ${n === 1 ? "host" : "hosts"}`,
+    }));
 }
 
 async function expectAggregatedPorts(
   page: import("@playwright/test").Page,
   selected: Host[],
 ) {
-  const labels = expectedPortLabels(selected);
-  expect(labels.length).toBeGreaterThan(1);
+  const expected = expectedPorts(selected);
+  expect(expected.length).toBeGreaterThan(1);
   const items = page.getByTestId("aggregated-port");
-  await expect(items).toHaveText(labels, { useInnerText: true });
-  // Every host listens on 22, so the first entry counts all selected hosts.
+  await expect(items).toHaveCount(expected.length);
+  // One card per port: badge, port link, common name and host count link.
+  for (const [i, { port, name, hosts }] of expected.entries()) {
+    const item = items.nth(i);
+    await expect(item.locator(".type-badge")).toHaveText("port");
+    await expect(item.getByRole("link", { name: String(port), exact: true })).toHaveAttribute(
+      "href",
+      `/entry/port/${port}`,
+    );
+    if (name) await expect(item).toContainText(`(${name})`);
+    await expect(item.getByTestId("port-hosts-link")).toHaveText(hosts);
+  }
+  // Every host listens on 22, so the first card counts all selected hosts.
   const first = items.first();
-  await expect(first).toHaveText(`22 (ssh, ${selected.length} hosts)`, {
-    useInnerText: true,
-  });
-  await expect(first.getByRole("link", { name: "22", exact: true })).toHaveAttribute(
-    "href",
-    "/entry/port/22",
-  );
+  await expect(first.getByTestId("port-hosts-link")).toHaveText(`${selected.length} hosts`);
   await expect(first.getByTestId("port-hosts-link")).toHaveAttribute(
     "href",
     /\/search\?q=port%3A22/,
@@ -1400,6 +1407,24 @@ test("See also links entries of different types with matching names", async ({
   // Group "Ubuntu" <-> class "ubuntu".
   await page.goto(groupHref("Ubuntu"));
   await expect(seeAlsoLink("ubuntu (class)")).toBeVisible();
+});
+
+test("port cards show a logo when the port has one", async ({ page }) => {
+  // Port 3306 (mysql) has a logo; port 22 has none.
+  const mysqlHost = hosts.find((h) => h["ports-listening"].includes(3306));
+  test.skip(!mysqlHost, "no host listening on 3306 in the generated data");
+  await page.goto("/entry/class/any?tab=ports");
+  const mysql = page
+    .getByTestId("aggregated-port")
+    .filter({ has: page.getByRole("link", { name: "3306", exact: true }) });
+  await expect(mysql.getByTestId("port-logo")).toHaveAttribute(
+    "src",
+    /cdn\.simpleicons\.org\/mysql/,
+  );
+  const ssh = page
+    .getByTestId("aggregated-port")
+    .filter({ has: page.getByRole("link", { name: "22", exact: true }) });
+  await expect(ssh.getByTestId("port-logo")).toHaveCount(0);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

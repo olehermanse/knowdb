@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import EntryLink from "@/components/EntryLink";
 import HostList from "@/components/HostList";
@@ -64,20 +65,35 @@ function AggregatedPort({
     { type: entry.type, name: entry.name },
   ]);
   return (
-    <li className="aggregated-port" data-testid="aggregated-port">
-      <EntryLink type="port" name={String(port)} />{" "}
-      <span className="muted">
-        ({info && <>{info.name}, </>}
-        <Link href={searchHref} className="entry-link" data-testid="port-hosts-link">
-          {hostsLabel(hosts)}
-        </Link>
-        )
-      </span>
+    <li className="host-item" data-testid="aggregated-port">
+      <span className="type-badge">port</span>
+      {info?.logo && (
+        <Image
+          className="list-logo"
+          src={info.logo}
+          alt={`${info.name} logo`}
+          width={32}
+          height={32}
+          unoptimized
+          data-testid="port-logo"
+        />
+      )}
+      <div className="host-summary">
+        <div>
+          <EntryLink type="port" name={String(port)} />
+          {info && <span className="muted"> ({info.name})</span>}
+        </div>
+        <div className="muted host-facts">
+          <Link href={searchHref} className="entry-link" data-testid="port-hosts-link">
+            {hostsLabel(hosts)}
+          </Link>
+        </div>
+      </div>
     </li>
   );
 }
 
-// The ports the related hosts listen on, one per line, ascending.
+// The ports the related hosts listen on, one card per port, ascending.
 function PortsPanel({ entry }: { entry: Entry }) {
   const ports = aggregatePorts(entry.hosts);
   return (
@@ -85,8 +101,8 @@ function PortsPanel({ entry }: { entry: Entry }) {
       <p className="muted" data-testid="ports-description">
         The hosts are listening to these ports:
       </p>
-      <ul className="ports-list" data-testid="aggregated-ports">
-        {ports.length === 0 && <li className="muted">None</li>}
+      {ports.length === 0 && <p className="muted">None</p>}
+      <ul className="entry-list" data-testid="aggregated-ports">
         {ports.map(({ port, hosts }) => (
           <AggregatedPort key={port} entry={entry} port={port} hosts={hosts} />
         ))}
