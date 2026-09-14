@@ -7,6 +7,7 @@ Writes 100 hosts to tmp/hosts.json.
 import json
 import random
 import secrets
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 NUM_HOSTS = 100
@@ -302,6 +303,28 @@ def generate_classes(os_name, hostname):
     return classes
 
 
+NOW = datetime.now(timezone.utc).replace(microsecond=0)
+
+
+def iso(dt):
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def generate_seen(online):
+    """First and last time the host reported in, as ISO 8601 UTC timestamps.
+
+    Online hosts reported within the last 15 minutes; offline hosts between
+    a couple of hours and two months ago. Hosts were first seen between a
+    day and three years before that.
+    """
+    if online:
+        last_seen = NOW - timedelta(seconds=random.randint(0, 15 * 60))
+    else:
+        last_seen = NOW - timedelta(seconds=random.randint(2 * 3600, 60 * 24 * 3600))
+    first_seen = last_seen - timedelta(seconds=random.randint(24 * 3600, 3 * 365 * 24 * 3600))
+    return iso(first_seen), iso(last_seen)
+
+
 def generate_cloud_provider():
     return random.choices(
         [name for name, _ in CLOUD_PROVIDERS], weights=[w for _, w in CLOUD_PROVIDERS]
@@ -314,6 +337,9 @@ def generate_host(used_hostnames, used_macs):
     )[0]
     hostname = generate_hostname(used_hostnames)
     software = generate_software(os_name, hostname)
+    # Roughly 70% of hosts are online (have reported recently).
+    online = random.random() < 0.7
+    first_seen, last_seen = generate_seen(online)
     return {
         "os": os_name,
         "id": generate_id(),
@@ -326,8 +352,9 @@ def generate_host(used_hostnames, used_macs):
         "local-users": generate_users(os_name, hostname),
         "classes": generate_classes(os_name, hostname),
         "cloud-provider": generate_cloud_provider(),
-        # Roughly 70% of hosts are online (have reported recently).
-        "online": random.random() < 0.7,
+        "online": online,
+        "first-seen": first_seen,
+        "last-seen": last_seen,
     }
 
 

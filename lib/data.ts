@@ -19,6 +19,29 @@ export interface Host {
   online: boolean;
   // Cloud provider the host runs on, or "" for your own data center.
   "cloud-provider": string;
+  // When the host first and most recently reported in (ISO 8601, UTC).
+  "first-seen": string;
+  "last-seen": string;
+}
+
+export interface Seen {
+  first: string;
+  last: string;
+}
+
+// When an entry was first and last seen: a host's own timestamps, or for
+// any other entry the earliest first-seen and latest last-seen of its
+// hosts. Undefined for entries without hosts.
+export function entrySeen(entry: Entry): Seen | undefined {
+  let first: string | undefined;
+  let last: string | undefined;
+  for (const hostkey of entry.hosts) {
+    const host = hostsByKey.get(hostkey);
+    if (!host) continue;
+    if (!first || host["first-seen"] < first) first = host["first-seen"];
+    if (!last || host["last-seen"] > last) last = host["last-seen"];
+  }
+  return first && last ? { first, last } : undefined;
 }
 
 export type EntryType =

@@ -1,5 +1,6 @@
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
+import Timestamp from "@/components/Timestamp";
 import { abbreviateHostId, Host } from "@/lib/data";
 
 // One host in a list: hostname (linked), abbreviated key, OS and IPs.
@@ -18,6 +19,9 @@ export default function HostListItem({ host }: { host: Host }) {
         <div className="muted host-facts">
           <span>
             OS: <EntryLink type="os" name={host.os} />
+          </span>
+          <span>
+            Last seen: <Timestamp iso={host["last-seen"]} />
           </span>
           <span>
             IPs:{" "}

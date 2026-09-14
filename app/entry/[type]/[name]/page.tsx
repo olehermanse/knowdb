@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
+import Timestamp from "@/components/Timestamp";
 import { parsePage } from "@/components/HostList";
 import RelatedHosts, { parseTab } from "@/components/RelatedHosts";
 import {
   describeEntry,
   Entry,
   entryHref,
+  entrySeen,
   externalLinkLabel,
   getEntry,
   getEntryLinks,
@@ -55,7 +57,15 @@ function HostDetails({ host }: { host: Host }) {
               <span className="muted">None</span>
             )}
           </dd>
-          <dt>Local users</dt>
+          <dt>First seen</dt>
+        <dd>
+          <Timestamp iso={host["first-seen"]} testId="host-first-seen" />
+        </dd>
+        <dt>Last seen</dt>
+        <dd>
+          <Timestamp iso={host["last-seen"]} testId="host-last-seen" />
+        </dd>
+        <dt>Local users</dt>
           <dd className="inline-links">
             {host["local-users"].map((user) => (
               <EntryLink key={user} type="user" name={user} />
@@ -219,6 +229,7 @@ export default async function EntryPage({
   const logo = getEntryLogo(entry);
   const portName = type === "port" ? getPortInfo(name)?.name : undefined;
   const summary = summarizeEntry(entry);
+  const seen = entrySeen(entry);
 
   return (
     <>
@@ -260,6 +271,12 @@ export default async function EntryPage({
         </p>
       )}
       {summary && <p data-testid="entry-summary">{summary}</p>}
+      {!host && seen && (
+        <p className="muted" data-testid="entry-seen">
+          First seen <Timestamp iso={seen.first} testId="entry-first-seen" />, last seen{" "}
+          <Timestamp iso={seen.last} testId="entry-last-seen" />.
+        </p>
+      )}
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
       {host ? (

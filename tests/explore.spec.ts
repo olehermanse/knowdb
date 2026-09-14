@@ -1831,6 +1831,8 @@ test("host page has two columns with software and classes below", async ({
     "Hostname",
     "Operating system",
     "Cloud provider",
+    "First seen",
+    "Last seen",
     "Local users",
     "Groups",
   ]);
@@ -1893,6 +1895,66 @@ test("software and classes open in a filterable modal", async ({ page }) => {
   await expect(dialog).toBeHidden();
   await page.getByTestId("classes-modal-open").click();
   await expect(items).toHaveCount(someHost.classes.length);
+});
+
+const fullTime = (iso: string) =>
+  `${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "medium", timeZone: "UTC" }).format(new Date(iso))} UTC`;
+type Seen = { "first-seen": string; "last-seen": string };
+const seenOf = (h: Host) => h as unknown as Seen;
+
+test("hosts show first and last seen as relative times with full tooltips", async ({
+  page,
+}) => {
+  const { "first-seen": first, "last-seen": last } = seenOf(someHost);
+  expect(first < last).toBe(true);
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const firstSeen = page.getByTestId("host-first-seen");
+  const lastSeen = page.getByTestId("host-last-seen");
+  await expect(firstSeen).toHaveAttribute("datetime", first);
+  await expect(firstSeen).toHaveAttribute("title", fullTime(first));
+  await expect(firstSeen).toHaveText(/^(\d+ (year|month|week|day|hour|minute)s? ago|just now|less than a minute ago)$/);
+  await expect(lastSeen).toHaveAttribute("datetime", last);
+  await expect(lastSeen).toHaveAttribute("title", fullTime(last));
+  await expect(lastSeen).toHaveText(/ago$|just now/);
+
+  // Online hosts were seen after offline ones in the generated data.
+  const online = hosts.filter((h) => h.online).map((h) => seenOf(h)["last-seen"]);
+  const offline = hosts.filter((h) => !h.online).map((h) => seenOf(h)["last-seen"]);
+  expect(Math.min(...online.map(Date.parse))).toBeGreaterThan(Math.max(...offline.map(Date.parse)));
+
+  // Host cards in lists show the last seen time too.
+  await page.goto("/entry/port/22?tab=hosts");
+  const firstCard = page.getByTestId("host-item").first();
+  await expect(firstCard).toContainText("Last seen:");
+  await expect(firstCard.locator("time")).toHaveAttribute("title", /UTC$/);
+});
+
+test("other entries derive first and last seen from their hosts", async ({
+  page,
+}) => {
+  // Port 22 is on every host.
+  const firsts = hosts.map((h) => seenOf(h)["first-seen"]).sort();
+  const lasts = hosts.map((h) => seenOf(h)["last-seen"]).sort();
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("entry-seen")).toContainText("First seen");
+  await expect(page.getByTestId("entry-first-seen")).toHaveAttribute("datetime", firsts[0]);
+  await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
+    "datetime",
+    lasts[lasts.length - 1],
+  );
+  await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
+    "title",
+    fullTime(lasts[lasts.length - 1]),
+  );
+
+  // A group derives from just its hosts.
+  const windows = hostsInGroup("Windows");
+  const wLast = windows.map((h) => seenOf(h)["last-seen"]).sort();
+  await page.goto(groupHref("Windows"));
+  await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
+    "datetime",
+    wLast[wLast.length - 1],
+  );
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {
