@@ -53,8 +53,9 @@ export const LIST_MODAL_SCRIPT = `
     try { return JSON.parse(localStorage.getItem(commentStorageKey(section)) || "[]"); } catch (err) { return []; }
   }
   function appendComment(section, comment) {
-    var list = section.querySelector("[data-testid=comments-list]");
-    var empty = section.querySelector("[data-comments-empty]");
+    var local = section.querySelector("[data-local-comments]");
+    var empty = local.querySelector("[data-comments-empty]");
+    if (empty) empty.remove();
     var li = document.createElement("li");
     li.className = "comment-card comment-card-local";
     li.setAttribute("data-testid", "comment-card");
@@ -77,12 +78,10 @@ export const LIST_MODAL_SCRIPT = `
     body.textContent = comment.text;
     li.appendChild(meta);
     li.appendChild(body);
-    list.insertBefore(li, empty);
-    if (empty) empty.hidden = true;
-    var count = section.querySelector("[data-comments-count]");
-    if (count) count.textContent = "(" + list.querySelectorAll(".comment-card").length + ")";
-    var tab = document.querySelector("[data-testid=comments-heading] [data-comments-count]");
-    if (tab && tab !== count) tab.textContent = "(" + list.querySelectorAll(".comment-card").length + ")";
+    local.appendChild(li);
+    var total = section.querySelectorAll(".comment-card").length;
+    var counts = document.querySelectorAll("[data-comments-count]");
+    for (var i = 0; i < counts.length; i++) counts[i].textContent = "(" + total + ")";
   }
   function initComments() {
     var sections = document.querySelectorAll("[data-comments]");

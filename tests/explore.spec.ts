@@ -2255,7 +2255,7 @@ test("posting a comment stores it in the browser only", async ({ page }) => {
   await expect(card.locator("time")).toHaveText("just now");
   await expect(page.getByTestId("comments-heading")).toHaveText("Comments (1)");
   await expect(page.getByTestId("comment-text")).toHaveValue("");
-  await expect(page.getByTestId("comments-list").locator(".comments-empty")).toBeHidden();
+  await expect(page.getByTestId("comments-list").locator(".comments-empty")).toHaveCount(0);
 
   // It survives a reload (local storage), alongside the examples elsewhere.
   await page.reload();

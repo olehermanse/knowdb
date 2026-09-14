@@ -8,21 +8,34 @@ import { Comment, commentKey, EntryRef, getComments } from "@/lib/data";
 export default function Comments({ entry, heading }: { entry: EntryRef; heading?: boolean }) {
   const list = getComments(entry);
   const key = commentKey(entry);
+  // The parts the inline script changes (the count and the user's own
+  // comments) are rendered with dangerouslySetInnerHTML so React leaves
+  // their contents alone when hydrating.
+  const emptyRow = list.length === 0 ? EMPTY_ROW : "";
   return (
     <section className="comments" data-comments={key} data-testid="comments">
       {heading && (
         <h2 data-testid="comments-heading">
-          Comments <span className="muted" data-comments-count>({list.length})</span>
+          Comments{" "}
+          <span
+            className="muted"
+            data-comments-count
+            dangerouslySetInnerHTML={{ __html: `(${list.length})` }}
+          />
         </h2>
       )}
-      <ul className="entry-list comments-list" data-testid="comments-list">
-        {list.map((comment, i) => (
-          <CommentCard key={i} comment={comment} />
-        ))}
-        <li className="muted comments-empty" data-comments-empty hidden={list.length > 0}>
-          No comments yet.
-        </li>
-      </ul>
+      <div data-testid="comments-list">
+        <ul className="entry-list comments-list">
+          {list.map((comment, i) => (
+            <CommentCard key={i} comment={comment} />
+          ))}
+        </ul>
+        <ul
+          className="entry-list comments-list"
+          data-local-comments
+          dangerouslySetInnerHTML={{ __html: emptyRow }}
+        />
+      </div>
       <form className="comment-form" data-comment-form data-testid="comment-form">
         <label>
           <span className="muted">Name</span>
@@ -42,6 +55,9 @@ export default function Comments({ entry, heading }: { entry: EntryRef; heading?
     </section>
   );
 }
+
+// Shown (by the server, or by the script) when there are no comments.
+const EMPTY_ROW = '<li class="muted comments-empty" data-comments-empty>No comments yet.</li>';
 
 function CommentCard({ comment }: { comment: Comment }) {
   return (

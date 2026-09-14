@@ -381,9 +381,15 @@ export default function RelatedHosts({
               data-testid={testIds[t]}
             >
               {labels[t]}{" "}
-              <span className="muted" {...(t === "comments" ? { "data-comments-count": "" } : {})}>
-                ({counts[t]})
-              </span>
+              {t === "comments" ? (
+                <span
+                  className="muted"
+                  data-comments-count
+                  dangerouslySetInnerHTML={{ __html: `(${counts[t]})` }}
+                />
+              ) : (
+                <span className="muted">({counts[t]})</span>
+              )}
             </Link>
           ),
         )}
