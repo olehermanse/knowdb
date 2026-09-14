@@ -1318,6 +1318,9 @@ test("software has versions which are entries of their own", async ({
   );
   await expect(page.getByTestId("entry-summary")).toHaveCount(0);
   await expect(page.getByTestId("external-links")).toHaveCount(0);
+  await expect(page.getByTestId("os-section")).toContainText(
+    `The cfengine ${topVersion} software version is installed on these operating systems:`,
+  );
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${topCount})`);
   await expect(page.getByTestId("os-heading")).toBeVisible();
   await openTab(page, "hosts");

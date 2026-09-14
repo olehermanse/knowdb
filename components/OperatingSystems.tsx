@@ -23,6 +23,9 @@ function sectionText(type: EntryType, subject: string, name: string): string {
   if (type === "software") {
     return `The hosts with ${name} installed run these operating systems:`;
   }
+  if (type === "version") {
+    return `The ${name} software version is installed on these operating systems:`;
+  }
   return `Operating systems of the hosts with this ${subject}, most hosts first.`;
 }
 
