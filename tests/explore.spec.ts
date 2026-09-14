@@ -848,6 +848,7 @@ test("host summary covers environments and roles from hostnames", async ({
     lb: "a load balancer",
     db: "a database server",
     dns: "a DNS server",
+    ntp: "an NTP server",
     hub: "a CFEngine hub",
     client: "a client machine",
   };

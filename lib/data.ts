@@ -578,8 +578,15 @@ export function hostRole(host: Host): string | undefined {
   return undefined;
 }
 
+// "an" before a vowel, and before acronyms spelled out letter by letter
+// whose first letter is pronounced with a vowel sound (NTP, SSH, FTP, ...).
+// Acronyms pronounced as words (RHEL, SUSE) keep "a".
+const WORD_ACRONYMS = new Set(["RHEL", "SUSE", "MAC"]);
 function withArticle(noun: string): string {
-  return `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
+  const first = noun.split(/\s/)[0];
+  const spelledOut = /^[A-Z]{2,}$/.test(first) && !WORD_ACRONYMS.has(first);
+  const vowelSound = spelledOut ? /^[AEFHILMNORSX]/.test(first) : /^[aeiou]/i.test(noun);
+  return `${vowelSound ? "an" : "a"} ${noun}`;
 }
 
 // "This is an Ubuntu 24 host in the staging environment. It looks like a
