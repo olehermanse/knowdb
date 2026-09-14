@@ -6,7 +6,9 @@ Click on a host to see information about it, see that port 22 is open,
 read what port 22 is for, see other hosts with port 22 open, and so on.
 
 A host page shows its software and classes as counts with a "Show all"
-button that opens a scrollable list which filters live as you type.
+button that opens a scrollable list which filters live as you type. The
+popup uses the native HTML popover attribute and a few lines of plain
+JavaScript, so it needs no framework code in the browser.
 
 Every host has a GitHub-style pixel avatar derived from its host key, so
 it stays the same everywhere the host appears. The avatar's colour comes

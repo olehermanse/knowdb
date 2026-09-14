@@ -471,6 +471,9 @@ a,
   max-height: 85vh;
   background: var(--background);
   color: var(--foreground);
+  /* Popovers are position: fixed by default; centre in the viewport. */
+  inset: 0;
+  margin: auto;
 }
 
 .list-modal::backdrop {
@@ -516,4 +519,9 @@ a,
   overflow-y: auto;
   min-height: 0;
   padding-right: 0.25rem;
+}
+
+/* The flex rule on list items would otherwise defeat the hidden attribute. */
+.list-modal-list li[hidden] {
+  display: none;
 }

@@ -1864,7 +1864,7 @@ test("software and classes open in a filterable modal", async ({ page }) => {
   await page.getByTestId("classes-modal-open").click();
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading")).toHaveText(`Classes of ${someHost.hostname}`);
-  const items = page.getByTestId("classes-modal-list").locator("li");
+  const items = page.getByTestId("classes-modal-list").locator("li:visible");
   await expect(items).toHaveCount(someHost.classes.length);
   // Items are stacked vertically.
   const first = (await items.nth(0).boundingBox())!;
