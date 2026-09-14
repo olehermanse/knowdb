@@ -14,6 +14,14 @@ export function hasOsSection(type: EntryType): boolean {
   return type in OS_SECTION_SUBJECTS;
 }
 
+// Text under the heading, per entry type.
+function sectionText(type: EntryType, subject: string): string {
+  if (type === "port") {
+    return "Operating systems of the hosts listening to this port:";
+  }
+  return `Operating systems of the hosts with this ${subject}, most hosts first.`;
+}
+
 // "Operating systems" section: a pie chart and a ranked list of the
 // operating systems of the hosts linked to an entry.
 export default function OperatingSystems({ entry }: { entry: Entry }) {
@@ -24,9 +32,7 @@ export default function OperatingSystems({ entry }: { entry: Entry }) {
       <h2 data-testid="os-heading">
         Operating systems <span className="muted">({counts.length})</span>
       </h2>
-      <p className="muted">
-        Operating systems of the hosts with this {subject}, most hosts first.
-      </p>
+      <p className="muted">{sectionText(entry.type, subject)}</p>
       <OsPieChart counts={counts} subject={`This ${subject}`} />
     </section>
   );

@@ -374,20 +374,30 @@ test("operating systems section is reused on software, port and user pages", asy
   page,
 }) => {
   const cases: [string, (h: Host) => boolean, string][] = [
-    ["/entry/software/dpkg", (h) => h.software.includes("dpkg"), "software"],
-    ["/entry/port/22", (h) => h["ports-listening"].includes(22), "port"],
-    ["/entry/user/root", (h) => h["local-users"].includes("root"), "local user"],
+    [
+      "/entry/software/dpkg",
+      (h) => h.software.includes("dpkg"),
+      "Operating systems of the hosts with this software, most hosts first.",
+    ],
+    [
+      "/entry/port/22",
+      (h) => h["ports-listening"].includes(22),
+      "Operating systems of the hosts listening to this port:",
+    ],
+    [
+      "/entry/user/root",
+      (h) => h["local-users"].includes("root"),
+      "Operating systems of the hosts with this local user, most hosts first.",
+    ],
   ];
-  for (const [url, selects, subject] of cases) {
+  for (const [url, selects, text] of cases) {
     const expected = osCounts(hosts.filter(selects));
     expect(expected.length, url).toBeGreaterThan(1);
     await page.goto(url);
     await expect(page.getByTestId("os-heading")).toHaveText(
       `Operating systems (${expected.length})`,
     );
-    await expect(page.getByTestId("os-section")).toContainText(
-      `hosts with this ${subject}`,
-    );
+    await expect(page.getByTestId("os-section")).toContainText(text);
     const items = page.getByTestId("os-list").locator("li");
     await expect(items.getByRole("link")).toHaveText(expected.map(([os]) => os));
     await expect(items.first()).toContainText(hostsLabel(expected[0][1]));
