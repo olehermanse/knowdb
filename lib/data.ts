@@ -286,7 +286,10 @@ export interface PortInfo extends DescribedInfo {
   name: string;
 }
 
-export type SoftwareInfo = DescribedInfo;
+export interface SoftwareInfo extends DescribedInfo {
+  // Ports this software typically listens on, e.g. [5432] for postgresql.
+  ports?: number[];
+}
 
 export interface IpRangeInfo extends DescribedInfo {
   // CIDR notation, e.g. "10.0.0.0/8" or "fe80::/10".
@@ -393,6 +396,33 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
 // Logo URL for an entry, from info.json, if it has one.
 export function getEntryLogo(entry: EntryRef): string | undefined {
   return infoFor(entry)?.logo;
+}
+
+// Related entries worth a look: software links to the ports it listens
+// on and ports link back to the software, based on info.json. Only
+// entries that exist in the infrastructure are returned.
+export function getSeeAlso(entry: EntryRef): EntryRef[] {
+  const related: EntryRef[] = [];
+  if (entry.type === "software") {
+    for (const port of getSoftwareInfo(entry.name)?.ports ?? []) {
+      related.push({ type: "port", name: String(port) });
+    }
+  } else if (entry.type === "port") {
+    const port = Number(entry.name);
+    for (const [name, sw] of Object.entries(info.software)) {
+      if (sw.ports?.includes(port)) related.push({ type: "software", name });
+    }
+  }
+  return related.filter((ref) => entries.has(entryKey(ref.type, ref.name)));
+}
+
+// "port 5432 (postgresql)" or "software postgresql", for see-also links.
+export function seeAlsoLabel(ref: EntryRef): string {
+  if (ref.type === "port") {
+    const name = getPortInfo(ref.name)?.name;
+    return name ? `port ${ref.name} (${name})` : `port ${ref.name}`;
+  }
+  return `${ref.type} ${ref.name}`;
 }
 
 export const NO_USER_INFO = "No information available about this user.";

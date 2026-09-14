@@ -1023,6 +1023,50 @@ test("filtered host search results are paginated", async ({ page }) => {
   );
 });
 
+test("software and ports link to each other with See also", async ({
+  page,
+}) => {
+  await page.goto("/entry/software/postgresql");
+  const seeAlso = page.getByTestId("see-also");
+  await expect(seeAlso).toContainText("See also:");
+  await expect(
+    seeAlso.getByRole("link", { name: "port 5432 (postgresql)", exact: true }),
+  ).toHaveAttribute("href", "/entry/port/5432");
+  // It sits between the title and the description.
+  const title = await page.getByTestId("entry-name").boundingBox();
+  const seeAlsoBox = await seeAlso.boundingBox();
+  const description = await page.getByTestId("entry-description").boundingBox();
+  expect(title!.y).toBeLessThan(seeAlsoBox!.y);
+  expect(seeAlsoBox!.y).toBeLessThan(description!.y);
+
+  await seeAlso.getByRole("link", { name: "port 5432 (postgresql)" }).click();
+  await expect(page).toHaveURL("/entry/port/5432");
+  await expect(
+    page.getByTestId("see-also").getByRole("link", {
+      name: "software postgresql",
+      exact: true,
+    }),
+  ).toHaveAttribute("href", "/entry/software/postgresql");
+
+  // Software with several ports lists them all; a port used by several
+  // programs lists them all (apache and nginx both serve port 80).
+  await page.goto("/entry/software/apache");
+  await expect(page.getByTestId("see-also").getByRole("link")).toHaveText([
+    "port 80 (http)",
+    "port 443 (https)",
+  ]);
+  await page.goto("/entry/port/80");
+  const port80 = page.getByTestId("see-also");
+  await expect(port80).toContainText("software apache");
+  await expect(port80).toContainText("software nginx");
+
+  // Entries with nothing related have no See also line.
+  await page.goto("/entry/software/curl");
+  await expect(page.getByTestId("see-also")).toHaveCount(0);
+  await page.goto("/entry/user/root");
+  await expect(page.getByTestId("see-also")).toHaveCount(0);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

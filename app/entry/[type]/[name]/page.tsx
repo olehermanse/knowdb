@@ -20,9 +20,11 @@ import {
   getHost,
   getHostGroups,
   getPortInfo,
+  getSeeAlso,
   Group,
   Host,
   isEntryType,
+  seeAlsoLabel,
   summarizeEntry,
   uniqueHostForHostname,
 } from "@/lib/data";
@@ -167,6 +169,23 @@ function AggregatedPorts({ entry }: { entry: Entry }) {
   );
 }
 
+// Related entries, e.g. the port a piece of software listens on.
+function SeeAlso({ entry }: { entry: Entry }) {
+  const related = getSeeAlso(entry);
+  if (related.length === 0) return null;
+  return (
+    <p className="see-also" data-testid="see-also">
+      <span className="muted">See also:</span>{" "}
+      {related.map((ref, i) => (
+        <span key={`${ref.type}:${ref.name}`}>
+          {i > 0 && ", "}
+          <EntryLink type={ref.type} name={ref.name} label={seeAlsoLabel(ref)} />
+        </span>
+      ))}
+    </p>
+  );
+}
+
 // External links (Wikipedia etc.) from info.json, if the entry has any.
 function ExternalLinks({ entry }: { entry: Entry }) {
   const links = getEntryLinks(entry);
@@ -280,6 +299,7 @@ export default async function EntryPage({
           )}
         </h1>
       </div>
+      <SeeAlso entry={entry} />
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>

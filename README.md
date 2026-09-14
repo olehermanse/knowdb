@@ -76,6 +76,9 @@ external sources, each with the `title` of the page, the `source` site it
 is on, and the `url`, shown as "Read more" on the entry page like
 `"Secure Shell" on Wikipedia`. Links point to Wikipedia, official project
 websites, source code repositories and specifications; any source works.
+Software entries can list the `ports` they typically listen on, such as
+`[5432]` for postgresql; software and port pages then show a "See also"
+line linking to each other.
 Well-known software, operating systems and ports can also have a `logo`,
 the URL of an image shown next to the entry's title (currently served
 from Simple Icons, https://simpleicons.org/).
