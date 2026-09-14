@@ -37,13 +37,18 @@ export function entryTabs(entry: Entry): Tab[] {
   return tabs;
 }
 
+// Query parameters belonging to the other side of the page (e.g. the
+// right pane's htab and page), kept as they are when following a link.
+export type KeptQuery = Record<string, string | undefined>;
+
 // Link to a tab (and a page of its list); the first tab and first page
 // need no query parameters. The tab lists page with `tpage`, separate from
-// the host list's `page` on the right.
-export function tabHref(entry: Entry, tabs: Tab[], tab: Tab, page = 1): string {
+// the host list's `page` on the right, whose parameters are kept.
+export function tabHref(entry: Entry, tabs: Tab[], tab: Tab, page = 1, keep: KeptQuery = {}): string {
   const params = new URLSearchParams();
   if (tab !== tabs[0]) params.set("tab", tab);
   if (page > 1) params.set("tpage", String(page));
+  for (const [key, value] of Object.entries(keep)) if (value) params.set(key, value);
   const q = params.toString();
   return `${entryHref(entry)}${q ? `?${q}` : ""}`;
 }
@@ -53,12 +58,14 @@ interface PanelProps {
   entry: Entry;
   tabs: Tab[];
   page: number;
+  keep: KeptQuery;
 }
 
 function TabPagination({
   entry,
   tabs,
   tab,
+  keep,
   total,
   shown,
   start,
@@ -82,7 +89,7 @@ function TabPagination({
       current={current}
       totalPages={totalPages}
       noun={noun}
-      hrefForPage={(n) => tabHref(entry, tabs, tab, n)}
+      hrefForPage={(n) => tabHref(entry, tabs, tab, n, keep)}
     />
   );
 }
@@ -137,7 +144,7 @@ function AggregatedPort({
 }
 
 // Versions of a piece of software, one card per version, most hosts first.
-function VersionsPanel({ entry, tabs, page }: PanelProps) {
+function VersionsPanel({ entry, tabs, page, keep }: PanelProps) {
   const versions = aggregateVersions(entry.name, entry.hosts);
   const paged = paginate(versions, page);
   return (
@@ -171,6 +178,7 @@ function VersionsPanel({ entry, tabs, page }: PanelProps) {
       <TabPagination
         entry={entry}
         tabs={tabs}
+        keep={keep}
         tab="versions"
         page={page}
         total={versions.length}
@@ -201,7 +209,7 @@ function portsDescription(entry: Entry): string {
 }
 
 // Entries of the same type with similar names, longest shared prefix first.
-function SimilarPanel({ entry, tabs, page }: PanelProps) {
+function SimilarPanel({ entry, tabs, page, keep }: PanelProps) {
   const similar = similarEntries(entry);
   const paged = paginate(similar, page);
   return (
@@ -227,6 +235,7 @@ function SimilarPanel({ entry, tabs, page }: PanelProps) {
       <TabPagination
         entry={entry}
         tabs={tabs}
+        keep={keep}
         tab="similar"
         page={page}
         total={similar.length}
@@ -268,7 +277,7 @@ function ResourcesPanel({ entry }: { entry: Entry }) {
 }
 
 // The ports the related hosts listen on, one card per port, ascending.
-function PortsPanel({ entry, tabs, page }: PanelProps) {
+function PortsPanel({ entry, tabs, page, keep }: PanelProps) {
   const ports = aggregatePorts(entry.hosts);
   const paged = paginate(ports, page);
   return (
@@ -285,6 +294,7 @@ function PortsPanel({ entry, tabs, page }: PanelProps) {
       <TabPagination
         entry={entry}
         tabs={tabs}
+        keep={keep}
         tab="ports"
         page={page}
         total={ports.length}
@@ -303,6 +313,7 @@ export default function RelatedHosts({
   tabs,
   tab,
   page,
+  keep = {},
   testId,
 }: {
   entry: Entry;
@@ -310,6 +321,8 @@ export default function RelatedHosts({
   tab?: Tab;
   // Page of the current tab's list (the `tpage` query parameter).
   page: number;
+  // The other side's query parameters, kept when switching tabs here.
+  keep?: KeptQuery;
   testId: string;
 }) {
   const similarCount = similarEntries(entry).length;
@@ -356,7 +369,7 @@ export default function RelatedHosts({
           ) : (
             <Link
               key={t}
-              href={tabHref(entry, tabs, t)}
+              href={tabHref(entry, tabs, t, 1, keep)}
               role="tab"
               aria-selected={t === current}
               className={`tab${t === current ? " tab-current" : ""}`}
@@ -369,9 +382,13 @@ export default function RelatedHosts({
       </nav>
       {current && (
         <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
-          {current === "versions" && <VersionsPanel entry={entry} tabs={tabs} page={page} />}
-          {current === "ports" && <PortsPanel entry={entry} tabs={tabs} page={page} />}
-          {current === "similar" && <SimilarPanel entry={entry} tabs={tabs} page={page} />}
+          {current === "versions" && (
+            <VersionsPanel entry={entry} tabs={tabs} page={page} keep={keep} />
+          )}
+          {current === "ports" && <PortsPanel entry={entry} tabs={tabs} page={page} keep={keep} />}
+          {current === "similar" && (
+            <SimilarPanel entry={entry} tabs={tabs} page={page} keep={keep} />
+          )}
           {current === "resources" && <ResourcesPanel entry={entry} />}
         </div>
       )}

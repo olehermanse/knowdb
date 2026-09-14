@@ -2111,6 +2111,40 @@ test("right side has Charts and List tabs, Charts by default", async ({ page }) 
   }
 });
 
+test("switching a tab on one side keeps the other side's tab", async ({ page }) => {
+  // dpkg is on every Debian-like host: several pages of hosts, and it has
+  // Ports and Resources tabs on the left.
+  const dpkgHosts = hosts.filter((h) => h.software.includes("dpkg")).length;
+  test.skip(dpkgHosts <= PAGE_SIZE, "not enough dpkg hosts to paginate");
+  await page.goto("/entry/software/dpkg?tab=resources");
+  await expect(page.getByTestId("resources-heading")).toHaveAttribute("aria-selected", "true");
+
+  // Switch the right side; the left must stay on Resources.
+  await page.getByTestId("list-tab").click();
+  await expect(page).toHaveURL(/tab=resources/);
+  await expect(page).toHaveURL(/htab=list/);
+  await expect(page.getByTestId("resources-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("section-list")).toBeVisible();
+  // Paging the host list keeps the left tab too.
+  await page.getByTestId("pagination").getByRole("link", { name: "Next →" }).click();
+  await expect(page).toHaveURL(/tab=resources/);
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page.getByTestId("resources-heading")).toHaveAttribute("aria-selected", "true");
+
+  // And switching the left side keeps the right side's tab and page.
+  await page.getByTestId("ports-heading").click();
+  await expect(page).toHaveURL(/htab=list/);
+  await expect(page).toHaveURL(/page=2/);
+  await expect(page.getByTestId("ports-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("list-tab")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("hosts-sections").getByTestId("pagination-summary")).toContainText(
+    `Showing ${PAGE_SIZE + 1}–`,
+  );
+  await page.getByTestId("charts-tab").click();
+  await expect(page.getByTestId("ports-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("tab-charts")).toBeVisible();
+});
+
 test("the Charts/List choice follows the user between entries", async ({
   page,
 }) => {

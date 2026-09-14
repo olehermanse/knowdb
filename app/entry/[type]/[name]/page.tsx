@@ -64,6 +64,11 @@ function SeeAlso({ entry }: { entry: Entry }) {
 }
 
 
+// A query parameter as a single string, for passing along in links.
+function rawParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default async function EntryPage({
   params,
   searchParams,
@@ -145,6 +150,7 @@ export default async function EntryPage({
             tabs={entryTabs(entry)}
             tab={tab}
             page={tabPage}
+            keep={{ htab: rawParam(query.htab), page: rawParam(query.page) }}
             testId="entry-tabs"
           />
         </div>
@@ -152,7 +158,12 @@ export default async function EntryPage({
           {singleHost ? (
             <HostView host={singleHost} embedded />
           ) : entry.hosts.length > 1 ? (
-            <HostsSections entry={entry} page={page} tab={htab} />
+            <HostsSections
+              entry={entry}
+              page={page}
+              tab={htab}
+              keep={{ tab: rawParam(query.tab), tpage: rawParam(query.tpage) }}
+            />
           ) : (
             <p className="muted" data-testid="no-hosts">
               No hosts in your infrastructure have this {entry.type}.

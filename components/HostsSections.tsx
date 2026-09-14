@@ -66,10 +66,13 @@ export default function HostsSections({
   entry,
   page,
   tab,
+  keep = {},
 }: {
   entry: Entry;
   page: number;
   tab?: HostsTab;
+  // The left side's query parameters (tab, tpage), kept when switching here.
+  keep?: Record<string, string | undefined>;
 }) {
   const hosts = entry.hosts
     .map((hostkey) => getHost(hostkey))
@@ -80,6 +83,7 @@ export default function HostsSections({
   const current: HostsTab = charts === 0 ? "list" : tab ?? "charts";
   const href = (t: HostsTab, n = 1) => {
     const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(keep)) if (value) params.set(key, value);
     if (t !== "charts") params.set("htab", t);
     if (n > 1) params.set("page", String(n));
     const q = params.toString();
