@@ -10,6 +10,11 @@ it stays the same everywhere the host appears. The avatar's colour comes
 from the host's operating system (the `color` field of the OS entry in
 `data/info.json`, falling back to a colour derived from the OS name).
 
+Every entry page except a host's shows the hosts related to the entry in
+three tabs: the operating systems they run (a pie chart and ranked list),
+the ports they listen on, and the host list itself. The operating systems
+tab is hidden on OS pages and the ports tab on port pages.
+
 Lists of hosts show at most 50 hosts at a time, with pagination links
 below the list.
 

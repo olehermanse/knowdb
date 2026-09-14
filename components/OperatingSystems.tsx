@@ -10,11 +10,10 @@ export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
   version: "software version",
   port: "port",
   user: "local user",
+  hostname: "hostname",
+  ip: "IP address",
+  mac: "MAC address",
 };
-
-export function hasOsSection(type: EntryType): boolean {
-  return type in OS_SECTION_SUBJECTS;
-}
 
 // Text under the heading, per entry type.
 function sectionText(type: EntryType, subject: string): string {
@@ -31,9 +30,6 @@ export default function OperatingSystems({ entry }: { entry: Entry }) {
   const subject = OS_SECTION_SUBJECTS[entry.type] ?? "entry";
   return (
     <section data-testid="os-section">
-      <h2 data-testid="os-heading">
-        Operating systems <span className="muted">({counts.length})</span>
-      </h2>
       <p className="muted">{sectionText(entry.type, subject)}</p>
       <OsPieChart counts={counts} subject={`This ${subject}`} />
     </section>

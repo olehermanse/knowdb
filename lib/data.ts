@@ -197,9 +197,6 @@ export function aggregateOs(hostkeys: string[]): OsCount[] {
     .sort((a, b) => b.hosts - a.hosts || a.os.localeCompare(b.os));
 }
 
-// Entry types whose pages aggregate information about their linked hosts.
-export const AGGREGATING_TYPES: EntryType[] = ["group", "class", "software", "version", "os"];
-
 export interface VersionCount {
   version: string;
   // Number of the given hosts having this version installed.

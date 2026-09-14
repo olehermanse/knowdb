@@ -325,3 +325,38 @@ a,
 .host-avatar-bg {
   fill: var(--avatar-bg);
 }
+
+/* Tabs for the hosts related to an entry. */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-top: 1.5rem;
+}
+
+.tab {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  color: var(--foreground);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.tab:hover {
+  background: var(--badge-bg);
+}
+
+.tab-current {
+  border-color: var(--border);
+  background: var(--background);
+  color: var(--badge-fg);
+}
+
+.tab-panel {
+  padding-top: 0.5rem;
+}

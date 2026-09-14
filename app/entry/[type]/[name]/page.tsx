@@ -1,19 +1,15 @@
 import { Fragment } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
-import HostList, { parsePage } from "@/components/HostList";
-import OperatingSystems, { hasOsSection } from "@/components/OperatingSystems";
+import { parsePage } from "@/components/HostList";
+import RelatedHosts, { parseTab } from "@/components/RelatedHosts";
 import {
-  AGGREGATING_TYPES,
-  aggregatePorts,
   describeEntry,
   Entry,
   entryHref,
   externalLinkLabel,
-  filterSearchHref,
   getEntry,
   getEntryLinks,
   getEntryLogo,
@@ -30,7 +26,6 @@ import {
   uniqueHostForHostname,
   versionEntryName,
   aggregateVersions,
-  parseVersionEntryName,
 } from "@/lib/data";
 
 // "22 (ssh)" for well-known ports, just the number otherwise.
@@ -140,6 +135,10 @@ function GroupRules({ group }: { group: Group }) {
   );
 }
 
+function hostsLabel(n: number): string {
+  return `${n} ${n === 1 ? "host" : "hosts"}`;
+}
+
 // Versions of a piece of software across its hosts, most hosts first.
 function Versions({ entry }: { entry: Entry }) {
   const versions = aggregateVersions(entry.name, entry.hosts);
@@ -160,60 +159,6 @@ function Versions({ entry }: { entry: Entry }) {
             />{" "}
             <span className="muted">({hostsLabel(hosts)})</span>
           </span>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function hostsLabel(n: number): string {
-  return `${n} ${n === 1 ? "host" : "hosts"}`;
-}
-
-// "22 (ssh, 50 hosts)": the port number links to the port, the number of
-// hosts links to a search for exactly those hosts.
-function AggregatedPort({
-  entry,
-  port,
-  hosts,
-}: {
-  entry: Entry;
-  port: number;
-  hosts: number;
-}) {
-  const info = getPortInfo(port);
-  const searchHref = filterSearchHref([
-    { type: "port", name: String(port) },
-    { type: entry.type, name: entry.name },
-  ]);
-  return (
-    <span className="aggregated-port" data-testid="aggregated-port">
-      <EntryLink type="port" name={String(port)} />{" "}
-      <span className="muted">
-        ({info && <>{info.name}, </>}
-        <Link href={searchHref} className="entry-link" data-testid="port-hosts-link">
-          {hostsLabel(hosts)}
-        </Link>
-        )
-      </span>
-    </span>
-  );
-}
-
-function AggregatedPorts({ entry }: { entry: Entry }) {
-  const ports = aggregatePorts(entry.hosts);
-  return (
-    <>
-      <h2 data-testid="ports-heading">
-        Ports <span className="muted">({ports.length})</span>
-      </h2>
-      <p className="muted" data-testid="ports-description">
-        The hosts are listening to these ports:
-      </p>
-      <div className="inline-links" data-testid="aggregated-ports">
-        {ports.length === 0 && <span className="muted">None</span>}
-        {ports.map(({ port, hosts }) => (
-          <AggregatedPort key={port} entry={entry} port={port} hosts={hosts} />
         ))}
       </div>
     </>
@@ -256,63 +201,14 @@ function ExternalLinks({ entry }: { entry: Entry }) {
   );
 }
 
-// One sentence explaining how the listed hosts relate to the entry.
-function describeLinkedHosts(entry: Entry): string {
-  switch (entry.type) {
-    case "hostname":
-      return `Hosts with the hostname ${entry.name}.`;
-    case "os":
-      return `Hosts running ${entry.name}.`;
-    case "ip":
-      return `Hosts with the IP address ${entry.name}.`;
-    case "mac":
-      return `Hosts with a network interface with the MAC address ${entry.name}.`;
-    case "port":
-      return `Hosts listening on port ${entry.name}.`;
-    case "software":
-      return `Hosts with ${entry.name} installed.`;
-    case "user":
-      return `Hosts with a local user named ${entry.name}.`;
-    case "group":
-      return `Hosts in the group ${entry.name}.`;
-    case "class":
-      return `Hosts with the class ${entry.name} set.`;
-    case "version": {
-      const { software, version } = parseVersionEntryName(entry.name);
-      return `Hosts with ${software} version ${version} installed.`;
-    }
-    default:
-      return `Hosts linked to ${entry.name}.`;
-  }
-}
-
-function LinkedHosts({ entry, page }: { entry: Entry; page: number }) {
-  const hosts = entry.hosts
-    .map((hostkey) => getHost(hostkey))
-    .filter((host): host is Host => host !== undefined);
-  return (
-    <>
-      <h2 data-testid="hosts-heading">
-        Hosts <span className="muted">({entry.hosts.length})</span>
-      </h2>
-      <p className="muted" data-testid="hosts-description">
-        {describeLinkedHosts(entry)}
-      </p>
-      <HostList
-        hosts={hosts}
-        page={page}
-        hrefForPage={(n) => `${entryHref(entry)}${n > 1 ? `?page=${n}` : ""}`}
-      />
-    </>
-  );
-}
-
 export default async function EntryPage({
   params,
   searchParams,
 }: PageProps<"/entry/[type]/[name]">) {
   const { type, name: encodedName } = await params;
-  const page = parsePage((await searchParams).page);
+  const query = await searchParams;
+  const page = parsePage(query.page);
+  const tab = parseTab(query.tab);
   const name = decodeURIComponent(encodedName);
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
@@ -365,12 +261,10 @@ export default async function EntryPage({
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}
       {type === "software" && <Versions entry={entry} />}
-      {hasOsSection(type) && <OperatingSystems entry={entry} />}
-      {AGGREGATING_TYPES.includes(type) && <AggregatedPorts entry={entry} />}
       {host ? (
         <HostDetails host={host} />
       ) : (
-        <LinkedHosts entry={entry} page={page} />
+        <RelatedHosts entry={entry} tab={tab} page={page} />
       )}
     </>
   );
