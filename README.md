@@ -19,7 +19,7 @@ host is online.
 
 Every entry page except a host's has its title across the top and is
 split in two below it. The left side holds the entry's own information and
-its Ports, Similar and (for software) Versions tabs. The right side is
+its Ports, Similar, Resources and (for software) Versions tabs. The right side is
 about the entry's hosts: when exactly one host matches it shows that host
 exactly as on the host page, and when several match it shows a "Hosts"
 heading with two tabs: Charts (the default) with the Operating systems and
@@ -114,7 +114,7 @@ users and operating systems have a description. Entry pages show the
 description when one exists, and otherwise a sentence like "No information
 available about this user". Any entry can also have a `links` list of
 external sources, each with the `title` of the page, the `source` site it
-is on, and the `url`, shown as "Read more" on the entry page. Wikipedia
+is on, and the `url`, shown in the Resources tab of the entry page. Wikipedia
 links read like `"Secure Shell" on Wikipedia`; other links show their
 address, like `openssh.com` or `github.com/openssh/openssh-portable`. Links point to Wikipedia, official project
 websites, source code repositories and specifications; any source works.

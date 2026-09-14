@@ -33,7 +33,7 @@ const SECTIONS: Record<string, string> = {
 };
 async function openTab(
   page: import("@playwright/test").Page,
-  tab: "os" | "clouds" | "ports" | "hosts" | "similar",
+  tab: "os" | "clouds" | "ports" | "hosts" | "similar" | "resources",
 ) {
   if (tab === "hosts") {
     // The host list is the "List" tab on the right.
@@ -193,7 +193,7 @@ test("host page shows common port names in parenthesis", async ({ page }) => {
   }
 });
 
-test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
+test("single-host hostnames, IPs and MACs show the host view and only entry tabs", async ({
   page,
 }) => {
   // The hostname link on a host page leads to the hostname's own page.
@@ -210,10 +210,11 @@ test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
   await expect(page.getByTestId("entry-name")).toHaveText(someHost.hostname);
 
   const onlyHostsAndSimilar = async () => {
-    // Left: just the Similar tab. Right: the host view itself.
+    // Left: just the Similar and Resources tabs. Right: the host view itself.
     const leftTabs = page.getByTestId("entry-tabs").getByRole("tab");
-    await expect(leftTabs).toHaveCount(1);
-    await expect(leftTabs.first()).toContainText("Similar");
+    await expect(leftTabs).toHaveCount(2);
+    await expect(leftTabs.nth(0)).toContainText("Similar");
+    await expect(leftTabs.nth(1)).toContainText("Resources");
     await expect(page.getByTestId("hosts-sections")).toHaveCount(0);
     await expect(page.getByTestId("os-heading")).toHaveCount(0);
     await expect(page.getByTestId("clouds-heading")).toHaveCount(0);
@@ -803,8 +804,16 @@ test("entries with links in info.json show them as external links", async ({
   };
   expect(port22.links!.length).toBeGreaterThan(0);
   await page.goto("/entry/port/22");
+  // Links live in a Resources tab next to Similar.
+  await expect(page.getByTestId("resources-heading")).toHaveText(
+    `Resources (${port22.links!.length})`,
+  );
+  const similarBox = (await page.getByTestId("similar-heading").boundingBox())!;
+  const resourcesBox = (await page.getByTestId("resources-heading").boundingBox())!;
+  expect(resourcesBox.x).toBeGreaterThan(similarBox.x + similarBox.width - 1);
+  await openTab(page, "resources");
+  await expect(page.getByTestId("resources-description")).toHaveText("Read more about 22:");
   const links = page.getByTestId("external-links");
-  await expect(links).toContainText("Read more:");
   // Links name the article and the site, e.g. "Secure Shell" on Wikipedia.
   await expect(
     links.getByRole("link", { name: '"Secure Shell" on Wikipedia', exact: true }),
@@ -823,14 +832,14 @@ test("entries with links in info.json show them as external links", async ({
   // Entries can have several links; every host listens on port 5308.
   const port5308 = info.ports["5308"] as { links: unknown[] };
   expect(port5308.links.length).toBeGreaterThan(1);
-  await page.goto("/entry/port/5308");
+  await page.goto("/entry/port/5308?tab=resources");
   await expect(page.getByTestId("external-links").getByRole("link")).toHaveCount(
     port5308.links.length,
   );
 });
 
 test("well-known entries show a logo and official links", async ({ page }) => {
-  await page.goto("/entry/software/nginx");
+  await page.goto("/entry/software/nginx?tab=resources");
   const logo = page.getByTestId("entry-logo");
   await expect(logo).toBeVisible();
   await expect(logo).toHaveAttribute("src", /cdn\.simpleicons\.org\/nginx/);
@@ -884,6 +893,7 @@ test("special IP addresses are described exactly or by range", async ({
   await expect(page.getByTestId("entry-description")).toHaveText(
     (info.ips as Record<string, { description: string }>)["127.0.0.1"].description,
   );
+  await openTab(page, "resources");
   await expect(
     page
       .getByTestId("external-links")
@@ -893,7 +903,7 @@ test("special IP addresses are described exactly or by range", async ({
   // Private addresses are described by their range.
   const privateIp = hosts.flatMap((h) => h.ips).find((ip) => ip.startsWith("10."));
   test.skip(!privateIp, "no 10.x.x.x address in the generated data");
-  await page.goto(`/entry/ip/${encodeURIComponent(privateIp!)}`);
+  await page.goto(`/entry/ip/${encodeURIComponent(privateIp!)}?tab=resources`);
   await expect(page.getByTestId("entry-description")).toContainText(
     "Private network address (RFC 1918)",
   );
@@ -912,6 +922,8 @@ test("special IP addresses are described exactly or by range", async ({
   await expect(page.getByTestId("entry-description")).toHaveText(
     "An IP address (IPv4 or IPv6).",
   );
+  await expect(page.getByTestId("resources-heading")).toHaveText("Resources (0)");
+  await expect(page.getByTestId("resources-heading")).toHaveAttribute("aria-disabled", "true");
   await expect(page.getByTestId("external-links")).toHaveCount(0);
 });
 
@@ -928,7 +940,8 @@ test("entries without links show no links section", async ({ page }) => {
     (u) => users[u] && !users[u].links,
   );
   test.skip(!plain, "every user in the data has links");
-  await page.goto(`/entry/user/${encodeURIComponent(plain!)}`);
+  await page.goto(`/entry/user/${encodeURIComponent(plain!)}?tab=resources`);
+  await expect(page.getByTestId("resources-heading")).toHaveAttribute("aria-disabled", "true");
   await expect(page.getByTestId("external-links")).toHaveCount(0);
 });
 
@@ -1050,7 +1063,7 @@ test("entries show a sentence with numbers from the infrastructure", async ({
   );
 });
 
-test("description, summary and read more form one paragraph", async ({
+test("description and summary form one paragraph", async ({
   page,
 }) => {
   await page.goto("/entry/port/22");
@@ -1062,16 +1075,14 @@ test("description, summary and read more form one paragraph", async ({
   const text = (await paragraph.textContent())!;
   expect(text.indexOf(description!)).toBe(0);
   expect(text.indexOf(summary!)).toBeGreaterThan(text.indexOf(description!));
-  expect(text.indexOf("Read more:")).toBeGreaterThan(text.indexOf(summary!));
-  await expect(paragraph.getByTestId("external-links").getByRole("link").first()).toBeVisible();
-  // The three parts share one style (same faded colour, same size).
+  expect(text).not.toContain("Read more");
+  // The parts share one style (same faded colour, same size).
   const style = (id: string) =>
     page.getByTestId(id).evaluate((el) => {
       const cs = getComputedStyle(el);
       return `${cs.color} ${cs.fontSize} ${cs.fontStyle}`;
     });
   expect(await style("entry-summary")).toBe(await style("entry-description"));
-  expect(await style("external-links")).toBe(await style("entry-description"));
   // See also stays a separate line above it.
   const seeAlso = (await page.getByTestId("see-also").boundingBox())!;
   const box = (await paragraph.boundingBox())!;

@@ -10,6 +10,8 @@ import {
   aggregateVersions,
   Entry,
   entryHref,
+  externalLinkLabel,
+  getEntryLinks,
   filterSearchHref,
   getPortInfo,
   versionEntryName,
@@ -17,8 +19,8 @@ import {
 
 // The entry's own tabs, shown on the left of an entry page: versions (for
 // software), the ports its hosts listen on, and similar entries.
-export type Tab = "versions" | "ports" | "similar";
-const TAB_ORDER: Tab[] = ["versions", "ports", "similar"];
+export type Tab = "versions" | "ports" | "similar" | "resources";
+const TAB_ORDER: Tab[] = ["versions", "ports", "similar", "resources"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -31,7 +33,7 @@ export function entryTabs(entry: Entry): Tab[] {
   const tabs: Tab[] = [];
   if (entry.type === "software") tabs.push("versions");
   if (entry.type !== "port" && entry.hosts.length > 1) tabs.push("ports");
-  tabs.push("similar");
+  tabs.push("similar", "resources");
   return tabs;
 }
 
@@ -238,6 +240,33 @@ function SimilarPanel({ entry, tabs, page }: PanelProps) {
   );
 }
 
+// External resources (Wikipedia, official sites, ...) from info.json.
+function ResourcesPanel({ entry }: { entry: Entry }) {
+  const links = getEntryLinks(entry);
+  return (
+    <>
+      <p className="muted" data-testid="resources-description">
+        Read more about {entry.name}:
+      </p>
+      <ul className="entry-list" data-testid="external-links">
+        {links.map((link) => (
+          <li key={link.url} className="host-item" data-testid="resource-item">
+            <span className="type-badge">link</span>
+            <div className="host-summary">
+              <div>
+                <a href={link.url} target="_blank" rel="noopener noreferrer" className="entry-link">
+                  {externalLinkLabel(link)}
+                </a>
+              </div>
+              <div className="muted host-facts">{link.url}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 // The ports the related hosts listen on, one card per port, ascending.
 function PortsPanel({ entry, tabs, page }: PanelProps) {
   const ports = aggregatePorts(entry.hosts);
@@ -284,20 +313,30 @@ export default function RelatedHosts({
   testId: string;
 }) {
   const similarCount = similarEntries(entry).length;
+  const resourceCount = getEntryLinks(entry).length;
   // Tabs with nothing to show are disabled: visible, gray, not clickable.
-  const disabled = new Set<Tab>(similarCount === 0 ? ["similar"] : []);
+  const disabled = new Set<Tab>();
+  if (similarCount === 0) disabled.add("similar");
+  if (resourceCount === 0) disabled.add("resources");
   const enabled = tabs.filter((t) => !disabled.has(t));
   const current = tab && enabled.includes(tab) ? tab : enabled[0];
   const counts: Record<Tab, number> = {
     similar: similarCount,
+    resources: resourceCount,
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     ports: aggregatePorts(entry.hosts).length,
   };
-  const labels: Record<Tab, string> = { versions: "Versions", ports: "Ports", similar: "Similar" };
+  const labels: Record<Tab, string> = {
+    versions: "Versions",
+    ports: "Ports",
+    similar: "Similar",
+    resources: "Resources",
+  };
   const testIds: Record<Tab, string> = {
     versions: "versions-heading",
     ports: "ports-heading",
     similar: "similar-heading",
+    resources: "resources-heading",
   };
   return (
     <section className="related-hosts" data-testid={testId}>
@@ -333,6 +372,7 @@ export default function RelatedHosts({
           {current === "versions" && <VersionsPanel entry={entry} tabs={tabs} page={page} />}
           {current === "ports" && <PortsPanel entry={entry} tabs={tabs} page={page} />}
           {current === "similar" && <SimilarPanel entry={entry} tabs={tabs} page={page} />}
+          {current === "resources" && <ResourcesPanel entry={entry} />}
         </div>
       )}
     </section>

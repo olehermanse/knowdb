@@ -12,9 +12,7 @@ import {
   describeEntry,
   Entry,
   entrySeen,
-  externalLinkLabel,
   getEntry,
-  getEntryLinks,
   getEntryLogo,
   getGroup,
   getHost,
@@ -65,24 +63,6 @@ function SeeAlso({ entry }: { entry: Entry }) {
   );
 }
 
-// External links (Wikipedia etc.) from info.json, if the entry has any.
-function ExternalLinks({ entry }: { entry: Entry }) {
-  const links = getEntryLinks(entry);
-  if (links.length === 0) return null;
-  return (
-    <span className="external-links" data-testid="external-links">
-      <span className="muted">Read more:</span>{" "}
-      {links.map((link, i) => (
-        <span key={link.url}>
-          {i > 0 && ", "}
-          <a href={link.url} target="_blank" rel="noopener noreferrer">
-            {externalLinkLabel(link)}
-          </a>
-        </span>
-      ))}
-    </span>
-  );
-}
 
 export default async function EntryPage({
   params,
@@ -149,7 +129,7 @@ export default async function EntryPage({
       <div className="entry-split">
         <div className="entry-pane entry-pane-left" data-testid="entry-pane">
           <SeeAlso entry={entry} />
-          {/* Description, the sentence with numbers, and read more links: one paragraph. */}
+          {/* Description and the sentence with numbers: one paragraph. */}
           <p className="entry-text muted" data-testid="entry-text">
             <span data-testid="entry-description">{describeEntry(entry)}</span>
             {summary && (
@@ -157,8 +137,7 @@ export default async function EntryPage({
                 {" "}
                 <span data-testid="entry-summary">{summary}</span>
               </>
-            )}{" "}
-            <ExternalLinks entry={entry} />
+            )}
           </p>
           {group && <GroupRules group={group} />}
           <RelatedHosts
