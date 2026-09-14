@@ -1010,6 +1010,23 @@ test("search matches many types and descriptions", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("search finds entries by their external resources", async ({ page }) => {
+  // cloud.google.com is one of GCP's links, not part of its name or description.
+  const gcp = hosts.some((h) => (h as unknown as { "cloud-provider": string })["cloud-provider"] === "GCP");
+  test.skip(!gcp, "no GCP host in the generated data");
+  await page.goto("/search?q=cloud.google.com");
+  const results = page.getByTestId("search-results").locator("li");
+  const gcpResult = results.filter({ has: page.getByRole("link", { name: "GCP", exact: true }) });
+  await expect(gcpResult).toHaveCount(1);
+  await expect(gcpResult.locator(".type-badge")).toHaveText("cloud");
+
+  // A Wikipedia article title works too.
+  await page.goto(`/search?q=${encodeURIComponent("Secure Shell")}`);
+  await expect(
+    page.getByTestId("search-results").getByRole("link", { name: "22", exact: true }),
+  ).toBeVisible();
+});
+
 test("search handles empty queries and no results", async ({ page }) => {
   await page.goto("/search");
   await expect(page.getByTestId("search-hint")).toBeVisible();

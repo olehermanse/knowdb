@@ -50,7 +50,8 @@ entries with at least one of every type.
 
 The search bar at the top of every page searches "anything": hostnames,
 host keys, port numbers and names, software, users, operating systems,
-groups, IP and MAC addresses, and words from descriptions. Results show
+groups, IP and MAC addresses, words from descriptions, and the titles and
+addresses of external resources (so "cloud.google.com" finds GCP). Results show
 the type of each entry, its name and description, and hosts are shown
 with their OS and IP addresses.
 

@@ -766,11 +766,22 @@ function matchRank(entry: Entry, description: string, q: string): number {
   if (entry.type === "port" && getPortInfo(entry.name)?.name.toLowerCase() === q)
     return 1;
   if (description.toLowerCase().includes(q)) return 3;
+  // External resources: their label ("openssh.com") and full address.
+  for (const link of getEntryLinks(entry)) {
+    if (
+      link.url.toLowerCase().includes(q) ||
+      externalLinkLabel(link).toLowerCase().includes(q) ||
+      link.title.toLowerCase().includes(q)
+    ) {
+      return 4;
+    }
+  }
   return -1;
 }
 
-// Search "anything": entry names, hostnames, host keys, port names, and
-// the descriptions of entries. Case-insensitive substring matching.
+// Search "anything": entry names, hostnames, host keys, port names, the
+// descriptions of entries and their external resources (titles and
+// addresses). Case-insensitive substring matching.
 // Hostname entries are left out when they resolve to a single host, since
 // that host is found by its hostname anyway.
 export function searchEntries(query: string, limit = 200): SearchResult[] {
