@@ -91,6 +91,7 @@ export default async function EntryPage({
   const { type, name: encodedName } = await params;
   const query = await searchParams;
   const page = parsePage(query.page);
+  const tabPage = parsePage(query.tpage);
   const tab = parseTab(query.tab);
   // The URL wins; otherwise the tab chosen last time, remembered in a cookie.
   const htab =
@@ -168,7 +169,13 @@ export default async function EntryPage({
           )}
           <ExternalLinks entry={entry} />
           {group && <GroupRules group={group} />}
-          <RelatedHosts entry={entry} tabs={entryTabs(entry)} tab={tab} testId="entry-tabs" />
+          <RelatedHosts
+            entry={entry}
+            tabs={entryTabs(entry)}
+            tab={tab}
+            page={tabPage}
+            testId="entry-tabs"
+          />
         </div>
         <aside className="entry-pane entry-pane-right" data-testid="hosts-pane">
           {singleHost ? (

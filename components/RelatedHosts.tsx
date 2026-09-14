@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import EntryLink from "@/components/EntryLink";
+import Pagination, { paginate } from "@/components/Pagination";
 import {
   describeEntry,
   similarEntries,
@@ -34,9 +35,54 @@ export function entryTabs(entry: Entry): Tab[] {
   return tabs;
 }
 
-// Link to a tab; the first tab needs no query parameter.
-export function tabHref(entry: Entry, tabs: Tab[], tab: Tab): string {
-  return tab === tabs[0] ? entryHref(entry) : `${entryHref(entry)}?tab=${tab}`;
+// Link to a tab (and a page of its list); the first tab and first page
+// need no query parameters. The tab lists page with `tpage`, separate from
+// the host list's `page` on the right.
+export function tabHref(entry: Entry, tabs: Tab[], tab: Tab, page = 1): string {
+  const params = new URLSearchParams();
+  if (tab !== tabs[0]) params.set("tab", tab);
+  if (page > 1) params.set("tpage", String(page));
+  const q = params.toString();
+  return `${entryHref(entry)}${q ? `?${q}` : ""}`;
+}
+
+// Props shared by the paginated tab panels.
+interface PanelProps {
+  entry: Entry;
+  tabs: Tab[];
+  page: number;
+}
+
+function TabPagination({
+  entry,
+  tabs,
+  tab,
+  total,
+  shown,
+  start,
+  current,
+  totalPages,
+  noun,
+}: PanelProps & {
+  tab: Tab;
+  total: number;
+  shown: number;
+  start: number;
+  current: number;
+  totalPages: number;
+  noun: string;
+}) {
+  return (
+    <Pagination
+      total={total}
+      shown={shown}
+      start={start}
+      current={current}
+      totalPages={totalPages}
+      noun={noun}
+      hrefForPage={(n) => tabHref(entry, tabs, tab, n)}
+    />
+  );
 }
 
 function hostsLabel(n: number): string {
@@ -89,8 +135,9 @@ function AggregatedPort({
 }
 
 // Versions of a piece of software, one card per version, most hosts first.
-function VersionsPanel({ entry }: { entry: Entry }) {
+function VersionsPanel({ entry, tabs, page }: PanelProps) {
   const versions = aggregateVersions(entry.name, entry.hosts);
+  const paged = paginate(versions, page);
   return (
     <>
       <p className="muted" data-testid="versions-description">
@@ -98,7 +145,7 @@ function VersionsPanel({ entry }: { entry: Entry }) {
       </p>
       {versions.length === 0 && <p className="muted">None</p>}
       <ul className="entry-list" data-testid="versions">
-        {versions.map(({ version, hosts }) => {
+        {paged.shown.map(({ version, hosts }) => {
           const name = versionEntryName(entry.name, version);
           const searchHref = filterSearchHref([{ type: "version", name }]);
           return (
@@ -119,6 +166,18 @@ function VersionsPanel({ entry }: { entry: Entry }) {
           );
         })}
       </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        tab="versions"
+        page={page}
+        total={versions.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="versions"
+      />
     </>
   );
 }
@@ -140,8 +199,9 @@ function portsDescription(entry: Entry): string {
 }
 
 // Entries of the same type with similar names, longest shared prefix first.
-function SimilarPanel({ entry }: { entry: Entry }) {
+function SimilarPanel({ entry, tabs, page }: PanelProps) {
   const similar = similarEntries(entry);
+  const paged = paginate(similar, page);
   return (
     <>
       <p className="muted" data-testid="similar-description">
@@ -150,7 +210,7 @@ function SimilarPanel({ entry }: { entry: Entry }) {
           : `Other ${TYPE_LABELS[entry.type].toLowerCase()} with similar names:`}
       </p>
       <ul className="entry-list" data-testid="similar">
-        {similar.map(({ entry: e, common }) => (
+        {paged.shown.map(({ entry: e, common }) => (
           <li key={e.name} className="host-item" data-testid="similar-item" data-common={common}>
             <span className="type-badge">{e.type}</span>
             <div className="host-summary">
@@ -162,13 +222,26 @@ function SimilarPanel({ entry }: { entry: Entry }) {
           </li>
         ))}
       </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        tab="similar"
+        page={page}
+        total={similar.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun={TYPE_LABELS[entry.type].toLowerCase()}
+      />
     </>
   );
 }
 
 // The ports the related hosts listen on, one card per port, ascending.
-function PortsPanel({ entry }: { entry: Entry }) {
+function PortsPanel({ entry, tabs, page }: PanelProps) {
   const ports = aggregatePorts(entry.hosts);
+  const paged = paginate(ports, page);
   return (
     <>
       <p className="muted" data-testid="ports-description">
@@ -176,10 +249,22 @@ function PortsPanel({ entry }: { entry: Entry }) {
       </p>
       {ports.length === 0 && <p className="muted">None</p>}
       <ul className="entry-list" data-testid="aggregated-ports">
-        {ports.map(({ port, hosts }) => (
+        {paged.shown.map(({ port, hosts }) => (
           <AggregatedPort key={port} entry={entry} port={port} hosts={hosts} />
         ))}
       </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        tab="ports"
+        page={page}
+        total={ports.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="ports"
+      />
     </>
   );
 }
@@ -188,11 +273,14 @@ export default function RelatedHosts({
   entry,
   tabs,
   tab,
+  page,
   testId,
 }: {
   entry: Entry;
   tabs: Tab[];
   tab?: Tab;
+  // Page of the current tab's list (the `tpage` query parameter).
+  page: number;
   testId: string;
 }) {
   const similarCount = similarEntries(entry).length;
@@ -242,9 +330,9 @@ export default function RelatedHosts({
       </nav>
       {current && (
         <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
-          {current === "versions" && <VersionsPanel entry={entry} />}
-          {current === "ports" && <PortsPanel entry={entry} />}
-          {current === "similar" && <SimilarPanel entry={entry} />}
+          {current === "versions" && <VersionsPanel entry={entry} tabs={tabs} page={page} />}
+          {current === "ports" && <PortsPanel entry={entry} tabs={tabs} page={page} />}
+          {current === "similar" && <SimilarPanel entry={entry} tabs={tabs} page={page} />}
         </div>
       )}
     </section>

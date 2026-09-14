@@ -36,8 +36,8 @@ hidden on OS pages, the clouds tab on cloud pages and the ports tab on
 port pages. An IP address, MAC address or hostname belonging to a single
 host shows only the Hosts and Similar tabs.
 
-Lists of hosts show at most 10 hosts at a time, with pagination links
-below the list.
+Lists show at most 10 items at a time, with pagination links below the
+list: hosts, but also the ports, versions and similar entries in the tabs.
 
 ## Front page
 

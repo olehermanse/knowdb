@@ -76,9 +76,10 @@ async function expectAggregatedPorts(
   const expected = expectedPorts(selected);
   expect(expected.length).toBeGreaterThan(1);
   const items = page.getByTestId("aggregated-port");
-  await expect(items).toHaveCount(expected.length);
+  await expect(items).toHaveCount(Math.min(PAGE_SIZE, expected.length));
+  await expect(page.getByTestId("pagination")).toHaveCount(expected.length > PAGE_SIZE ? 1 : 0);
   // One card per port: badge, port link, common name and host count link.
-  for (const [i, { port, name, hosts }] of expected.entries()) {
+  for (const [i, { port, name, hosts }] of expected.slice(0, PAGE_SIZE).entries()) {
     const item = items.nth(i);
     await expect(item.locator(".type-badge")).toHaveText("port");
     await expect(item.getByRole("link", { name: String(port), exact: true })).toHaveAttribute(
@@ -610,7 +611,9 @@ test("the number of hosts on a port links to a search of those hosts", async ({
   const expected = selected.filter((h) => h["ports-listening"].includes(port));
   expect(expected.length).toBe(n);
 
-  await page.goto(`${groupHref(group.name)}?tab=ports`);
+  const sortedPorts = [...counts.keys()].sort((a, b) => a - b);
+  const portPage = Math.floor(sortedPorts.indexOf(port) / PAGE_SIZE) + 1;
+  await page.goto(`${groupHref(group.name)}?tab=ports${portPage > 1 ? `&tpage=${portPage}` : ""}`);
   const item = page
     .getByTestId("aggregated-port")
     .filter({ has: page.getByRole("link", { name: String(port), exact: true }) });
@@ -1532,7 +1535,9 @@ test("port cards show a logo when the port has one", async ({ page }) => {
   // Port 3306 (mysql) has a logo; port 22 has none.
   const mysqlHost = hosts.find((h) => h["ports-listening"].includes(3306));
   test.skip(!mysqlHost, "no host listening on 3306 in the generated data");
-  await page.goto("/entry/class/any?tab=ports");
+  const anyPorts = [...new Set(hosts.flatMap((h) => h["ports-listening"]))].sort((a, b) => a - b);
+  const mysqlPage = Math.floor(anyPorts.indexOf(3306) / PAGE_SIZE) + 1;
+  await page.goto(`/entry/class/any?tab=ports${mysqlPage > 1 ? `&tpage=${mysqlPage}` : ""}`);
   const mysql = page
     .getByTestId("aggregated-port")
     .filter({ has: page.getByRole("link", { name: "3306", exact: true }) });
@@ -1540,6 +1545,7 @@ test("port cards show a logo when the port has one", async ({ page }) => {
     "src",
     /cdn\.simpleicons\.org\/mysql/,
   );
+  await page.goto("/entry/class/any?tab=ports");
   const ssh = page
     .getByTestId("aggregated-port")
     .filter({ has: page.getByRole("link", { name: "22", exact: true }) });
@@ -2047,6 +2053,34 @@ test("the Charts/List choice follows the user between entries", async ({
   await page.getByTestId("charts-tab").click();
   await page.goto("/entry/class/any");
   await expect(page.getByTestId("charts-tab")).toHaveAttribute("aria-selected", "true");
+});
+
+test("tab lists are paginated like host lists", async ({ page }) => {
+  // MAC addresses share vendor prefixes, so a MAC has many similar ones.
+  const mac = someHost.macs[0];
+  const similar = hosts
+    .flatMap((h) => h.macs)
+    .filter((m) => m !== mac && m.toLowerCase().slice(0, 3) === mac.toLowerCase().slice(0, 3));
+  test.skip(similar.length <= PAGE_SIZE, "not enough similar MAC addresses to paginate");
+  await page.goto(`/entry/mac/${encodeURIComponent(mac)}?tab=similar`);
+  await expect(page.getByTestId("similar-item")).toHaveCount(PAGE_SIZE);
+  await expect(page.getByTestId("pagination-summary")).toHaveText(
+    `Showing 1–${PAGE_SIZE} of ${similar.length} mac addresses`,
+  );
+  await page.getByTestId("pagination").getByRole("link", { name: "Next →" }).click();
+  // Similar is the only left tab on a single-host MAC page, so no tab= in the URL.
+  await expect(page).toHaveURL(`/entry/mac/${encodeURIComponent(mac)}?tpage=2`);
+  await expect(page.getByTestId("similar-item")).toHaveCount(
+    Math.min(PAGE_SIZE, similar.length - PAGE_SIZE),
+  );
+
+  // Ports on a big entry paginate too, independently of the host list page.
+  await page.goto("/entry/class/any?tab=ports&tpage=2&htab=list&page=3");
+  await expect(page.getByTestId("aggregated-port").first()).toBeVisible();
+  const left = page.getByTestId("entry-tabs").getByTestId("pagination-summary");
+  await expect(left).toContainText(`Showing ${PAGE_SIZE + 1}–`);
+  const right = page.getByTestId("hosts-sections").getByTestId("pagination-summary");
+  await expect(right).toContainText(`Showing ${2 * PAGE_SIZE + 1}–`);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {
