@@ -508,13 +508,13 @@ test("hosts and ports sections have short headings and descriptions", async ({
     `Hosts (${hosts.length})`,
   );
   await expect(page.getByTestId("hosts-description")).toHaveText(
-    "Hosts listening on port 22.",
+    "Hosts listening on port 22:",
   );
   await expect(page.getByText("Linked hosts")).toHaveCount(0);
 
   await page.goto("/entry/software/dpkg?tab=hosts");
   await expect(page.getByTestId("hosts-description")).toHaveText(
-    "Hosts with dpkg installed.",
+    "Hosts with dpkg installed:",
   );
   await expect(page.getByTestId("ports-heading")).toHaveText(/^Ports \(\d+\)$/);
   await openTab(page, "ports");
@@ -647,7 +647,7 @@ test("MAC addresses are linked both ways", async ({ page }) => {
   );
   await openTab(page, "hosts");
   await expect(page.getByTestId("hosts-description")).toHaveText(
-    `Hosts with a network interface with the MAC address ${mac}.`,
+    `Hosts with a network interface with the MAC address ${mac}:`,
   );
   const owners = hosts.filter((h) => h.macs.includes(mac));
   await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
@@ -1220,7 +1220,7 @@ test("hosts have classes which work like groups", async ({ page }) => {
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hosts.length})`);
   await openTab(page, "hosts");
   await expect(page.getByTestId("hosts-description")).toHaveText(
-    "Hosts with the class any set.",
+    "Hosts with the class any set:",
   );
 
   // A distribution class only lists hosts of that distribution.
@@ -1318,7 +1318,7 @@ test("software has versions which are entries of their own", async ({
   await expect(page.getByTestId("os-heading")).toBeVisible();
   await openTab(page, "hosts");
   await expect(page.getByTestId("hosts-description")).toHaveText(
-    `Hosts with cfengine version ${topVersion} installed.`,
+    `Hosts with cfengine version ${topVersion} installed:`,
   );
 });
 

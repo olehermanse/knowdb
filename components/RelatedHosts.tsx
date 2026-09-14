@@ -156,29 +156,29 @@ function PortsPanel({ entry }: { entry: Entry }) {
 function describeLinkedHosts(entry: Entry): string {
   switch (entry.type) {
     case "hostname":
-      return `Hosts with the hostname ${entry.name}.`;
+      return `Hosts with the hostname ${entry.name}:`;
     case "os":
-      return `Hosts running ${entry.name}.`;
+      return `Hosts running ${entry.name}:`;
     case "ip":
-      return `Hosts with the IP address ${entry.name}.`;
+      return `Hosts with the IP address ${entry.name}:`;
     case "mac":
-      return `Hosts with a network interface with the MAC address ${entry.name}.`;
+      return `Hosts with a network interface with the MAC address ${entry.name}:`;
     case "port":
-      return `Hosts listening on port ${entry.name}.`;
+      return `Hosts listening on port ${entry.name}:`;
     case "software":
-      return `Hosts with ${entry.name} installed.`;
+      return `Hosts with ${entry.name} installed:`;
     case "user":
-      return `Hosts with a local user named ${entry.name}.`;
+      return `Hosts with a local user named ${entry.name}:`;
     case "group":
-      return `Hosts in the group ${entry.name}.`;
+      return `Hosts in the group ${entry.name}:`;
     case "class":
-      return `Hosts with the class ${entry.name} set.`;
+      return `Hosts with the class ${entry.name} set:`;
     case "version": {
       const { software, version } = parseVersionEntryName(entry.name);
-      return `Hosts with ${software} version ${version} installed.`;
+      return `Hosts with ${software} version ${version} installed:`;
     }
     default:
-      return `Hosts linked to ${entry.name}.`;
+      return `Hosts linked to ${entry.name}:`;
   }
 }
 
