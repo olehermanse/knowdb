@@ -99,6 +99,18 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.entry-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.entry-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
 .host-id {
   font-size: 0.9rem;
   font-weight: 400;

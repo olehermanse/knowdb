@@ -277,6 +277,8 @@ export function externalLinkLabel(link: ExternalLink): string {
 export interface DescribedInfo {
   description: string;
   links?: ExternalLink[];
+  // URL of a logo image (SVG or PNG) for well-known software, OSes, ports.
+  logo?: string;
 }
 
 export interface PortInfo extends DescribedInfo {
@@ -326,6 +328,26 @@ export function getEntryLinks(entry: EntryRef): ExternalLink[] {
     default:
       return [];
   }
+}
+
+function infoFor(entry: EntryRef): DescribedInfo | undefined {
+  switch (entry.type) {
+    case "port":
+      return getPortInfo(entry.name);
+    case "software":
+      return getSoftwareInfo(entry.name);
+    case "user":
+      return getUserInfo(entry.name);
+    case "os":
+      return getOsInfo(entry.name);
+    default:
+      return undefined;
+  }
+}
+
+// Logo URL for an entry, from info.json, if it has one.
+export function getEntryLogo(entry: EntryRef): string | undefined {
+  return infoFor(entry)?.logo;
 }
 
 export const NO_USER_INFO = "No information available about this user.";

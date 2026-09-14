@@ -68,8 +68,11 @@ description when one exists, and otherwise a sentence like "No information
 available about this user". Any entry can also have a `links` list of
 external sources, each with the `title` of the page, the `source` site it
 is on, and the `url`, shown as "Read more" on the entry page like
-`"Secure Shell" on Wikipedia`. For now these point to Wikipedia, but any
-source works.
+`"Secure Shell" on Wikipedia`. Links point to Wikipedia, official project
+websites, source code repositories and specifications; any source works.
+Well-known software, operating systems and ports can also have a `logo`,
+the URL of an image shown next to the entry's title (currently served
+from Simple Icons, https://simpleicons.org/).
 Keep the list short: most entries need none or one link, and more than a
 handful is too many. Edit this file to improve or extend the descriptions;
 the frontend reads it at build time.

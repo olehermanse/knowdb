@@ -682,6 +682,39 @@ test("entries with links in info.json show them as external links", async ({
   );
 });
 
+test("well-known entries show a logo and official links", async ({ page }) => {
+  await page.goto("/entry/software/nginx");
+  const logo = page.getByTestId("entry-logo");
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveAttribute("src", /cdn\.simpleicons\.org\/nginx/);
+  await expect(logo).toHaveAttribute("alt", "nginx logo");
+  const links = page.getByTestId("external-links");
+  await expect(
+    links.getByRole("link", { name: '"Official website" on nginx.org', exact: true }),
+  ).toHaveAttribute("href", "https://nginx.org/");
+  await expect(
+    links.getByRole("link", { name: '"Source code" on GitHub', exact: true }),
+  ).toHaveAttribute("href", "https://github.com/nginx/nginx");
+
+  // Ports and operating systems can have logos too.
+  await page.goto("/entry/port/3306");
+  await expect(page.getByTestId("entry-logo")).toHaveAttribute(
+    "src",
+    /cdn\.simpleicons\.org\/mysql/,
+  );
+  await page.goto(`/entry/os/${encodeURIComponent("Ubuntu 24")}`);
+  await expect(page.getByTestId("entry-logo")).toHaveAttribute(
+    "src",
+    /cdn\.simpleicons\.org\/ubuntu/,
+  );
+
+  // Entries without a logo show none.
+  await page.goto("/entry/user/root");
+  await expect(page.getByTestId("entry-logo")).toHaveCount(0);
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  await expect(page.getByTestId("entry-logo")).toHaveCount(0);
+});
+
 test("entries without links show no links section", async ({ page }) => {
   // Hosts and IP addresses have no hard coded information at all.
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);

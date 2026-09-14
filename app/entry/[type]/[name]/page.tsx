@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
@@ -14,6 +15,7 @@ import {
   filterSearchHref,
   getEntry,
   getEntryLinks,
+  getEntryLogo,
   getGroup,
   getHost,
   getHostGroups,
@@ -244,22 +246,36 @@ export default async function EntryPage({
 
   const host = type === "host" ? getHost(name) : undefined;
   const group = type === "group" ? getGroup(name) : undefined;
+  const logo = getEntryLogo(entry);
 
   return (
     <>
       <p>
         <span className="type-badge">{entry.type}</span>
       </p>
-      <h1 data-testid="entry-name">
-        {host ? (
-          <>
-            {host.hostname}{" "}
-            <span className="muted host-id">({host.id})</span>
-          </>
-        ) : (
-          entry.name
+      <div className="entry-title">
+        {logo && (
+          <Image
+            className="entry-logo"
+            src={logo}
+            alt={`${entry.name} logo`}
+            width={40}
+            height={40}
+            unoptimized
+            data-testid="entry-logo"
+          />
         )}
-      </h1>
+        <h1 data-testid="entry-name">
+          {host ? (
+            <>
+              {host.hostname}{" "}
+              <span className="muted host-id">({host.id})</span>
+            </>
+          ) : (
+            entry.name
+          )}
+        </h1>
+      </div>
       <p className="muted" data-testid="entry-description">
         {describeEntry(entry)}
       </p>
