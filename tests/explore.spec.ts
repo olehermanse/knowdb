@@ -772,6 +772,15 @@ test("well-known entries show a logo and official links", async ({ page }) => {
     /cdn\.simpleicons\.org\/ubuntu/,
   );
 
+  const windows = hosts.find((h) => h.os.startsWith("Windows"));
+  if (windows) {
+    await page.goto(`/entry/os/${encodeURIComponent(windows.os)}`);
+    await expect(page.getByTestId("entry-logo")).toHaveAttribute(
+      "src",
+      /upload\.wikimedia\.org\/.*Windows_logo/,
+    );
+  }
+
   // Entries without a logo show none.
   await page.goto("/entry/user/root");
   await expect(page.getByTestId("entry-logo")).toHaveCount(0);

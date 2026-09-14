@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     // Logos in data/info.json are served from these hosts.
-    remotePatterns: [{ protocol: "https", hostname: "cdn.simpleicons.org" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.simpleicons.org" },
+      { protocol: "https", hostname: "upload.wikimedia.org" },
+    ],
   },
 };
 
