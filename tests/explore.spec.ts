@@ -220,6 +220,11 @@ test("single-host hostnames, IPs and MACs show only Hosts and Similar", async ({
     await expect(page.getByTestId("ports-heading")).toHaveCount(0);
     await expect(page.getByTestId("hosts-heading")).toHaveCount(0);
     const pane = page.getByTestId("hosts-pane");
+    // The host sits in a bordered card.
+    const card = pane.getByTestId("pane-host-view");
+    await expect(card).toHaveCSS("border-top-width", "1px");
+    await expect(card).toHaveCSS("border-top-style", "solid");
+    expect(parseFloat(await card.evaluate((el) => getComputedStyle(el).borderTopLeftRadius))).toBeGreaterThan(0);
     await expect(pane.getByTestId("pane-entry-name")).toContainText(someHost.hostname);
     await expect(pane.getByTestId("pane-entry-summary")).toContainText("This is");
     await expect(pane.getByTestId("host-details")).toBeVisible();

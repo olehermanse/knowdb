@@ -600,3 +600,14 @@ a,
   font-style: italic;
   text-align: right;
 }
+
+/* The single host shown on the right of an entry sits in a card. */
+.entry-pane-right .host-view {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.entry-pane-right .host-view .entry-topline {
+  margin-top: 0;
+}
