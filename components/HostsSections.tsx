@@ -1,3 +1,4 @@
+import Link from "next/link";
 import CloudProviders from "@/components/CloudProviders";
 import HostList from "@/components/HostList";
 import OperatingSystems from "@/components/OperatingSystems";
@@ -44,48 +45,107 @@ function describeLinkedHosts(entry: Entry): string {
 }
 
 
+export type HostsTab = "charts" | "list";
+
+export function parseHostsTab(raw: string | string[] | undefined): HostsTab | undefined {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value === "charts" || value === "list" ? value : undefined;
+}
+
 // The right side of an entry page when it matches several hosts: a
-// "Hosts" heading with sections for the operating systems and cloud
-// providers they run (skipped when there is only one option) and the
-// paginated list of the hosts.
-export default function HostsSections({ entry, page }: { entry: Entry; page: number }) {
+// "Hosts" heading and two tabs. "Charts" (the default) holds the operating
+// systems and cloud provider pie charts, each skipped when there is only
+// one option; "List" holds the paginated list of the hosts. With nothing
+// to chart, Charts is disabled and List is shown.
+export default function HostsSections({
+  entry,
+  page,
+  tab,
+}: {
+  entry: Entry;
+  page: number;
+  tab?: HostsTab;
+}) {
   const hosts = entry.hosts
     .map((hostkey) => getHost(hostkey))
     .filter((host): host is Host => host !== undefined);
   const osCount = aggregateOs(entry.hosts).length;
   const cloudCount = aggregateClouds(entry.hosts).length;
+  const charts = (osCount > 1 ? 1 : 0) + (cloudCount > 1 ? 1 : 0);
+  const current: HostsTab = charts === 0 ? "list" : tab ?? "charts";
+  const href = (t: HostsTab, n = 1) => {
+    const params = new URLSearchParams();
+    if (t !== "charts") params.set("htab", t);
+    if (n > 1) params.set("page", String(n));
+    const q = params.toString();
+    return `${entryHref(entry)}${q ? `?${q}` : ""}`;
+  };
+  const tabClass = (t: HostsTab) => `tab${t === current ? " tab-current" : ""}`;
   return (
     <section className="hosts-sections" data-testid="hosts-sections">
       <h2 data-testid="hosts-heading">
         Hosts <span className="muted">({entry.hosts.length})</span>
       </h2>
-      {osCount > 1 && (
-        <section data-testid="section-os">
-          <h3 data-testid="os-heading">
-            Operating systems <span className="muted">({osCount})</span>
-          </h3>
-          <OperatingSystems entry={entry} />
-        </section>
+      <nav className="tabs" role="tablist" aria-label="Hosts">
+        {charts === 0 ? (
+          <span
+            role="tab"
+            aria-selected={false}
+            aria-disabled="true"
+            className="tab tab-disabled"
+            data-testid="charts-tab"
+          >
+            Charts <span className="muted">(0)</span>
+          </span>
+        ) : (
+          <Link
+            href={href("charts")}
+            role="tab"
+            aria-selected={current === "charts"}
+            className={tabClass("charts")}
+            data-testid="charts-tab"
+          >
+            Charts <span className="muted">({charts})</span>
+          </Link>
+        )}
+        <Link
+          href={href("list")}
+          role="tab"
+          aria-selected={current === "list"}
+          className={tabClass("list")}
+          data-testid="list-tab"
+        >
+          List <span className="muted">({entry.hosts.length})</span>
+        </Link>
+      </nav>
+      {current === "charts" && (
+        <div className="tab-panel" role="tabpanel" data-testid="tab-charts">
+          {osCount > 1 && (
+            <section data-testid="section-os">
+              <h3 data-testid="os-heading">
+                Operating systems <span className="muted">({osCount})</span>
+              </h3>
+              <OperatingSystems entry={entry} />
+            </section>
+          )}
+          {cloudCount > 1 && (
+            <section data-testid="section-clouds">
+              <h3 data-testid="clouds-heading">
+                Clouds <span className="muted">({cloudCount})</span>
+              </h3>
+              <CloudProviders entry={entry} />
+            </section>
+          )}
+        </div>
       )}
-      {cloudCount > 1 && (
-        <section data-testid="section-clouds">
-          <h3 data-testid="clouds-heading">
-            Clouds <span className="muted">({cloudCount})</span>
-          </h3>
-          <CloudProviders entry={entry} />
-        </section>
+      {current === "list" && (
+        <div className="tab-panel" role="tabpanel" data-testid="section-list">
+          <p className="muted" data-testid="hosts-description">
+            {describeLinkedHosts(entry)}
+          </p>
+          <HostList hosts={hosts} page={page} hrefForPage={(n) => href("list", n)} />
+        </div>
       )}
-      <section data-testid="section-list">
-        <h3 data-testid="list-heading">List</h3>
-        <p className="muted" data-testid="hosts-description">
-          {describeLinkedHosts(entry)}
-        </p>
-        <HostList
-          hosts={hosts}
-          page={page}
-          hrefForPage={(n) => `${entryHref(entry)}${n > 1 ? `?page=${n}` : ""}`}
-        />
-      </section>
     </section>
   );
 }

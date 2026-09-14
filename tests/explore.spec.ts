@@ -35,7 +35,14 @@ async function openTab(
   page: import("@playwright/test").Page,
   tab: "os" | "clouds" | "ports" | "hosts" | "similar",
 ) {
+  if (tab === "hosts") {
+    // The host list is the "List" tab on the right.
+    await page.getByTestId("list-tab").click();
+    await expect(page.getByTestId("section-list")).toBeVisible();
+    return;
+  }
   if (SECTIONS[tab]) {
+    // Charts is the default tab on the right.
     await expect(page.getByTestId(SECTIONS[tab])).toBeVisible();
     return;
   }
@@ -462,7 +469,6 @@ test("the operating systems section is skipped with a single operating system", 
   expect(name).toBeTruthy();
   await page.goto(group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`);
   await expect(page.getByTestId("hosts-heading")).toBeVisible();
-  await expect(page.getByTestId("section-list")).toBeVisible();
   await expect(page.getByTestId("section-os")).toHaveCount(0);
   await expect(page.getByTestId("os-heading")).toHaveCount(0);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
@@ -556,7 +562,7 @@ test("os page aggregates listening ports of its hosts", async ({ page }) => {
 test("hosts and ports sections have short headings and descriptions", async ({
   page,
 }) => {
-  await page.goto("/entry/port/22?htab=hosts");
+  await page.goto("/entry/port/22?htab=list");
   await expect(page.getByTestId("hosts-heading")).toHaveText(
     `Hosts (${hosts.length})`,
   );
@@ -565,7 +571,7 @@ test("hosts and ports sections have short headings and descriptions", async ({
   );
   await expect(page.getByText("Linked hosts")).toHaveCount(0);
 
-  await page.goto("/entry/software/dpkg?htab=hosts");
+  await page.goto("/entry/software/dpkg?htab=list");
   await expect(page.getByTestId("hosts-description")).toHaveText(
     "Hosts with dpkg installed:",
   );
@@ -667,7 +673,7 @@ test("host lists show abbreviated ID, OS and IP addresses", async ({
   // Hosts are listed a page at a time in host key order; go to our host's page.
   const sortedIds = hosts.map((h) => h.id).sort();
   const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / PAGE_SIZE) + 1;
-  await page.goto(`/entry/port/22?htab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
+  await page.goto(`/entry/port/22?htab=list${ourPage > 1 ? `&page=${ourPage}` : ""}`);
   const item = page
     .getByTestId("linked-hosts")
     .locator("li", { hasText: someHost.hostname })
@@ -1129,7 +1135,7 @@ test("host lists are paginated 10 at a time", async ({ page }) => {
   expect(hosts.length).toBeGreaterThan(PAGE_SIZE);
   const total = hosts.length;
   const lastPage = Math.ceil(total / PAGE_SIZE);
-  await page.goto("/entry/port/22?htab=hosts");
+  await page.goto("/entry/port/22?htab=list");
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${total})`);
   await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(PAGE_SIZE);
   await expect(page.getByTestId("pagination-summary")).toHaveText(
@@ -1139,7 +1145,7 @@ test("host lists are paginated 10 at a time", async ({ page }) => {
   await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveCount(0);
 
   await pagination.getByRole("link", { name: "Next →" }).click();
-  await expect(page).toHaveURL(/\/entry\/port\/22\?page=2$/);
+  await expect(page).toHaveURL(/\/entry\/port\/22\?htab=list&page=2$/);
   await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(
     Math.min(PAGE_SIZE, total - PAGE_SIZE),
   );
@@ -1148,7 +1154,7 @@ test("host lists are paginated 10 at a time", async ({ page }) => {
   );
   await expect(pagination.getByRole("link", { name: "← Previous" })).toHaveAttribute(
     "href",
-    "/entry/port/22",
+    "/entry/port/22?htab=list",
   );
   // The two pages show different hosts.
   const firstOnPage2 = await page
@@ -1156,19 +1162,19 @@ test("host lists are paginated 10 at a time", async ({ page }) => {
     .locator("li")
     .first()
     .textContent();
-  await page.goto("/entry/port/22?htab=hosts");
+  await page.goto("/entry/port/22?htab=list");
   await expect(page.getByTestId("linked-hosts").locator("li").first()).not.toHaveText(
     firstOnPage2!,
   );
 
   // Out-of-range pages are clamped to the last page.
-  await page.goto("/entry/port/22?htab=hosts&page=999");
+  await page.goto("/entry/port/22?htab=list&page=999");
   await expect(page.getByTestId("pagination").locator("[aria-current=page]")).toHaveText(
     String(lastPage),
   );
 
   // Short lists have no pagination.
-  await page.goto(`${groupHref("Windows")}?htab=hosts`);
+  await page.goto(`${groupHref("Windows")}?htab=list`);
   await expect(page.getByTestId("pagination")).toHaveCount(0);
 });
 
@@ -1254,7 +1260,7 @@ test("hosts have pixel avatars coloured by operating system", async ({
   // Stable: the same host gets the same pattern in a list.
   const sortedIds = hosts.map((h) => h.id).sort();
   const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / PAGE_SIZE) + 1;
-  await page.goto(`/entry/port/22?htab=hosts${ourPage > 1 ? `&page=${ourPage}` : ""}`);
+  await page.goto(`/entry/port/22?htab=list${ourPage > 1 ? `&page=${ourPage}` : ""}`);
   const item = page.getByTestId("host-item").filter({
     has: page.getByRole("link", { name: someHost.hostname, exact: true }),
   });
@@ -1461,7 +1467,7 @@ test("avatars show an online/offline dot and about 70% of hosts are online", asy
 
   // Dots appear in host lists too, and the avatar is vertically centred
   // with the badge and the text next to it.
-  await page.goto("/entry/port/22?htab=hosts");
+  await page.goto("/entry/port/22?htab=list");
   const item = page.getByTestId("host-item").first();
   await expect(item.getByTestId("host-status")).toHaveCount(1);
   const avatar = (await item.getByTestId("host-avatar-wrap").boundingBox())!;
@@ -1826,7 +1832,7 @@ test("similar tab is disabled when nothing is similar", async ({ page }) => {
   await expect(tab.getByRole("link")).toHaveCount(0);
   // Asking for the disabled tab falls back to the first tab.
   await page.goto("/entry/port/22?tab=similar");
-  await expect(page.getByTestId("section-list")).toBeVisible();
+  await expect(page.getByTestId("tab-charts")).toBeVisible();
   await expect(page.getByTestId("similar")).toHaveCount(0);
 });
 
@@ -1941,7 +1947,7 @@ test("hosts show first and last seen as relative times with full tooltips", asyn
   expect(Math.min(...online.map(Date.parse))).toBeGreaterThan(Math.max(...offline.map(Date.parse)));
 
   // Host cards in lists show the last seen time too.
-  await page.goto("/entry/port/22?htab=hosts");
+  await page.goto("/entry/port/22?htab=list");
   const firstCard = page.getByTestId("host-item").first();
   await expect(firstCard).toContainText(/First seen .* ago, last seen .*\./);
   await expect(firstCard.locator("time").first()).toHaveAttribute("title", /UTC$/);
@@ -1982,6 +1988,45 @@ test("other entries derive first and last seen from their hosts", async ({
     "datetime",
     wLast[wLast.length - 1],
   );
+});
+
+test("right side has Charts and List tabs, Charts by default", async ({ page }) => {
+  await page.goto("/entry/port/22");
+  const charts = page.getByTestId("charts-tab");
+  const list = page.getByTestId("list-tab");
+  await expect(charts).toHaveAttribute("aria-selected", "true");
+  await expect(list).toHaveText(`List (${hosts.length})`);
+  await expect(page.getByTestId("tab-charts")).toBeVisible();
+  await expect(page.getByTestId("section-os")).toBeVisible();
+  await expect(page.getByTestId("section-list")).toHaveCount(0);
+  // Both tabs sit under the Hosts heading, left of each other.
+  const c = (await charts.boundingBox())!;
+  const l = (await list.boundingBox())!;
+  const h = (await page.getByTestId("hosts-heading").boundingBox())!;
+  expect(c.x).toBeLessThan(l.x);
+  expect(c.y).toBeGreaterThan(h.y);
+
+  await list.click();
+  await expect(page).toHaveURL("/entry/port/22?htab=list");
+  await expect(list).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("section-list")).toBeVisible();
+  await expect(page.getByTestId("section-os")).toHaveCount(0);
+  await expect(page.getByTestId("linked-hosts").locator("li")).toHaveCount(PAGE_SIZE);
+
+  // With nothing to chart, Charts is disabled and List is shown.
+  const providerOf = (h: Host) => (h as unknown as { "cloud-provider": string })["cloud-provider"];
+  const byClass = new Map<string, Host[]>();
+  for (const h of hosts) for (const c of h.classes) byClass.set(c, [...(byClass.get(c) ?? []), h]);
+  const plain = [...byClass.entries()].find(
+    ([, hs]) =>
+      hs.length > 1 && new Set(hs.map((h) => h.os)).size === 1 && new Set(hs.map(providerOf)).size === 1,
+  );
+  if (plain) {
+    await page.goto(`/entry/class/${encodeURIComponent(plain[0])}`);
+    await expect(page.getByTestId("charts-tab")).toHaveAttribute("aria-disabled", "true");
+    await expect(page.getByTestId("charts-tab")).toHaveText("Charts (0)");
+    await expect(page.getByTestId("section-list")).toBeVisible();
+  }
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

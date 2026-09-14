@@ -5,7 +5,7 @@ import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
-import HostsSections from "@/components/HostsSections";
+import HostsSections, { parseHostsTab } from "@/components/HostsSections";
 import RelatedHosts, { entryTabs, parseTab } from "@/components/RelatedHosts";
 import {
   describeEntry,
@@ -91,6 +91,7 @@ export default async function EntryPage({
   const query = await searchParams;
   const page = parsePage(query.page);
   const tab = parseTab(query.tab);
+  const htab = parseHostsTab(query.htab);
   const name = decodeURIComponent(encodedName);
   if (!isEntryType(type)) notFound();
   const entry = getEntry(type, name);
@@ -165,7 +166,7 @@ export default async function EntryPage({
           {singleHost ? (
             <HostView host={singleHost} embedded />
           ) : entry.hosts.length > 1 ? (
-            <HostsSections entry={entry} page={page} />
+            <HostsSections entry={entry} page={page} tab={htab} />
           ) : (
             <p className="muted" data-testid="no-hosts">
               No hosts in your infrastructure have this {entry.type}.

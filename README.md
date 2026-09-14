@@ -22,8 +22,9 @@ split in two below it. The left side holds the entry's own information and
 its Ports, Similar and (for software) Versions tabs. The right side is
 about the entry's hosts: when exactly one host matches it shows that host
 exactly as on the host page, and when several match it shows a "Hosts"
-heading with Operating systems and Clouds sections (each skipped when
-there is only one option) and the paginated List of hosts. In detail: the operating systems they run (a pie chart and ranked list), the
+heading with two tabs: Charts (the default) with the Operating systems and
+Clouds pie charts, each skipped when there is only one option, and List
+with the paginated hosts. In detail: the operating systems they run (a pie chart and ranked list), the
 cloud providers they run on (likewise, with hosts outside any cloud as
 their own slice), the ports they listen on, and the host list itself.
 Software pages have a Versions tab as well, and every page has a Similar

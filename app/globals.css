@@ -568,7 +568,11 @@ a,
 
 .hosts-sections h3 {
   font-size: 1.05rem;
-  margin: 1.5rem 0 0.25rem;
+  margin: 1rem 0 0.25rem;
+}
+
+.hosts-sections .tabs {
+  margin-top: 0.5rem;
 }
 
 .entry-pane-left > :first-child {
