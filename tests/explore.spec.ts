@@ -1261,8 +1261,8 @@ test("hosts have pixel avatars coloured by operating system", async ({
 test("hosts have classes which work like groups", async ({ page }) => {
   expect(someHost.classes.length).toBeGreaterThan(0);
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
-  await expect(page.getByTestId("classes-modal-count")).toHaveText(
-    `${someHost.classes.length} classes`,
+  await expect(page.getByTestId("classes-modal-open")).toHaveText(
+    `${someHost.classes.length} defined`,
   );
   await page.getByTestId("classes-modal-open").click();
   const classes = page.getByTestId("classes-modal-list");
@@ -1853,10 +1853,11 @@ test("host page has two columns with software and classes below", async ({
 
 test("software and classes open in a filterable modal", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
-  // Counts and buttons instead of inline lists.
-  await expect(page.getByTestId("software-modal-count")).toHaveText(
-    `${someHost.software.length} software packages`,
+  // A single button carrying the count instead of inline lists.
+  await expect(page.getByTestId("software-modal-open")).toHaveText(
+    `${someHost.software.length} installed`,
   );
+  await expect(page.getByTestId("host-software").getByRole("button")).toHaveCount(1);
   await expect(page.getByTestId("host-software").getByRole("link")).toHaveCount(0);
   const dialog = page.getByTestId("classes-modal-dialog");
   await expect(dialog).toBeHidden();

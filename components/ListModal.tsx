@@ -19,12 +19,15 @@ export default function ListModal({
   title,
   singular,
   plural,
+  verb,
   rows,
   testId,
 }: {
   title: string;
   singular: string;
   plural: string;
+  // Word after the count on the button, e.g. "installed" -> "10 installed".
+  verb: string;
   rows: ModalRow[];
   testId: string;
 }) {
@@ -32,15 +35,15 @@ export default function ListModal({
   const count = `${rows.length} ${rows.length === 1 ? singular : plural}`;
   return (
     <span className="list-modal-trigger" data-testid={testId}>
-      <span data-testid={`${testId}-count`}>{count}</span>{" "}
       <button
         type="button"
         className="list-modal-button"
         popoverTarget={id}
         popoverTargetAction="show"
+        aria-label={`${count}, show all`}
         data-testid={`${testId}-open`}
       >
-        Show all
+        {rows.length} {verb}
       </button>
       <div
         id={id}

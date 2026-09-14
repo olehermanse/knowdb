@@ -102,6 +102,7 @@ function HostDetails({ host }: { host: Host }) {
             title={`Software on ${host.hostname}`}
             singular="software package"
             plural="software packages"
+            verb="installed"
             testId="software-modal"
             rows={host.software.map((sw) => {
               const version = host["software-versions"]?.[sw];
@@ -126,6 +127,7 @@ function HostDetails({ host }: { host: Host }) {
             title={`Classes of ${host.hostname}`}
             singular="class"
             plural="classes"
+            verb="defined"
             testId="classes-modal"
             rows={host.classes.map((cls) => ({
               key: cls,
