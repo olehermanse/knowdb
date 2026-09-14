@@ -439,15 +439,7 @@ export function summarizeEntry(entry: Entry): string {
       return `${hosts} in your infrastructure ${n === 1 ? "has" : "share"} this hostname.`;
     case "host": {
       const host = hostsByKey.get(entry.name);
-      if (!host) return "";
-      return (
-        `This host has ${plural(host.ips.length, "IP address", "IP addresses")} and ` +
-        `${plural(host.macs.length, "MAC address", "MAC addresses")}, listens on ` +
-        `${plural(host["ports-listening"].length, "port")}, has ` +
-        `${plural(host.software.length, "software package")} and ` +
-        `${plural(host["local-users"].length, "local user")}, and is in ` +
-        `${plural(getHostGroups(host.id).length, "group")}.`
-      );
+      return host ? describeHost(host) : "";
     }
   }
 }
@@ -516,4 +508,88 @@ export function describeFilters(filters: SearchFilter[]): string {
   return filters
     .map((f) => (f.type === "port" ? `port ${f.name}` : `${f.type} ${f.name}`))
     .join(", ");
+}
+
+// Environments recognised from the first part of a hostname, e.g.
+// "staging2-mail-alpha" is in the staging environment.
+const ENVIRONMENTS: Record<string, string> = {
+  production: "production",
+  prod: "production",
+  staging: "staging",
+  stage: "staging",
+  testing: "testing",
+  test: "testing",
+  dev: "development",
+  development: "development",
+};
+
+// Roles recognised from words in a hostname.
+const HOSTNAME_ROLES: Record<string, string> = {
+  webserver: "web server",
+  web: "web server",
+  www: "web server",
+  mail: "mail server",
+  smtp: "mail server",
+  imap: "mail server",
+  db: "database server",
+  database: "database server",
+  postgres: "database server",
+  mysql: "database server",
+  dns: "DNS server",
+  ntp: "NTP server",
+  lb: "load balancer",
+  loadbalancer: "load balancer",
+  proxy: "proxy server",
+  firewall: "firewall",
+  fw: "firewall",
+  hub: "CFEngine hub",
+  monitor: "monitoring server",
+  monitoring: "monitoring server",
+  backup: "backup server",
+  client: "client machine",
+};
+
+// Roles guessed from listening ports when the hostname gives no hint.
+const PORT_ROLES: [number[], string][] = [
+  [[25, 143, 465, 587, 993], "mail server"],
+  [[80, 443], "web server"],
+  [[3306, 5432], "database server"],
+  [[53], "DNS server"],
+  [[123], "NTP server"],
+  [[3128], "proxy server"],
+  [[9090, 3000], "monitoring server"],
+  [[873], "backup server"],
+];
+
+export function hostEnvironment(host: Host): string | undefined {
+  const first = host.hostname.split(/[-_.]/)[0].toLowerCase().replace(/\d+$/, "");
+  return ENVIRONMENTS[first];
+}
+
+export function hostRole(host: Host): string | undefined {
+  for (const word of host.hostname.toLowerCase().split(/[-_.]/)) {
+    const role = HOSTNAME_ROLES[word.replace(/\d+$/, "")];
+    if (role) return role;
+  }
+  const ports = new Set(host["ports-listening"]);
+  for (const [candidates, role] of PORT_ROLES) {
+    if (candidates.some((p) => ports.has(p))) return role;
+  }
+  return undefined;
+}
+
+function withArticle(noun: string): string {
+  return `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
+}
+
+// "This is an Ubuntu 24 host in the staging environment. It looks like a
+// mail server."
+export function describeHost(host: Host): string {
+  const env = hostEnvironment(host);
+  const role = hostRole(host);
+  let text = `This is ${withArticle(host.os)} host`;
+  if (env) text += ` in the ${env} environment`;
+  text += ".";
+  if (role) text += ` It looks like ${withArticle(role)}.`;
+  return text;
 }

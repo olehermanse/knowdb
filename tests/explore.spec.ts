@@ -824,14 +824,47 @@ test("the summary sentence sits between description and read more links", async 
   expect(description!.y).toBeLessThan(summary!.y);
   expect(summary!.y).toBeLessThan(links!.y);
 
-  // Hosts get a summary of their own details.
-  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
-  await expect(page.getByTestId("entry-summary")).toContainText(
-    `listens on ${pluralize(someHost["ports-listening"].length, "port")}`,
+  // Hosts get a plain-language summary: OS, environment and likely role.
+  const mailHost = hosts.find((h) => /^staging\d*-mail-/.test(h.hostname));
+  test.skip(!mailHost, "no staging mail host in the generated data");
+  await page.goto(`/entry/host/${encodeURIComponent(mailHost!.id)}`);
+  const article = /^[aeiou]/i.test(mailHost!.os) ? "an" : "a";
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `This is ${article} ${mailHost!.os} host in the staging environment. It looks like a mail server.`,
   );
-  await expect(page.getByTestId("entry-summary")).toContainText(
-    pluralize(someHost.ips.length, "IP address", "IP addresses"),
-  );
+});
+
+test("host summary covers environments and roles from hostnames", async ({
+  page,
+}) => {
+  const envs: Record<string, string> = {
+    production: "production",
+    staging: "staging",
+    testing: "testing",
+    dev: "development",
+  };
+  const roles: Record<string, string> = {
+    webserver: "a web server",
+    lb: "a load balancer",
+    db: "a database server",
+    dns: "a DNS server",
+    hub: "a CFEngine hub",
+    client: "a client machine",
+  };
+  const picked = new Set<string>();
+  for (const host of hosts) {
+    const [prefix, ...rest] = host.hostname.split("-");
+    const env = envs[prefix.replace(/\d+$/, "")];
+    const roleWord = rest.find((w) => roles[w]);
+    if (!env || !roleWord || picked.has(roleWord)) continue;
+    picked.add(roleWord);
+    await page.goto(`/entry/host/${encodeURIComponent(host.id)}`);
+    await expect(page.getByTestId("entry-summary")).toContainText(
+      `host in the ${env} environment. It looks like ${roles[roleWord]}.`,
+    );
+    if (picked.size >= 3) break;
+  }
+  expect(picked.size).toBeGreaterThan(0);
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {
