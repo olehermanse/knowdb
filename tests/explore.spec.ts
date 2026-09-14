@@ -423,7 +423,7 @@ test("operating systems section is reused on software, port and user pages", asy
     [
       "/entry/software/dpkg?tab=os",
       (h) => h.software.includes("dpkg"),
-      "Operating systems of the hosts with this software, most hosts first.",
+      "The hosts with dpkg installed run these operating systems:",
     ],
     [
       "/entry/port/22",

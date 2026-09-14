@@ -16,9 +16,12 @@ export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
 };
 
 // Text under the heading, per entry type.
-function sectionText(type: EntryType, subject: string): string {
+function sectionText(type: EntryType, subject: string, name: string): string {
   if (type === "port") {
     return "Operating systems of the hosts listening to this port:";
+  }
+  if (type === "software") {
+    return `The hosts with ${name} installed run these operating systems:`;
   }
   return `Operating systems of the hosts with this ${subject}, most hosts first.`;
 }
@@ -30,7 +33,7 @@ export default function OperatingSystems({ entry }: { entry: Entry }) {
   const subject = OS_SECTION_SUBJECTS[entry.type] ?? "entry";
   return (
     <section data-testid="os-section">
-      <p className="muted">{sectionText(entry.type, subject)}</p>
+      <p className="muted">{sectionText(entry.type, subject, entry.name)}</p>
       <OsPieChart counts={counts} subject={`This ${subject}`} />
     </section>
   );
