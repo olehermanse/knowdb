@@ -5,6 +5,11 @@ based on the data reported from your hosts.
 Click on a host to see information about it, see that port 22 is open,
 read what port 22 is for, see other hosts with port 22 open, and so on.
 
+Every host has a GitHub-style pixel avatar derived from its host key, so
+it stays the same everywhere the host appears. The avatar's colour comes
+from the host's operating system (the `color` field of the OS entry in
+`data/info.json`, falling back to a colour derived from the OS name).
+
 Lists of hosts show at most 50 hosts at a time, with pagination links
 below the list.
 

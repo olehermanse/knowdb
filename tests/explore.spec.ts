@@ -1067,6 +1067,52 @@ test("software and ports link to each other with See also", async ({
   await expect(page.getByTestId("see-also")).toHaveCount(0);
 });
 
+test("hosts have pixel avatars coloured by operating system", async ({
+  page,
+}) => {
+  const osColors = info.os as Record<string, { color?: string }>;
+  const cellsOf = async (avatar: import("@playwright/test").Locator) =>
+    avatar.locator("rect[fill]").evaluateAll((rects) =>
+      rects.map((r) => `${r.getAttribute("x")},${r.getAttribute("y")}`),
+    );
+
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const avatar = page.getByTestId("host-avatar");
+  await expect(avatar).toBeVisible();
+  const expectedColor = osColors[someHost.os]?.color;
+  if (expectedColor) await expect(avatar).toHaveAttribute("data-color", expectedColor);
+  const cells = await cellsOf(avatar);
+  expect(cells.length).toBeGreaterThan(0);
+  // Horizontally symmetric 5x5 pattern.
+  for (const cell of cells) {
+    const [x, y] = cell.split(",").map(Number);
+    expect(cells).toContain(`${4 - x},${y}`);
+  }
+  // Stable: the same host gets the same pattern in a list.
+  await page.goto("/entry/port/22");
+  const sortedIds = hosts.map((h) => h.id).sort();
+  const ourPage = Math.floor(sortedIds.indexOf(someHost.id) / 50) + 1;
+  if (ourPage > 1) await page.goto(`/entry/port/22?page=${ourPage}`);
+  const item = page.getByTestId("host-item").filter({
+    has: page.getByRole("link", { name: someHost.hostname, exact: true }),
+  });
+  expect(await cellsOf(item.getByTestId("host-avatar"))).toEqual(cells);
+
+  // Same OS, same colour; different OS family, different colour.
+  const sameOs = hosts.find((h) => h.os === someHost.os && h.id !== someHost.id);
+  const otherOs = hosts.find((h) => h.os.split(" ")[0] !== someHost.os.split(" ")[0]);
+  const colorOf = async (h: Host) => {
+    await page.goto(`/entry/host/${encodeURIComponent(h.id)}`);
+    return page.getByTestId("host-avatar").getAttribute("data-color");
+  };
+  const ours = await colorOf(someHost);
+  if (sameOs) expect(await colorOf(sameOs)).toBe(ours);
+  expect(await colorOf(otherOs!)).not.toBe(ours);
+  // Two different hosts get different patterns (with overwhelming odds).
+  const otherCells = await cellsOf(page.getByTestId("host-avatar"));
+  expect(otherCells).not.toEqual(cells);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

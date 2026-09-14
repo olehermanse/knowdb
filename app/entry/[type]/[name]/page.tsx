@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
+import HostAvatar from "@/components/HostAvatar";
 import HostList, { parsePage } from "@/components/HostList";
 import OperatingSystems, { hasOsSection } from "@/components/OperatingSystems";
 import {
@@ -277,6 +278,7 @@ export default async function EntryPage({
         <span className="type-badge">{entry.type}</span>
       </p>
       <div className="entry-title">
+        {host && <HostAvatar host={host} size={48} />}
         {logo && (
           <Image
             className="entry-logo"

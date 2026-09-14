@@ -291,6 +291,11 @@ export interface SoftwareInfo extends DescribedInfo {
   ports?: number[];
 }
 
+export interface OsInfo extends DescribedInfo {
+  // Brand colour (hex) used for the avatars of hosts running this OS.
+  color?: string;
+}
+
 export interface IpRangeInfo extends DescribedInfo {
   // CIDR notation, e.g. "10.0.0.0/8" or "fe80::/10".
   cidr: string;
@@ -300,7 +305,7 @@ interface Info {
   ports: Record<string, PortInfo>;
   software: Record<string, SoftwareInfo>;
   users: Record<string, DescribedInfo>;
-  os: Record<string, DescribedInfo>;
+  os: Record<string, OsInfo>;
   ips: Record<string, DescribedInfo>;
   "ip-ranges": IpRangeInfo[];
 }
@@ -366,8 +371,23 @@ export function getUserInfo(name: string): DescribedInfo | undefined {
   return info.users[name];
 }
 
-export function getOsInfo(name: string): DescribedInfo | undefined {
+export function getOsInfo(name: string): OsInfo | undefined {
   return info.os[name];
+}
+
+// Colour for an operating system: from info.json (exact entry, or any
+// entry of the same family such as "Ubuntu 24" for "Ubuntu 99"), else a
+// stable hue derived from the name.
+export function getOsColor(os: string): string {
+  const exact = info.os[os]?.color;
+  if (exact) return exact;
+  const family = os.split(" ")[0];
+  for (const [name, entry] of Object.entries(info.os)) {
+    if (entry.color && name.split(" ")[0] === family) return entry.color;
+  }
+  let hash = 0;
+  for (const ch of os) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return `hsl(${hash % 360} 55% 45%)`;
 }
 
 // External links for an entry, from info.json. Empty for entry types

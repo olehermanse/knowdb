@@ -6,6 +6,7 @@
   --link: #1d4ed8;
   --badge-bg: #eef2ff;
   --badge-fg: #3730a3;
+  --avatar-bg: #f0f0f0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,6 +18,7 @@
     --link: #60a5fa;
     --badge-bg: #1e1b4b;
     --badge-fg: #c7d2fe;
+    --avatar-bg: #27272a;
   }
 }
 
@@ -312,4 +314,14 @@ a,
 
 .pagination-current {
   font-weight: 700;
+}
+
+/* Host avatars (identicons). */
+.host-avatar {
+  flex-shrink: 0;
+  border-radius: 0.35rem;
+}
+
+.host-avatar-bg {
+  fill: var(--avatar-bg);
 }
