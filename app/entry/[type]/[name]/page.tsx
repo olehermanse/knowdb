@@ -100,7 +100,7 @@ function HostDetails({ host }: { host: Host }) {
         {host["cloud-provider"] ? (
           <EntryLink type="cloud" name={host["cloud-provider"]} />
         ) : (
-          <span className="muted">None (own data center)</span>
+          <span className="muted">None</span>
         )}
       </dd>
       <dt>Classes</dt>

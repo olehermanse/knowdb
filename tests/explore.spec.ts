@@ -1517,7 +1517,7 @@ test("hosts have a cloud provider, or none for their own data center", async ({
   );
   await expect(page.getByTestId("entry-summary")).toContainText("running on AWS.");
   await page.goto(`/entry/host/${encodeURIComponent(without[0].id)}`);
-  await expect(page.getByTestId("host-cloud")).toHaveText("None (own data center)");
+  await expect(page.getByTestId("host-cloud")).toHaveText("None");
   await expect(page.getByTestId("host-cloud").getByRole("link")).toHaveCount(0);
   await expect(page.getByTestId("entry-summary")).toContainText(
     "running in your own data center.",
@@ -1583,7 +1583,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
       );
     } else {
       // Hosts outside any cloud are a slice of their own, without a link.
-      await expect(item).toContainText("None (own data center)");
+      await expect(item).toContainText("None");
       await expect(item.getByRole("link")).toHaveCount(0);
     }
   }

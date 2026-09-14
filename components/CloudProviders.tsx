@@ -1,7 +1,7 @@
 import PieChart, { hostsLabel, PieItem } from "@/components/PieChart";
 import { aggregateClouds, Entry } from "@/lib/data";
 
-export const NO_CLOUD_LABEL = "None (own data center)";
+export const NO_CLOUD_LABEL = "None";
 
 function sectionText(entry: Entry): string {
   switch (entry.type) {
