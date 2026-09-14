@@ -1608,6 +1608,55 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
   );
 });
 
+test("front page buttons list everything of a type", async ({ page }) => {
+  await page.goto("/");
+  const buttons = page.getByTestId("type-buttons").getByRole("link");
+  await expect(buttons).toHaveCount(12);
+  // Buttons come before the random list and sit side by side.
+  const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
+  const listBox = (await page.getByTestId("entry-list").boundingBox())!;
+  expect(buttonsBox.y).toBeLessThan(listBox.y);
+  const first = (await buttons.nth(0).boundingBox())!;
+  const second = (await buttons.nth(1).boundingBox())!;
+  expect(Math.abs(first.y - second.y)).toBeLessThan(2);
+  expect(second.x).toBeGreaterThan(first.x);
+
+  // Ports: all distinct ports, with count, ascending.
+  const allPorts = [...new Set(hosts.flatMap((h) => h["ports-listening"]))].sort((a, b) => a - b);
+  await expect(page.getByTestId("type-button-port")).toHaveText(`Ports (${allPorts.length})`);
+  await page.getByTestId("type-button-port").click();
+  await expect(page).toHaveURL("/search?type=port");
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${allPorts.length} ports in your infrastructure.`,
+  );
+  const items = page.getByTestId("search-results").locator("li");
+  await expect(items).toHaveCount(allPorts.length);
+  await expect(items.first().getByRole("link")).toHaveText(String(allPorts[0]));
+  await expect(items.first().locator(".type-badge")).toHaveText("port");
+  await expect(page.getByTestId("pagination")).toHaveCount(0);
+
+  // Hosts: paginated 50 at a time, sorted by hostname.
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-host")).toHaveText(`Hosts (${hosts.length})`);
+  await page.getByTestId("type-button-host").click();
+  await expect(page).toHaveURL("/search?type=host");
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(50, hosts.length));
+  const byName = [...hosts].sort((a, b) => a.hostname.localeCompare(b.hostname));
+  await expect(
+    page.getByTestId("host-item").first().getByRole("link", { name: byName[0].hostname }),
+  ).toBeVisible();
+  await expect(page.getByTestId("pagination-summary")).toHaveText(
+    `Showing 1–50 of ${hosts.length} hosts`,
+  );
+  await page.getByTestId("pagination").getByRole("link", { name: "Next →" }).click();
+  await expect(page).toHaveURL("/search?type=host&page=2");
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(50, hosts.length - 50));
+
+  // Unknown types fall back to the plain search page.
+  await page.goto("/search?type=banana");
+  await expect(page.getByTestId("search-hint")).toBeVisible();
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

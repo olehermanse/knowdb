@@ -23,6 +23,13 @@ port pages.
 Lists of hosts show at most 50 hosts at a time, with pagination links
 below the list.
 
+## Front page
+
+The front page has a button for each entry type (hosts, ports, software,
+...) with its count. A button leads to the search page listing everything
+of that type, 50 at a time. Below the buttons is a random sample of
+entries with at least one of every type.
+
 ## Searching
 
 The search bar at the top of every page searches "anything": hostnames,
@@ -30,6 +37,9 @@ host keys, port numbers and names, software, users, operating systems,
 groups, IP and MAC addresses, and words from descriptions. Results show
 the type of each entry, its name and description, and hosts are shown
 with their OS and IP addresses.
+
+The search page also lists everything of one type with `/search?type=port`
+(this is what the front page buttons link to).
 
 A query can also contain filters like `port:22 group:Windows` or
 `os:"Ubuntu 24"` (quote values with spaces). Then only hosts matching all

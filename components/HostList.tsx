@@ -1,18 +1,10 @@
-import Link from "next/link";
 import HostListItem from "@/components/HostListItem";
+import Pagination, { paginate } from "@/components/Pagination";
 import { Host } from "@/lib/data";
 
-export const HOSTS_PER_PAGE = 50;
+export { PAGE_SIZE as HOSTS_PER_PAGE, parsePage } from "@/components/Pagination";
 
-// Parse a ?page= query value into a page number (1-based), defaulting to 1.
-export function parsePage(raw: string | string[] | undefined): number {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  const n = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(n) && n >= 1 ? n : 1;
-}
-
-// A list of hosts, shown HOSTS_PER_PAGE at a time with Previous/Next and
-// page links. Out-of-range pages are clamped to the last page.
+// A list of hosts, 50 at a time with pagination links below.
 export default function HostList({
   hosts,
   page,
@@ -24,11 +16,7 @@ export default function HostList({
   hrefForPage: (page: number) => string;
   testId?: string;
 }) {
-  const totalPages = Math.max(1, Math.ceil(hosts.length / HOSTS_PER_PAGE));
-  const current = Math.min(Math.max(1, page), totalPages);
-  const start = (current - 1) * HOSTS_PER_PAGE;
-  const shown = hosts.slice(start, start + HOSTS_PER_PAGE);
-
+  const { shown, current, totalPages, start } = paginate(hosts, page);
   return (
     <>
       <ul className="entry-list" data-testid={testId}>
@@ -36,40 +24,15 @@ export default function HostList({
           <HostListItem key={host.id} host={host} />
         ))}
       </ul>
-      {totalPages > 1 && (
-        <nav className="pagination" aria-label="Pagination" data-testid="pagination">
-          <span className="muted" data-testid="pagination-summary">
-            Showing {start + 1}–{start + shown.length} of {hosts.length} hosts
-          </span>
-          <span className="pagination-links">
-            {current > 1 ? (
-              <Link href={hrefForPage(current - 1)} rel="prev">
-                ← Previous
-              </Link>
-            ) : (
-              <span className="muted">← Previous</span>
-            )}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) =>
-              n === current ? (
-                <span key={n} className="pagination-current" aria-current="page">
-                  {n}
-                </span>
-              ) : (
-                <Link key={n} href={hrefForPage(n)}>
-                  {n}
-                </Link>
-              ),
-            )}
-            {current < totalPages ? (
-              <Link href={hrefForPage(current + 1)} rel="next">
-                Next →
-              </Link>
-            ) : (
-              <span className="muted">Next →</span>
-            )}
-          </span>
-        </nav>
-      )}
+      <Pagination
+        total={hosts.length}
+        shown={shown.length}
+        start={start}
+        current={current}
+        totalPages={totalPages}
+        noun="hosts"
+        hrefForPage={hrefForPage}
+      />
     </>
   );
 }

@@ -397,3 +397,26 @@ a,
   flex-shrink: 0;
   border-radius: 0.35rem;
 }
+
+/* Front page buttons, one per entry type. */
+.type-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.type-button {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.type-button:hover {
+  border-color: var(--badge-fg);
+}

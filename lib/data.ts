@@ -378,6 +378,40 @@ export const ENTRY_TYPES: EntryType[] = [
   "cloud",
 ];
 
+// Plural, human readable names of the entry types, for buttons and summaries.
+export const TYPE_LABELS: Record<EntryType, string> = {
+  host: "Hosts",
+  hostname: "Hostnames",
+  os: "Operating systems",
+  ip: "IP addresses",
+  mac: "MAC addresses",
+  port: "Ports",
+  software: "Software",
+  user: "Users",
+  group: "Groups",
+  class: "Classes",
+  version: "Versions",
+  cloud: "Clouds",
+};
+
+// All entries of one type, sorted by name (numerically where names are
+// numbers, e.g. ports; hosts by hostname).
+export function entriesOfType(type: EntryType): Entry[] {
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+  const sortKey = (e: Entry) =>
+    type === "host" ? (hostsByKey.get(e.name)?.hostname ?? e.name) : e.name;
+  return [...entries.values()]
+    .filter((e) => e.type === type)
+    .map((e) => ({ type: e.type, name: e.name, hosts: [...e.hosts].sort() }))
+    .sort((a, b) => collator.compare(sortKey(a), sortKey(b)));
+}
+
+export function countOfType(type: EntryType): number {
+  let n = 0;
+  for (const e of entries.values()) if (e.type === type) n++;
+  return n;
+}
+
 export function isEntryType(value: string): value is EntryType {
   return (ENTRY_TYPES as string[]).includes(value);
 }
