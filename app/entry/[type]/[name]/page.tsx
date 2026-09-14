@@ -238,9 +238,11 @@ export default async function EntryPage({
         </h1>
       </div>
       <SeeAlso entry={entry} />
-      <p className="muted" data-testid="entry-description">
-        {describeEntry(entry)}
-      </p>
+      {!host && (
+        <p className="muted" data-testid="entry-description">
+          {describeEntry(entry)}
+        </p>
+      )}
       {summary && <p data-testid="entry-summary">{summary}</p>}
       <ExternalLinks entry={entry} />
       {group && <GroupRules group={group} />}

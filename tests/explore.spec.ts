@@ -135,6 +135,9 @@ test("host page title is the hostname with the ID in parenthesis", async ({
   page,
 }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  // Host pages have no generic type description, only the summary sentence.
+  await expect(page.getByTestId("entry-description")).toHaveCount(0);
+  await expect(page.getByTestId("entry-summary")).toContainText("This is");
   await expect(page.getByTestId("entry-name")).toHaveText(
     `${someHost.hostname} (${someHost.id})`,
   );
