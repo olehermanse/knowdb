@@ -1,6 +1,6 @@
 import EntryLink from "@/components/EntryLink";
 import OsPieChart from "@/components/OsPieChart";
-import { aggregateOs, Entry, EntryType } from "@/lib/data";
+import { aggregateOs, Entry, EntryType, hostsSubject } from "@/lib/data";
 
 // Entry types whose pages show the operating systems of their hosts, and
 // how to refer to the entry in the section text.
@@ -39,14 +39,24 @@ function sectionText(type: EntryType, subject: string, name: string): string {
 export default function OperatingSystems({ entry }: { entry: Entry }) {
   const counts = aggregateOs(entry.hosts);
   const subject = OS_SECTION_SUBJECTS[entry.type] ?? "entry";
-  // A version on a single OS gets one sentence instead of intro + chart.
-  if (entry.type === "version" && counts.length === 1) {
+  // A single operating system gets one short sentence instead of the intro
+  // sentence plus a chart.
+  if (counts.length === 1) {
     const only = counts[0];
+    const hosts = `${only.hosts} ${only.hosts === 1 ? "host" : "hosts"}`;
     return (
       <section data-testid="os-section">
         <p data-testid="os-summary">
-          The {entry.name} software version is only installed on{" "}
-          <EntryLink type="os" name={only.os} /> ({only.hosts} {only.hosts === 1 ? "host" : "hosts"}).
+          {entry.type === "version" ? (
+            <>
+              The {entry.name} software version is only installed on{" "}
+              <EntryLink type="os" name={only.os} /> ({hosts}).
+            </>
+          ) : (
+            <>
+              {hostsSubject(entry, only.hosts, "run")} <EntryLink type="os" name={only.os} />.
+            </>
+          )}
         </p>
       </section>
     );

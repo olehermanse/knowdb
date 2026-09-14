@@ -439,6 +439,47 @@ export function similarEntries(entry: EntryRef): SimilarEntry[] {
   return found.sort((a, b) => b.common - a.common || a.entry.name.localeCompare(b.entry.name));
 }
 
+// How hosts relate to an entry, to finish phrases like "All 5 hosts ...":
+// "in this group", "with dovecot installed", "listening to this port".
+export function hostsRelation(entry: EntryRef): string {
+  switch (entry.type) {
+    case "group":
+      return "in this group";
+    case "class":
+      return "with this class";
+    case "software":
+      return `with ${entry.name} installed`;
+    case "version":
+      return `with ${entry.name}`;
+    case "port":
+      return "listening to this port";
+    case "user":
+      return "with this local user";
+    case "hostname":
+      return "with this hostname";
+    case "ip":
+      return "with this IP address";
+    case "mac":
+      return "with this MAC address";
+    case "cloud":
+      return `on ${entry.name}`;
+    case "os":
+      return `running ${entry.name}`;
+    default:
+      return "";
+  }
+}
+
+// "All 5 hosts in this group run" / "The only host in this group runs".
+export function hostsSubject(entry: EntryRef, n: number, verb: string): string {
+  const relation = hostsRelation(entry);
+  const plural = `${verb}`;
+  const singular = /s$/.test(verb) ? `${verb}es` : `${verb}s`;
+  return n === 1
+    ? `The only host ${relation} ${singular}`
+    : `All ${n} hosts ${relation} ${plural}`;
+}
+
 export function countOfType(type: EntryType): number {
   let n = 0;
   for (const e of entries.values()) if (e.type === type) n++;

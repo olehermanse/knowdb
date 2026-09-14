@@ -1,5 +1,6 @@
-import PieChart, { hostsLabel, PieItem } from "@/components/PieChart";
-import { aggregateClouds, Entry } from "@/lib/data";
+import EntryLink from "@/components/EntryLink";
+import PieChart, { PieItem } from "@/components/PieChart";
+import { aggregateClouds, Entry, hostsSubject } from "@/lib/data";
 
 export const NO_CLOUD_LABEL = "None";
 
@@ -21,11 +22,30 @@ function sectionText(entry: Entry): string {
 // "Clouds" tab: a pie chart and ranked list of the cloud providers the
 // related hosts run on. Hosts without a provider get their own slice.
 export default function CloudProviders({ entry }: { entry: Entry }) {
-  const items: PieItem[] = aggregateClouds(entry.hosts).map((c) => ({
+  const counts = aggregateClouds(entry.hosts);
+  const items: PieItem[] = counts.map((c) => ({
     label: c.cloud || NO_CLOUD_LABEL,
     hosts: c.hosts,
     link: c.cloud ? { type: "cloud", name: c.cloud } : undefined,
   }));
+  // A single provider (or none at all) gets one short sentence.
+  if (counts.length === 1) {
+    const only = counts[0];
+    return (
+      <section data-testid="cloud-section">
+        <p data-testid="cloud-summary">
+          {only.cloud ? (
+            <>
+              {hostsSubject(entry, only.hosts, "run")} on{" "}
+              <EntryLink type="cloud" name={only.cloud} />.
+            </>
+          ) : (
+            <>{hostsSubject(entry, only.hosts, "run")} in your own data center.</>
+          )}
+        </p>
+      </section>
+    );
+  }
   return (
     <section data-testid="cloud-section">
       <p className="muted">{sectionText(entry)}</p>
@@ -35,15 +55,6 @@ export default function CloudProviders({ entry }: { entry: Entry }) {
         noun="cloud provider"
         testId="cloud"
         ariaLabel="Cloud providers"
-        single={(item) =>
-          item.link ? (
-            <>
-              All {hostsLabel(item.hosts)} run on {item.label}.
-            </>
-          ) : (
-            <>All {hostsLabel(item.hosts)} run in your own data center.</>
-          )
-        }
       />
     </section>
   );

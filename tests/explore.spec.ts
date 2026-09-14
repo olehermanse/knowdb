@@ -410,9 +410,13 @@ test("group with a single operating system shows a sentence instead", async ({
   await page.goto(group ? groupHref(name) : `/entry/class/${encodeURIComponent(name)}`);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);
   await expect(page.getByTestId("os-list")).toHaveCount(0);
+  const [os, n] = expected[0];
+  const relation = subject === "group" ? "in this group" : "with this class";
   await expect(page.getByTestId("os-summary")).toHaveText(
-    `This ${subject} has only 1 operating system: ${expected[0][0]} (${hostsLabel(expected[0][1])}).`,
+    n === 1 ? `The only host ${relation} runs ${os}.` : `All ${n} hosts ${relation} run ${os}.`,
   );
+  // One short sentence only: no intro sentence, no chart.
+  await expect(page.getByTestId("os-section").locator("p")).toHaveCount(1);
   await expect(
     page.getByTestId("os-summary").getByRole("link", { name: expected[0][0] }),
   ).toHaveAttribute("href", `/entry/os/${encodeURIComponent(expected[0][0])}`);
@@ -1605,8 +1609,11 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
   await page.goto(`/entry/mac/${encodeURIComponent(mac)}?tab=clouds`);
   const provider = providerOf(someHost);
   await expect(page.getByTestId("cloud-summary")).toHaveText(
-    provider ? `All 1 host run on ${provider}.` : "All 1 host run in your own data center.",
+    provider
+      ? `The only host with this MAC address runs on ${provider}.`
+      : "The only host with this MAC address runs in your own data center.",
   );
+  await expect(page.getByTestId("cloud-section").locator("p")).toHaveCount(1);
 });
 
 test("front page buttons list everything of a type", async ({ page }) => {
