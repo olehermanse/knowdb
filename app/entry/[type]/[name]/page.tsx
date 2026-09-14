@@ -223,6 +223,7 @@ export default async function EntryPage({
   const host = type === "host" ? getHost(name) : undefined;
   const group = type === "group" ? getGroup(name) : undefined;
   const logo = getEntryLogo(entry);
+  const portName = type === "port" ? getPortInfo(name)?.name : undefined;
 
   return (
     <>
@@ -247,6 +248,10 @@ export default async function EntryPage({
             <>
               {host.hostname}{" "}
               <span className="muted host-id">({host.id})</span>
+            </>
+          ) : type === "port" && portName ? (
+            <>
+              {entry.name} <span className="muted">({portName})</span>
             </>
           ) : (
             entry.name

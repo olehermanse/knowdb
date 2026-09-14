@@ -1427,6 +1427,23 @@ test("port cards show a logo when the port has one", async ({ page }) => {
   await expect(ssh.getByTestId("port-logo")).toHaveCount(0);
 });
 
+test("port page title includes the common name in parenthesis", async ({
+  page,
+}) => {
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("entry-name")).toHaveText("22 (ssh)");
+  await page.goto("/entry/port/5308");
+  await expect(page.getByTestId("entry-name")).toHaveText("5308 (cfengine)");
+  // Ports without a known name show just the number.
+  const unnamed = [...new Set(hosts.flatMap((h) => h["ports-listening"]))].find(
+    (p) => !(info.ports as Record<string, unknown>)[String(p)],
+  );
+  if (unnamed) {
+    await page.goto(`/entry/port/${unnamed}`);
+    await expect(page.getByTestId("entry-name")).toHaveText(String(unnamed));
+  }
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");
