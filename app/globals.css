@@ -611,3 +611,21 @@ a,
 .entry-pane-right .host-view .entry-topline {
   margin-top: 0;
 }
+
+/* The header of a split entry page spans only the left column, so the
+   first/last seen sentence lines up with the middle of the page. */
+.entry-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 3rem;
+}
+
+.entry-header > * {
+  grid-column: 1;
+}
+
+@media (max-width: 64rem) {
+  .entry-header {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2009,6 +2009,9 @@ test("other entries derive first and last seen from their hosts", async ({
   expect(Math.abs(seenBox.y + seenBox.height / 2 - (badge.y + badge.height / 2))).toBeLessThan(3);
   expect(seenBox.y + seenBox.height).toBeLessThanOrEqual(title.y + 1);
   expect(seenBox.x).toBeGreaterThan(badge.x + badge.width);
+  // In the two-column layout it lines up with the right edge of the left column.
+  const pane = (await page.getByTestId("entry-pane").boundingBox())!;
+  expect(Math.abs(seenBox.x + seenBox.width - (pane.x + pane.width))).toBeLessThan(4);
   await expect(page.getByTestId("entry-first-seen")).toHaveAttribute("datetime", firsts[0]);
   await expect(page.getByTestId("entry-last-seen")).toHaveAttribute(
     "datetime",
