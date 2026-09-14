@@ -140,6 +140,8 @@ function portsDescription(entry: Entry): string {
       return `The ${entry.name} hosts are listening to these ports:`;
     case "version":
       return `The hosts with ${entry.name} are listening to these ports:`;
+    case "os":
+      return `The ${entry.name} hosts are listening to these ports:`;
     default:
       return "The hosts are listening to these ports:";
   }
