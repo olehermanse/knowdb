@@ -1,4 +1,5 @@
 import hostsJson from "@/data/hosts.json";
+import infoJson from "@/data/info.json";
 
 export interface Host {
   os: string;
@@ -119,27 +120,32 @@ export function isEntryType(value: string): value is EntryType {
   return (ENTRY_TYPES as string[]).includes(value);
 }
 
-// Short descriptions for well-known entries, so a user can e.g. click
-// on port 22 and read what it is for.
-const PORT_DESCRIPTIONS: Record<string, string> = {
-  "22": "SSH (Secure Shell) — remote login and command execution.",
-  "25": "SMTP — sending email between mail servers.",
-  "53": "DNS — domain name resolution.",
-  "80": "HTTP — unencrypted web traffic.",
-  "123": "NTP — network time synchronization.",
-  "143": "IMAP — reading email from a mail server.",
-  "443": "HTTPS — encrypted web traffic.",
-  "465": "SMTPS — email submission over TLS.",
-  "587": "SMTP submission — email submission from clients.",
-  "873": "rsync — file synchronization service.",
-  "993": "IMAPS — IMAP over TLS.",
-  "3000": "Grafana — dashboards and visualization (common default).",
-  "3128": "Squid — HTTP proxy (common default).",
-  "3306": "MySQL — relational database.",
-  "5308": "CFEngine — communication between CFEngine hosts.",
-  "5432": "PostgreSQL — relational database.",
-  "9090": "Prometheus — metrics and monitoring (common default).",
-};
+// Hard coded, operator-editable descriptions of well-known ports and
+// software, so a user can e.g. click on port 22 and read what it is for.
+export interface PortInfo {
+  // Short common name, e.g. "ssh" for port 22.
+  name: string;
+  description: string;
+}
+
+export interface SoftwareInfo {
+  description: string;
+}
+
+interface Info {
+  ports: Record<string, PortInfo>;
+  software: Record<string, SoftwareInfo>;
+}
+
+const info = infoJson as Info;
+
+export function getPortInfo(port: string | number): PortInfo | undefined {
+  return info.ports[String(port)];
+}
+
+export function getSoftwareInfo(name: string): SoftwareInfo | undefined {
+  return info.software[name];
+}
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -153,8 +159,12 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
 
 export function describeEntry(entry: EntryRef): string {
   if (entry.type === "port") {
-    const known = PORT_DESCRIPTIONS[entry.name];
-    if (known) return `Port ${entry.name}: ${known}`;
+    const known = getPortInfo(entry.name);
+    if (known) return `Port ${entry.name} (${known.name}): ${known.description}`;
+  }
+  if (entry.type === "software") {
+    const known = getSoftwareInfo(entry.name);
+    if (known) return known.description;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }

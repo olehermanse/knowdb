@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import hosts from "../data/hosts.json";
+import info from "../data/info.json";
 
 // Every generated host listens on ports 22 and 5308, so these entries are
 // guaranteed to exist and be linked to all hosts.
@@ -91,6 +92,21 @@ test("entries are two-way linked: host -> port -> host", async ({ page }) => {
     .getByRole("link", { name: someHost.id, exact: true })
     .click();
   await expect(page.getByTestId("entry-name")).toContainText(someHost.id);
+});
+
+test("port and software descriptions come from info.json", async ({
+  page,
+}) => {
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("entry-description")).toContainText(
+    info.ports["22"].description,
+  );
+  await expect(page.getByTestId("entry-description")).toContainText("(ssh)");
+
+  await page.goto("/entry/software/dpkg");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    info.software["dpkg"].description,
+  );
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

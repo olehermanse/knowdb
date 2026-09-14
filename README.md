@@ -47,6 +47,14 @@ python3 scripts/generate_hosts.py
 cp tmp/hosts.json frontend/data/hosts.json
 ```
 
+## Descriptions of ports and software
+
+`frontend/data/info.json` is a hand-written file with descriptions of
+well-known ports and software. Each port has a short common name (like
+`ssh` for port 22) and a description, and each software package has a
+description. Edit this file to improve or extend the descriptions shown
+on entry pages; the frontend reads it at build time.
+
 ## Host data format
 
 The relevant information from a host looks like this:
