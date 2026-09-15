@@ -1790,6 +1790,10 @@ test("pinned software, classes and variables follow the user between hosts", asy
   await expect(names.first()).toHaveText(cls);
   await expect(names.first().getByRole("link")).toHaveCount(0);
   await expect(items.first()).toHaveText("defined");
+  await expect(items.first().getByRole("link", { name: "defined", exact: true })).toHaveAttribute(
+    "href",
+    `/entry/class/${encodeURIComponent(cls)}`,
+  );
   // No cards: plain name/value pairs like the fields above.
   await expect(pinned.locator("li")).toHaveCount(0);
   await expect(pinned.locator(".type-badge")).toHaveCount(0);

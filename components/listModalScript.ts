@@ -171,10 +171,18 @@ export const LIST_MODAL_SCRIPT = `
     dd.setAttribute("data-pin-name", name);
     var row = modalRow(type, name);
     if (row) {
-      // The second link of the row is the version or value, if any.
+      // The second link of the row is the version or value, if any. A
+      // class has none: "defined" links to the class itself instead.
       var links = row.querySelectorAll("[data-pin-content] > a");
-      if (links.length > 1) dd.appendChild(links[1].cloneNode(true));
-      else dd.appendChild(document.createTextNode(type === "software" ? "installed" : "defined"));
+      if (links.length > 1) {
+        dd.appendChild(links[1].cloneNode(true));
+      } else {
+        var entry = document.createElement("a");
+        entry.className = "entry-link";
+        entry.href = "/entry/" + type + "/" + encodeURIComponent(name);
+        entry.textContent = type === "software" ? "installed" : "defined";
+        dd.appendChild(entry);
+      }
     } else {
       var missing = document.createElement("em");
       missing.className = "muted pinned-missing";

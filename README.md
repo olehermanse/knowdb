@@ -52,7 +52,7 @@ host page as a name/value pair, styled like the host's basic fields and
 laid out in three columns, below those fields and above the modal
 buttons: the name is a plain label (not a link, to keep the section
 quiet) and the value is the software's version, `defined` for a class, or
-the variable's value, linking to the version or value entry. When the host does not have the pinned item, the
+the variable's value, linking to the version, class or value entry. When the host does not have the pinned item, the
 value reads `(not installed)` for software and `(not defined)` for classes
 and variables, in gray italics. Which items are pinned is stored in the
 browser's local storage, shared across all hosts; unpin with the icon next
