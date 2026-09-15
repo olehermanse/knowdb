@@ -711,3 +711,23 @@ a,
 .comment-form-note {
   font-size: 0.85rem;
 }
+
+/* User details on a user page: two columns like a host's details. The
+   columns are short, so they stay side by side even in the left pane. */
+.user-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem 2rem;
+  align-items: start;
+  margin: 1rem 0 0.5rem;
+}
+
+@container (max-width: 26rem) {
+  .user-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+.user-details code {
+  font-size: 0.9em;
+}

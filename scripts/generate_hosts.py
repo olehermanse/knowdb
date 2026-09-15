@@ -204,6 +204,55 @@ ROLE_USERS = {
 COMMON_LINUX_USERS = ["daemon", "mail", "lp", "sshd", "nobody", "syslog"]
 COMMON_WINDOWS_USERS = ["Guest", "DefaultAccount", "SYSTEM"]
 
+# Per-user details: home directory, shell and groups. Linux system users
+# get a distribution-appropriate nologin shell; Windows accounts have none.
+LINUX_USER_HOMES = {
+    "root": "/root",
+    "daemon": "/usr/sbin",
+    "mail": "/var/mail",
+    "lp": "/var/spool/lpd",
+    "sshd": "/run/sshd",
+    "nobody": "/nonexistent",
+    "syslog": "/home/syslog",
+    "www-data": "/var/www",
+    "haproxy": "/var/lib/haproxy",
+    "proxy": "/bin",
+    "postgres": "/var/lib/postgresql",
+    "mysql": "/var/lib/mysql",
+    "postfix": "/var/spool/postfix",
+    "dovecot": "/usr/lib/dovecot",
+    "bind": "/var/cache/bind",
+    "prometheus": "/var/lib/prometheus",
+    "grafana": "/usr/share/grafana",
+}
+LINUX_USER_GROUPS = {
+    "root": ["root"],
+    "daemon": ["daemon"],
+    "mail": ["mail"],
+    "lp": ["lp"],
+    "sshd": ["sshd"],
+    "nobody": ["nogroup"],
+    "syslog": ["syslog", "adm"],
+    "www-data": ["www-data"],
+    "haproxy": ["haproxy"],
+    "proxy": ["proxy"],
+    "postgres": ["postgres", "ssl-cert"],
+    "mysql": ["mysql"],
+    "postfix": ["postfix", "mail"],
+    "dovecot": ["dovecot"],
+    "bind": ["bind"],
+    "prometheus": ["prometheus"],
+    "grafana": ["grafana"],
+}
+WINDOWS_USER_GROUPS = {
+    "Administrator": ["Administrators", "Users"],
+    "Guest": ["Guests"],
+    "DefaultAccount": ["System Managed Accounts Group"],
+    "SYSTEM": [],
+}
+# Accounts people actually log in as, and get their password guessed on.
+LOGIN_USERS = {"root", "Administrator"}
+
 
 def generate_id():
     return "SHA=" + secrets.token_hex(32)
@@ -340,6 +389,40 @@ def generate_users(os_name, hostname):
     return sorted(set(users))
 
 
+def generate_user_details(os_name, users, last_seen):
+    """Home, shell, groups and login times for each local user on a host."""
+    windows = os_name.startswith("Windows")
+    nologin = "/usr/sbin/nologin" if os_name.startswith(("Ubuntu", "Debian")) else "/sbin/nologin"
+    seen = datetime.fromisoformat(last_seen.replace("Z", "+00:00"))
+    details = {}
+    for name in users:
+        if windows:
+            home = f"C:\\Users\\{name}" if name in ("Administrator", "Guest") else None
+            shell = None
+            groups = WINDOWS_USER_GROUPS.get(name, ["Users"])
+        else:
+            home = LINUX_USER_HOMES.get(name, f"/home/{name}")
+            shell = "/bin/bash" if name == "root" else nologin
+            groups = LINUX_USER_GROUPS.get(name, [name])
+        last_login = None
+        last_failed = None
+        if name in LOGIN_USERS:
+            # Most admin accounts were used within the last month; a third
+            # have seen a failed attempt more recently than that.
+            if random.random() < 0.8:
+                last_login = iso(seen - timedelta(seconds=random.randint(3600, 30 * 24 * 3600)))
+            if random.random() < 0.35:
+                last_failed = iso(seen - timedelta(seconds=random.randint(600, 14 * 24 * 3600)))
+        details[name] = {
+            "home": home,
+            "shell": shell,
+            "groups": groups,
+            "last-login": last_login,
+            "last-failed-login": last_failed,
+        }
+    return details
+
+
 def generate_classes(os_name, hostname):
     classes = list(OS_CLASSES.get(os_name, ["any", "cfengine"]))
     if role_of(hostname) == "hub":
@@ -384,6 +467,7 @@ def generate_host(used_hostnames, used_macs):
     # Roughly 70% of hosts are online (have reported recently).
     online = random.random() < 0.7
     first_seen, last_seen = generate_seen(online)
+    users = generate_users(os_name, hostname)
     return {
         "os": os_name,
         "id": generate_id(),
@@ -394,7 +478,8 @@ def generate_host(used_hostnames, used_macs):
         "software": software,
         "services": generate_services(os_name, software),
         "software-versions": generate_software_versions(software),
-        "local-users": generate_users(os_name, hostname),
+        "local-users": users,
+        "user-details": generate_user_details(os_name, users, last_seen),
         "classes": generate_classes(os_name, hostname),
         "cloud-provider": generate_cloud_provider(),
         "online": online,

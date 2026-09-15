@@ -2374,6 +2374,78 @@ test("hosts run systemd services which are entries like software", async ({ page
   await expect(page.getByTestId("type-button-service")).toContainText("Services");
 });
 
+type UserDetails = {
+  home: string | null;
+  shell: string | null;
+  groups: string[];
+  "last-login": string | null;
+  "last-failed-login": string | null;
+};
+const userDetailsOf = (h: Host) =>
+  (h as unknown as { "user-details": Record<string, UserDetails> })["user-details"];
+
+test("user pages show home, shell, groups and logins in two columns", async ({ page }) => {
+  // Every local user has details on its host.
+  for (const h of hosts) {
+    for (const u of h["local-users"]) expect(userDetailsOf(h)[u], `${u} on ${h.hostname}`).toBeTruthy();
+  }
+  const rootHosts = hosts.filter((h) => h["local-users"].includes("root"));
+  const rootDetails = rootHosts.map((h) => userDetailsOf(h)["root"]);
+  const logins = rootHosts
+    .map((h) => ({ h, t: userDetailsOf(h)["root"]["last-login"] }))
+    .filter((x): x is { h: Host; t: string } => !!x.t)
+    .sort((a, b) => (a.t < b.t ? 1 : -1));
+  const failed = rootHosts
+    .map((h) => ({ h, t: userDetailsOf(h)["root"]["last-failed-login"] }))
+    .filter((x): x is { h: Host; t: string } => !!x.t)
+    .sort((a, b) => (a.t < b.t ? 1 : -1));
+
+  await page.goto("/entry/user/root");
+  const left = page.getByTestId("user-details-left");
+  const right = page.getByTestId("user-details-right");
+  await expect(left.locator("dt")).toHaveText(["Home directory", "Shell", "Groups"]);
+  await expect(right.locator("dt")).toHaveText(["Last login", "Last failed login"]);
+  // Side by side, like a host's details.
+  const l = (await left.boundingBox())!;
+  const r = (await right.boundingBox())!;
+  expect(r.x).toBeGreaterThan(l.x + l.width - 1);
+  expect(Math.abs(r.y - l.y)).toBeLessThan(2);
+
+  await expect(page.getByTestId("user-home")).toHaveText("/root");
+  await expect(page.getByTestId("user-shell")).toHaveText("/bin/bash");
+  const groups = [...new Set(rootDetails.flatMap((d) => d.groups))].sort();
+  await expect(page.getByTestId("user-groups").locator("code")).toHaveText(groups);
+
+  if (logins.length > 0) {
+    const latest = logins[0];
+    const cell = page.getByTestId("user-last-login");
+    await expect(cell.locator("time")).toHaveAttribute("datetime", latest.t);
+    await expect(cell.getByRole("link", { name: latest.h.hostname, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/host/${encodeURIComponent(latest.h.id)}`,
+    );
+  }
+  if (failed.length > 0) {
+    await expect(page.getByTestId("user-last-failed-login").locator("time")).toHaveAttribute(
+      "datetime",
+      failed[0].t,
+    );
+  }
+
+  // A system account: nologin shell(s), and never logged in.
+  const nobodyHosts = hosts.filter((h) => h["local-users"].includes("nobody"));
+  test.skip(nobodyHosts.length === 0, "no host has the nobody user");
+  await page.goto("/entry/user/nobody");
+  const shells = [...new Set(nobodyHosts.map((h) => userDetailsOf(h)["nobody"].shell!))].sort();
+  await expect(page.getByTestId("user-shell").locator("code")).toHaveText(shells);
+  await expect(page.getByTestId("user-last-login")).toHaveText("Never");
+  await expect(page.getByTestId("user-last-failed-login")).toHaveText("Never");
+
+  // Other entry types have no such section.
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("user-details")).toHaveCount(0);
+});
+
 test("entry types are distinct namespaces", async ({ page }) => {
   // "dpkg" exists as software, but there is no *host* named dpkg.
   const response = await page.goto("/entry/host/dpkg");

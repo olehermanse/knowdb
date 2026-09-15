@@ -201,6 +201,15 @@ with host counts, and a version page links back to the software and lists
 the hosts on it.
 `cfengine` is installed on every host.
 
+## Local users
+
+Besides the list of local user names, each host reports details of each
+user in `user-details`: home directory, shell, groups, and the last
+successful and last failed login (or null for never). A user page shows
+these across the hosts that have the user, in two columns like a host's
+details: the distinct homes, shells and groups, and the most recent login
+and failed login with the host they happened on.
+
 ## First and last seen
 
 Every host records when it first and most recently reported in. Other
@@ -233,6 +242,12 @@ The relevant information from a host looks like this:
   "software": ["apache", "cfengine", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
   "software-versions": {"apache": "2.4.62", "cfengine": "3.27.0", "dpkg": "1.22.6"},
   "services": ["apache2", "cf-execd", "cf-serverd", "cron", "ssh", "systemd-journald"],
+  "user-details": {
+    "root": {
+      "home": "/root", "shell": "/bin/bash", "groups": ["root"],
+      "last-login": "2026-09-13T21:04:10Z", "last-failed-login": null
+    }
+  },
   "local-users": ["root", "nickanderson"],
   "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"],
   "online": true,
@@ -261,6 +276,7 @@ Some guidelines for generating random hosts:
 - `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
 - `services` should be the running systemd units: a few base units on every Linux host, distribution-specific ones (`systemd-networkd` on Ubuntu, `NetworkManager` and `firewalld` on RHEL-like systems), and one per installed daemon using the distribution's unit name (`ssh` on Debian-like, `sshd` on RHEL-like). Windows hosts have none.
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
+- `user-details` should give each local user a believable home directory, shell and groups (`/root`, `/bin/bash` and `root` for root; `/var/www`, a nologin shell and `www-data` for www-data; Windows accounts have no shell). Only accounts people log in as (root, Administrator) get login times: most were used within the last month, and about a third have a more recent failed login.
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.
 - `online` is whether the host has reported in recently. Around 70% of hosts should be online.

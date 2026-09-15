@@ -16,6 +16,8 @@ export interface Host {
   // Version of each installed software, keyed by software name.
   "software-versions": Record<string, string>;
   "local-users": string[];
+  // Details of each local user, keyed by user name.
+  "user-details": Record<string, UserDetails>;
   // CFEngine classes reported by the host, e.g. "linux", "ubuntu_22".
   classes: string[];
   // Whether the host has reported in recently.
@@ -25,6 +27,53 @@ export interface Host {
   // When the host first and most recently reported in (ISO 8601, UTC).
   "first-seen": string;
   "last-seen": string;
+}
+
+export interface UserDetails {
+  home: string | null;
+  shell: string | null;
+  groups: string[];
+  // ISO 8601 timestamps, or null if never.
+  "last-login": string | null;
+  "last-failed-login": string | null;
+}
+
+// A user's details gathered across the hosts that have the user: distinct
+// homes, shells and groups, and the most recent logins with their host.
+export interface UserSummary {
+  homes: string[];
+  shells: string[];
+  groups: string[];
+  lastLogin?: { time: string; hostkey: string };
+  lastFailedLogin?: { time: string; hostkey: string };
+}
+
+export function summarizeUser(entry: Entry): UserSummary {
+  const homes = new Set<string>();
+  const shells = new Set<string>();
+  const groups = new Set<string>();
+  let lastLogin: UserSummary["lastLogin"];
+  let lastFailedLogin: UserSummary["lastFailedLogin"];
+  for (const hostkey of entry.hosts) {
+    const details = hostsByKey.get(hostkey)?.["user-details"]?.[entry.name];
+    if (!details) continue;
+    if (details.home) homes.add(details.home);
+    if (details.shell) shells.add(details.shell);
+    for (const g of details.groups) groups.add(g);
+    const login = details["last-login"];
+    if (login && (!lastLogin || login > lastLogin.time)) lastLogin = { time: login, hostkey };
+    const failed = details["last-failed-login"];
+    if (failed && (!lastFailedLogin || failed > lastFailedLogin.time)) {
+      lastFailedLogin = { time: failed, hostkey };
+    }
+  }
+  return {
+    homes: [...homes].sort(),
+    shells: [...shells].sort(),
+    groups: [...groups].sort(),
+    lastLogin,
+    lastFailedLogin,
+  };
 }
 
 export interface Seen {

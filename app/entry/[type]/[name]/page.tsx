@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
+import UserDetailsSection from "@/components/UserDetails";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import { cookies } from "next/headers";
@@ -145,6 +146,7 @@ export default async function EntryPage({
             )}
           </p>
           {group && <GroupRules group={group} />}
+          {type === "user" && <UserDetailsSection entry={entry} />}
           <RelatedHosts
             entry={entry}
             tabs={entryTabs(entry)}
