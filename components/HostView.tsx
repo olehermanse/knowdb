@@ -189,8 +189,8 @@ function HostDetails({ host, embedded = false }: { host: Host; embedded?: boolea
 function HostLists({ host }: { host: Host }) {
   return (
     <>
-      {/* Software, classes and variables pinned from the lists below, as
-          name/value pairs in three columns like the details above. Kept in
+      {/* Software, services, classes and variables pinned from the lists
+          below, as name/value pairs in four columns like the details above. Kept in
           local storage and filled in by the layout's inline script (see
           components/listModalScript.ts), so the server renders the hint.
           The hidden icon is what the script copies for the pin toggles. */}

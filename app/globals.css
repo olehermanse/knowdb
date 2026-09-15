@@ -582,11 +582,12 @@ a,
   fill-opacity: 0.2;
 }
 
-/* Pinned software, classes and variables in the host view: name/value
-   pairs like the details above, in three columns. */
+/* Pinned software, services, classes and variables in the host view:
+   name/value pairs like the details above, in four columns, lining up
+   with the four list buttons below. */
 .host-pinned {
   margin-top: 1.5rem;
-  grid-template-columns: repeat(3, max-content minmax(0, 1fr));
+  grid-template-columns: repeat(4, max-content minmax(0, 1fr));
   column-gap: 1.5rem;
 }
 

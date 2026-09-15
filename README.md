@@ -49,7 +49,7 @@ list: hosts, but also the ports, versions and similar entries in the tabs.
 Every row in the Software, Services, Classes and Variables modals on a
 host page has a pin icon (from the lucide icon library). Pinning a row
 shows it on every host page as a name/value pair, styled like the host's
-basic fields and laid out in three columns, below those fields and above
+basic fields and laid out in four columns, below those fields and above
 the modal buttons: the name is a plain label (not a link, to keep the
 section quiet) and the value is the software's version, `defined` for a
 class, `running` for a service, or the variable's value, linking to the

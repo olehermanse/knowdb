@@ -1836,14 +1836,14 @@ test("pinned software, classes and variables follow the user between hosts", asy
     `/entry/value/${encodeURIComponent(`sys.flavor=${flavor}`)}`,
   );
   expect(await pins()).toEqual([`class:${cls}`, `software:${software}`, "variable:sys.flavor", `service:${service}`]);
-  // Three columns: the three names share a line, left to right, each value
+  // Four columns: the four names share a line, left to right, each value
   // right of its name.
   const nameBoxes = [];
-  for (let i = 0; i < 3; i++) nameBoxes.push((await names.nth(i).boundingBox())!);
-  expect(Math.abs(nameBoxes[1].y - nameBoxes[0].y)).toBeLessThan(2);
-  expect(Math.abs(nameBoxes[2].y - nameBoxes[0].y)).toBeLessThan(2);
-  expect(nameBoxes[1].x).toBeGreaterThan(nameBoxes[0].x);
-  expect(nameBoxes[2].x).toBeGreaterThan(nameBoxes[1].x);
+  for (let i = 0; i < 4; i++) nameBoxes.push((await names.nth(i).boundingBox())!);
+  for (let i = 1; i < 4; i++) {
+    expect(Math.abs(nameBoxes[i].y - nameBoxes[0].y)).toBeLessThan(2);
+    expect(nameBoxes[i].x).toBeGreaterThan(nameBoxes[i - 1].x);
+  }
   const valueBox = (await items.first().boundingBox())!;
   expect(valueBox.x).toBeGreaterThan(nameBoxes[0].x);
   expect(valueBox.x).toBeLessThan(nameBoxes[1].x);
