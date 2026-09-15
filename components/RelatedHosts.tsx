@@ -15,6 +15,7 @@ import {
   getComments,
   getEntryLinks,
   filterSearchHref,
+  parseValueEntryName,
   valueEntryName,
   versionEntryName,
 } from "@/lib/data";
@@ -202,7 +203,9 @@ function SimilarPanel({ entry, tabs, page, keep }: PanelProps) {
       <p className="muted" data-testid="similar-description">
         {entry.type === "ip" || entry.type === "mac"
           ? `Other similar ${TYPE_LABELS[entry.type]}:`
-          : `Other ${TYPE_LABELS[entry.type].toLowerCase()} with similar names:`}
+          : entry.type === "value"
+            ? `Other values of ${parseValueEntryName(entry.name).variable} with similar names:`
+            : `Other ${TYPE_LABELS[entry.type].toLowerCase()} with similar names:`}
       </p>
       <ul className="entry-list" data-testid="similar">
         {paged.shown.map(({ entry: e, common }) => (

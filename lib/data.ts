@@ -591,14 +591,32 @@ export interface SimilarEntry {
   common: number;
 }
 
+// How many leading characters two names of the same type have in common,
+// or -1 if they are not similar. Names are similar when they start with the
+// same 3 or more characters. Values ("sys.flavor=ubuntu_24") must also be
+// of the same variable: the whole variable name and the "=" have to match,
+// and then the first 3 characters of the value.
+function similarity(type: EntryType, a: string, b: string): number {
+  if (type === "value") {
+    const x = parseValueEntryName(a);
+    const y = parseValueEntryName(b);
+    if (x.variable !== y.variable) return -1;
+    const common = commonPrefixLength(x.value, y.value);
+    return common < SIMILAR_MIN_PREFIX ? -1 : x.variable.length + 1 + common;
+  }
+  const common = commonPrefixLength(a, b);
+  return common < SIMILAR_MIN_PREFIX ? -1 : common;
+}
+
 // Entries of the same type whose names start with the same 3 or more
-// characters, longest match first.
+// characters (for values: the same variable and the first 3 characters of
+// the value), longest match first.
 export function similarEntries(entry: EntryRef): SimilarEntry[] {
   const found: SimilarEntry[] = [];
   for (const other of entries.values()) {
     if (other.type !== entry.type || other.name === entry.name) continue;
-    const common = commonPrefixLength(entry.name, other.name);
-    if (common < SIMILAR_MIN_PREFIX) continue;
+    const common = similarity(entry.type, entry.name, other.name);
+    if (common < 0) continue;
     found.push({
       entry: { type: other.type, name: other.name, hosts: [...other.hosts].sort() },
       common,

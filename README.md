@@ -33,7 +33,10 @@ card per port with the number of hosts, linking to a search for them).
 Software pages have a Versions tab on the left as well, and every page has
 a Similar tab listing entries of the same type whose names start with the
 same three or more characters, longest match first; it is shown grayed out
-with (0) when there are none. The operating systems chart is hidden on OS
+with (0) when there are none. For values, the whole variable name and the
+equals sign have to match, and then the first three characters of the
+value: `sys.flavor=ubuntu_24` is similar to `sys.flavor=ubuntu_22` but not
+to `sys.flavor=debian_12` or to any `sys.class` value. The operating systems chart is hidden on OS
 pages, the clouds chart on cloud pages and the Ports tab on port pages. An
 IP address, MAC address or hostname belonging to a single host shows only
 the host and the Similar tab.

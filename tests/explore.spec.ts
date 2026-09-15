@@ -2225,6 +2225,33 @@ test("similar tab lists same-type entries sharing a name prefix", async ({
   ).toBeVisible();
 });
 
+test("similar values share the variable and the first letters of the value", async ({ page }) => {
+  // Values of sys.flavor: ubuntu_24 is similar to the other ubuntu_* values
+  // only, not to debian_12 or to a value of another variable.
+  const flavors = new Set(hosts.map((h) => variablesOf(h)["sys.flavor"]));
+  const ubuntu = [...flavors].filter((f) => f.startsWith("ubuntu_")).sort();
+  const others = [...flavors].filter((f) => !f.startsWith("ubuntu_"));
+  expect(ubuntu.length).toBeGreaterThan(1);
+  expect(others.length).toBeGreaterThan(0);
+  const [mine, ...rest] = ubuntu;
+  await page.goto(`/entry/value/${encodeURIComponent(`sys.flavor=${mine}`)}?tab=similar`);
+  await expect(page.getByTestId("similar-heading")).toHaveText(`Similar (${rest.length})`);
+  await expect(page.getByTestId("similar-description")).toHaveText(
+    "Other values of sys.flavor with similar names:",
+  );
+  const links = page.getByTestId("similar-item").getByRole("link");
+  await expect(links).toHaveText(rest.map((f) => `sys.flavor=${f}`));
+  for (const other of others) {
+    await expect(page.getByTestId("similar")).not.toContainText(`sys.flavor=${other}`);
+  }
+  // sys.os=linux and sys.class=linux share "linux" but are different
+  // variables; sys.cpus values are too short to be similar to each other.
+  await page.goto(`/entry/value/${encodeURIComponent("sys.os=linux")}?tab=similar`);
+  await expect(page.getByTestId("similar-heading")).toHaveText("Similar (0)");
+  await page.goto(`/entry/value/${encodeURIComponent(`sys.cpus=${variablesOf(hosts[0])["sys.cpus"]}`)}`);
+  await expect(page.getByTestId("similar-heading")).toHaveText("Similar (0)");
+});
+
 test("similar sentence keeps IP and MAC capitalised", async ({ page }) => {
   // MAC addresses share vendor prefixes, so there is always something similar.
   const mac = someHost.macs[0];
