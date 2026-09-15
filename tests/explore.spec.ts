@@ -1690,8 +1690,27 @@ test("host pages list variables with their values as links", async ({ page }) =>
       "href",
       `/entry/value/${encodeURIComponent(`${variable}=${value}`)}`,
     );
+    // Shown as "variable=value (N hosts)", the count of hosts sharing the
+    // value linking to a search for them.
+    const shared = hosts.filter((h) => variablesOf(h)[variable] === value).length;
+    const count = `(${shared} ${shared === 1 ? "host" : "hosts"})`;
+    await expect(item).toHaveText(`variable${variable}=${value} ${count}`);
+    await expect(item.getByTestId("list-modal-note").getByRole("link")).toHaveAttribute(
+      "href",
+      `/search?q=${encodeURIComponent(`value:${quoteIfNeeded(`${variable}=${value}`)}`)}`,
+    );
   }
+  // sys.arch is x86_64 everywhere; sys.fqhost is unique to the host.
+  await expect(
+    list.locator("li", { has: page.getByRole("link", { name: "sys.arch", exact: true }) }),
+  ).toContainText(`(${hosts.length} hosts)`);
+  await expect(
+    list.locator("li", { has: page.getByRole("link", { name: "sys.fqhost", exact: true }) }),
+  ).toContainText("(1 host)");
 });
+
+// Search filter values with spaces or quotes are quoted (lib/data.ts).
+const quoteIfNeeded = (v: string) => (/[\s"]/.test(v) ? `"${v.replace(/"/g, "")}"` : v);
 
 test("host pages show software versions as links", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);

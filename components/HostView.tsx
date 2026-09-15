@@ -9,8 +9,10 @@ import {
   conditionHref,
   describeHost,
   entryHref,
+  filterSearchHref,
   freePercent,
   getClientsOfHub,
+  getEntry,
   getHostGroups,
   getHubOf,
   getPortInfo,
@@ -237,16 +239,24 @@ function HostDetails({ host }: { host: Host }) {
             plural="variables"
             verb="defined"
             testId="variables-modal"
-            rows={Object.entries(host.variables ?? {}).map(([variable, value]) => ({
-              key: variable,
-              type: "variable",
-              label: variable,
-              href: entryHref({ type: "variable", name: variable }),
-              extra: {
-                label: value,
-                href: entryHref({ type: "value", name: valueEntryName(variable, value) }),
-              },
-            }))}
+            rows={Object.entries(host.variables ?? {}).map(([variable, value]) => {
+              // "sys.arch=x86_64 (87 hosts)": the count of hosts sharing the
+              // value links to a search for them.
+              const name = valueEntryName(variable, value);
+              const shared = getEntry("value", name)?.hosts.length ?? 1;
+              return {
+                key: variable,
+                type: "variable",
+                label: variable,
+                href: entryHref({ type: "variable", name: variable }),
+                separator: "=",
+                extra: { label: value, href: entryHref({ type: "value", name }) },
+                note: {
+                  label: `(${shared} ${shared === 1 ? "host" : "hosts"})`,
+                  href: filterSearchHref([{ type: "value", name }]),
+                },
+              };
+            })}
           />
         </dd>
       </dl>

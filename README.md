@@ -253,8 +253,10 @@ variable page (`sys.arch`) describes the variable (from `data/info.json`
 under `variables`) and has a Values tab listing its values with host
 counts; a value page is named `<variable>=<value>` (`sys.arch=x86_64`),
 links back to the variable, and is kept short like a version page. Both
-show their hosts on the right. A host page lists its variables and values
-in a "Variables" modal, each linking to its entry.
+show their hosts on the right. A host page lists its variables in a
+"Variables" modal as `sys.arch=x86_64 (87 hosts)`: the variable and the
+value link to their entries, and the count of hosts sharing that value
+links to a search for them.
 
 ## CFEngine roles and hubs
 

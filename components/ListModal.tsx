@@ -1,13 +1,17 @@
 import Link from "next/link";
 
 // A row in the modal: a badge, a main link and optionally a second link
-// (e.g. a software's version).
+// (e.g. a software's version), joined by a separator (a space by default,
+// "=" for a variable's value), and a faded note after them (e.g. how many
+// hosts share the value), optionally linking somewhere.
 export interface ModalRow {
   key: string;
   type: string;
   label: string;
   href: string;
   extra?: { label: string; href: string };
+  separator?: string;
+  note?: { label: string; href?: string };
 }
 
 // A count plus a "Show all" button opening a popover that lists every row
@@ -94,11 +98,23 @@ export default function ListModal({
                   </Link>
                   {row.extra && (
                     <>
-                      {" "}
+                      {row.separator ?? " "}
                       <Link className="entry-link" href={row.extra.href}>
                         {row.extra.label}
                       </Link>
                     </>
+                  )}
+                  {row.note && (
+                    <span className="muted list-modal-note" data-testid="list-modal-note">
+                      {" "}
+                      {row.note.href ? (
+                        <Link className="entry-link" href={row.note.href}>
+                          {row.note.label}
+                        </Link>
+                      ) : (
+                        row.note.label
+                      )}
+                    </span>
                   )}
                 </span>
               </li>
