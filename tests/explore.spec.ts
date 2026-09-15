@@ -102,12 +102,12 @@ async function expectAggregatedPorts(
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
 
-test("front page shows 14 random entries", async ({ page }) => {
+test("front page shows 16 random entries", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Or pick one of the randomly selected entries below:")).toBeVisible();
   const items = page.getByTestId("entry-list").locator("li");
-  await expect(items).toHaveCount(14);
-  await expect(items.locator("a.entry-link")).toHaveCount(14);
+  await expect(items).toHaveCount(16);
+  await expect(items.locator("a.entry-link")).toHaveCount(16);
 });
 
 test("front page always shows at least one entry of each type", async ({
@@ -128,12 +128,14 @@ test("front page always shows at least one entry of each type", async ({
     "cloud",
     "service",
     "role",
+    "variable",
+    "value",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
     const badges = page.getByTestId("entry-list").locator(".type-badge");
-    await expect(badges).toHaveCount(14);
+    await expect(badges).toHaveCount(16);
     const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
     for (const type of allTypes) {
       expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
@@ -1533,6 +1535,162 @@ test("software has versions which are entries of their own", async ({
   );
 });
 
+// Every host defines the same CFEngine sys.* variables, with values that
+// differ between hosts.
+const variablesOf = (h: Host) => (h as unknown as { variables: Record<string, string> }).variables;
+const VARIABLE_NAMES = Object.keys(variablesOf(hosts[0])).sort();
+function valueCounts(variable: string): [string, number][] {
+  const counts = new Map<string, number>();
+  for (const h of hosts) {
+    const v = variablesOf(h)[variable];
+    counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+test("every host defines the same variables with differing values", () => {
+  expect(VARIABLE_NAMES.length).toBeGreaterThan(10);
+  for (const name of ["sys.arch", "sys.class", "sys.fqhost", "sys.policy_hub", "sys.cf_version"]) {
+    expect(VARIABLE_NAMES).toContain(name);
+  }
+  for (const h of hosts) {
+    expect(Object.keys(variablesOf(h)).sort()).toEqual(VARIABLE_NAMES);
+    for (const value of Object.values(variablesOf(h))) expect(typeof value).toBe("string");
+    // Values are consistent with the rest of the host.
+    expect(variablesOf(h)["sys.uqhost"]).toBe(h.hostname);
+    expect(variablesOf(h)["sys.policy_hub"]).toBe((h as unknown as { hub: string }).hub);
+    expect(variablesOf(h)["sys.cf_version"]).toBe(
+      (h["software-versions"] as unknown as Record<string, string>)["cfengine"],
+    );
+    expect(variablesOf(h)["sys.class"]).toBe(h.os.startsWith("Windows") ? "windows" : "linux");
+  }
+  // Some variables have several values, some are unique to each host.
+  expect(valueCounts("sys.class").length).toBe(2);
+  expect(valueCounts("sys.fqhost").length).toBe(hosts.length);
+});
+
+test("variables have values which are entries of their own", async ({ page }) => {
+  const counts = valueCounts("sys.flavor");
+  expect(counts.length).toBeGreaterThan(1);
+  const variables = info.variables as Record<string, { description: string }>;
+
+  await page.goto("/entry/variable/sys.flavor");
+  await expect(page.getByTestId("entry-header").locator(".type-badge")).toHaveText("variable");
+  await expect(page.getByTestId("entry-name")).toHaveText("sys.flavor");
+  await expect(page.getByTestId("entry-description")).toHaveText(variables["sys.flavor"].description);
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `sys.flavor is defined on ${hosts.length} hosts in your infrastructure, with ${counts.length} different values.`,
+  );
+  // The values tab is the first tab on variable pages, and only there.
+  await expect(page.getByTestId("values-heading")).toHaveText(`Values (${counts.length})`);
+  await expect(page.getByTestId("tab-values")).toBeVisible();
+  await expect(page.getByTestId("values-description")).toHaveText(
+    "Values of sys.flavor in your infrastructure:",
+  );
+  const items = page.getByTestId("value-item");
+  await expect(items).toHaveCount(Math.min(PAGE_SIZE, counts.length));
+  // Most hosts first, one card per value named "variable=value", with the
+  // host count linking to a search for those hosts.
+  const [topValue, topCount] = counts[0];
+  const first = items.first();
+  await expect(first.locator(".type-badge")).toHaveText("value");
+  await expect(
+    first.getByRole("link", { name: `sys.flavor=${topValue}`, exact: true }),
+  ).toHaveAttribute("href", `/entry/value/${encodeURIComponent(`sys.flavor=${topValue}`)}`);
+  await expect(first.getByTestId("value-hosts-link")).toHaveText(`${topCount} hosts`);
+  await expect(first.getByTestId("value-hosts-link")).toHaveAttribute(
+    "href",
+    `/search?q=${encodeURIComponent(`value:sys.flavor=${topValue}`)}`,
+  );
+  // The variable's hosts are on the right: every host defines it.
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hosts.length})`);
+  await openTab(page, "hosts");
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    "Hosts defining the variable sys.flavor:",
+  );
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("values-heading")).toHaveCount(0);
+  await page.goto("/entry/software/cfengine");
+  await expect(page.getByTestId("values-heading")).toHaveCount(0);
+
+  // The value page links back to the variable and lists its hosts.
+  await page.goto("/entry/variable/sys.flavor");
+  await items.first().getByRole("link", { name: `sys.flavor=${topValue}`, exact: true }).click();
+  await expect(page.getByTestId("entry-header").locator(".type-badge")).toHaveText("value");
+  await expect(page.getByTestId("entry-name")).toHaveText(`sys.flavor=${topValue}`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `The variable sys.flavor has the value ${topValue}.`,
+  );
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `${topCount} hosts in your infrastructure have this value.`,
+  );
+  await expect(
+    page.getByTestId("see-also").getByRole("link", { name: "sys.flavor (variable)", exact: true }),
+  ).toHaveAttribute("href", "/entry/variable/sys.flavor");
+  await expect(page.getByTestId("values-heading")).toHaveCount(0);
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${topCount})`);
+  // Every host with this flavor runs the same OS, so no OS chart: go to List.
+  await page.getByTestId("list-tab").click();
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    `Hosts where sys.flavor is ${topValue}:`,
+  );
+  const flavorHosts = hosts.filter((h) => variablesOf(h)["sys.flavor"] === topValue);
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, flavorHosts.length));
+  await page.goto(`/entry/value/${encodeURIComponent(`sys.flavor=${topValue}`)}`);
+  await page.getByTestId("charts-tab").click();
+  await openTab(page, "ports");
+  await expect(page.getByTestId("ports-description")).toHaveText(
+    `The hosts where sys.flavor is ${topValue} are listening to these ports:`,
+  );
+
+  // A value shared by hosts on several operating systems has the OS chart.
+  const [linuxValue] = valueCounts("sys.class")[0];
+  await page.goto(`/entry/value/${encodeURIComponent(`sys.class=${linuxValue}`)}`);
+  await page.getByTestId("charts-tab").click();
+  await openTab(page, "os");
+  await expect(page.getByTestId("os-section")).toContainText(
+    `The hosts where sys.class is ${linuxValue} run these operating systems:`,
+  );
+
+  // Variables and values are browsable from the front page and work as
+  // search filters.
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-variable")).toHaveText(`Variables (${VARIABLE_NAMES.length})`);
+  await page.goto(`/search?q=${encodeURIComponent(`value:sys.flavor=${topValue} variable:sys.arch`)}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${topCount} hosts matching value sys.flavor=${topValue}, variable sys.arch.`,
+  );
+  // Searching for a variable by name finds it and its values.
+  await page.goto("/search?q=sys.flavor");
+  const results = page.getByTestId("search-results").locator("li");
+  await expect(results.first().locator(".type-badge")).toHaveText("variable");
+  await expect(results.first().getByRole("link", { name: "sys.flavor", exact: true })).toBeVisible();
+  await expect(results.nth(1).locator(".type-badge")).toHaveText("value");
+});
+
+test("host pages list variables with their values as links", async ({ page }) => {
+  await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
+  const vars = variablesOf(someHost);
+  await expect(page.getByTestId("variables-modal-open")).toHaveText(
+    `${Object.keys(vars).length} defined`,
+  );
+  await page.getByTestId("variables-modal-open").click();
+  const list = page.getByTestId("variables-modal-list");
+  // One row per variable, plus the hidden "Nothing matches" row.
+  await expect(list.locator("li[data-list-modal-row]")).toHaveCount(Object.keys(vars).length);
+  for (const [variable, value] of Object.entries(vars).slice(0, 5)) {
+    await expect(list.getByRole("link", { name: variable, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/variable/${encodeURIComponent(variable)}`,
+    );
+    const item = list.locator("li", { has: page.getByRole("link", { name: variable, exact: true }) });
+    await expect(item.getByRole("link", { name: value, exact: true })).toHaveAttribute(
+      "href",
+      `/entry/value/${encodeURIComponent(`${variable}=${value}`)}`,
+    );
+  }
+});
+
 test("host pages show software versions as links", async ({ page }) => {
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await page.getByTestId("software-modal-open").click();
@@ -1929,7 +2087,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(14);
+  await expect(buttons).toHaveCount(16);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -2104,7 +2262,7 @@ test("host page has two columns with software and classes below", async ({
     "Memory",
     "Listening ports",
   ]);
-  await expect(wide.locator("dt")).toHaveText(["Software", "Services", "Classes"]);
+  await expect(wide.locator("dt")).toHaveText(["Software", "Services", "Classes", "Variables"]);
 
   const l = (await left.boundingBox())!;
   const r = (await right.boundingBox())!;

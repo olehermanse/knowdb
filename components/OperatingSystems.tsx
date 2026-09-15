@@ -1,5 +1,5 @@
 import OsPieChart from "@/components/OsPieChart";
-import { aggregateOs, Entry, EntryType } from "@/lib/data";
+import { aggregateOs, parseValueEntryName, Entry, EntryType } from "@/lib/data";
 
 // Entry types whose pages show the operating systems of their hosts, and
 // how to refer to the entry in the section text.
@@ -16,6 +16,8 @@ export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
   cloud: "cloud provider",
   service: "service",
   role: "role",
+  variable: "variable",
+  value: "value",
 };
 
 // Text under the heading, per entry type.
@@ -34,6 +36,13 @@ function sectionText(type: EntryType, subject: string, name: string): string {
   }
   if (type === "role") {
     return `The CFEngine ${name.toLowerCase()}s run these operating systems:`;
+  }
+  if (type === "variable") {
+    return `The hosts defining ${name} run these operating systems:`;
+  }
+  if (type === "value") {
+    const { variable, value } = parseValueEntryName(name);
+    return `The hosts where ${variable} is ${value} run these operating systems:`;
   }
   if (type === "version") {
     return `The ${name} software version is installed on these operating systems:`;

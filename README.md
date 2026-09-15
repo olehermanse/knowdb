@@ -239,6 +239,21 @@ are their own entry type: a provider page lists the hosts on it with their
 operating systems and ports, and a host page links to its provider. Common
 providers are described in `data/info.json` under `cloud-providers`.
 
+## Variables and values
+
+Every host reports the same CFEngine special variables (`sys.*`, see
+https://docs.cfengine.com/docs/master/reference/special-variables/sys) in
+`variables`, a map from variable name to its value on that host. The
+values differ between hosts: `sys.fqhost` is unique to each, `sys.class`
+is `linux` or `windows`, `sys.policy_hub` is the hub's address. Variables
+and values are two entry types, modelled like software and versions. A
+variable page (`sys.arch`) describes the variable (from `data/info.json`
+under `variables`) and has a Values tab listing its values with host
+counts; a value page is named `<variable>=<value>` (`sys.arch=x86_64`),
+links back to the variable, and is kept short like a version page. Both
+show their hosts on the right. A host page lists its variables and values
+in a "Variables" modal, each linking to its entry.
+
 ## CFEngine roles and hubs
 
 Every host has a CFEngine `role`, either `Hub` or `Client`, and a `hub`
@@ -280,6 +295,7 @@ The relevant information from a host looks like this:
   "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3", "policy_server", "am_policy_hub"],
   "role": "Hub",
   "hub": "124.56.78.77",
+  "variables": {"sys.arch": "x86_64", "sys.class": "linux", "sys.fqhost": "production-hub.prod.example.com", "sys.policy_hub": "124.56.78.77"},
   "online": true,
   "cloud-provider": "AWS",
   "first-seen": "2024-03-02T09:14:55Z",
@@ -309,6 +325,7 @@ Some guidelines for generating random hosts:
 - `disk` and `memory` sizes should follow the role (database and backup servers have bigger disks, databases and hubs more memory), with a random share free.
 - `user-details` should give each local user a believable home directory, shell and groups (`/root`, `/bin/bash` and `root` for root; `/var/www`, a nologin shell and `www-data` for www-data; Windows accounts have no shell). Only accounts people log in as (root, Administrator) get login times: most were used within the last month, and about a third have a more recent failed login.
 - `role` is `Hub` for exactly 5 hosts (hosts named "hub" first) and `Client` for the rest. `hub` is the IP address of the host's hub: for a hub one of its own public IPv4 addresses (never `127.0.0.1`, added if it has none), for a client the address of one of the hubs, spread evenly. Hubs get the `policy_server` and `am_policy_hub` classes.
+- `variables` should be the same set of `sys.*` variables on every host, with values that follow from the rest of the host: `sys.flavor` and `sys.release` from the OS, `sys.uqhost`, `sys.fqhost` and `sys.domain` from the hostname and environment, `sys.ipv4` from the addresses, `sys.policy_hub` from the hub, `sys.cf_version` from the cfengine version, `sys.cpus` from the memory size, `sys.workdir` and `sys.inputdir` per platform, and a random `sys.uptime` in minutes.
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.
 - `online` is whether the host has reported in recently. Around 70% of hosts should be online.

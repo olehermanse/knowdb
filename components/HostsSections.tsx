@@ -9,6 +9,7 @@ import {
   entryHref,
   getHost,
   Host,
+  parseValueEntryName,
   parseVersionEntryName,
 } from "@/lib/data";
 
@@ -39,6 +40,12 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts running in ${entry.name}:`;
     case "role":
       return `Hosts with the CFEngine role ${entry.name}:`;
+    case "variable":
+      return `Hosts defining the variable ${entry.name}:`;
+    case "value": {
+      const { variable, value } = parseValueEntryName(entry.name);
+      return `Hosts where ${variable} is ${value}:`;
+    }
     case "version": {
       const { software, version } = parseVersionEntryName(entry.name);
       return `Hosts with ${software} version ${version} installed:`;

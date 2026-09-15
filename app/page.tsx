@@ -8,7 +8,7 @@ async function RandomEntries() {
   // Defer to request time so every page load shows a fresh random sample.
   await connection();
   // Enough entries to show at least one of every entry type.
-  const entries = randomEntries(14);
+  const entries = randomEntries(16);
   return (
     <ul className="entry-list" data-testid="entry-list">
       {entries.map((entry) => (

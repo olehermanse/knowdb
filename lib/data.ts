@@ -27,6 +27,9 @@ export interface Host {
   // (a hub's own address for hubs).
   role: Role;
   hub: string;
+  // CFEngine special variables (sys.*) and their values on this host.
+  // Every host defines the same variables, with differing values.
+  variables: Record<string, string>;
   // Whether the host has reported in recently.
   online: boolean;
   // Cloud provider the host runs in, or "" for your own data center.
@@ -125,7 +128,11 @@ export type EntryType =
   // A running systemd service, e.g. "sshd".
   | "service"
   // A host's CFEngine role: "Hub" or "Client".
-  | "role";
+  | "role"
+  // A CFEngine variable, e.g. "sys.arch", defined on every host.
+  | "variable"
+  // One value of a variable, named "<variable>=<value>", e.g. "sys.arch=x86_64".
+  | "value";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -184,6 +191,18 @@ export function parseVersionEntryName(name: string): { software: string; version
     : { software: name.slice(0, i), version: name.slice(i + 1) };
 }
 
+// Value entries are named "<variable>=<value>", e.g. "sys.arch=x86_64".
+export function valueEntryName(variable: string, value: string): string {
+  return `${variable}=${value}`;
+}
+
+export function parseValueEntryName(name: string): { variable: string; value: string } {
+  const i = name.indexOf("=");
+  return i < 0
+    ? { variable: name, value: "" }
+    : { variable: name.slice(0, i), value: name.slice(i + 1) };
+}
+
 // Names of different entry types often refer to the same thing: the group
 // "Linux" and the class "linux", the class "ubuntu_24" and the OS
 // "Ubuntu 24". Normalising lowercases and turns runs of anything that is
@@ -238,6 +257,10 @@ function buildIndex() {
     for (const cls of host.classes ?? []) link("class", cls, host.id);
     if (host["cloud-provider"]) link("cloud", host["cloud-provider"], host.id);
     if (host.role) link("role", host.role, host.id);
+    for (const [variable, value] of Object.entries(host.variables ?? {})) {
+      link("variable", variable, host.id);
+      link("value", valueEntryName(variable, value), host.id);
+    }
     const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
     for (const name of hostGroups) link("group", name, host.id);
     groupsByHost.set(host.id, hostGroups);
@@ -399,6 +422,26 @@ export function aggregateVersions(software: string, hostkeys: string[]): Version
     .sort((a, b) => b.hosts - a.hosts || compareVersions(b.version, a.version));
 }
 
+export interface ValueCount {
+  value: string;
+  // Number of the given hosts on which the variable has this value.
+  hosts: number;
+}
+
+// The values of a variable across the given hosts, most hosts first; ties
+// are broken by value, numerically where values are numbers.
+export function aggregateValues(variable: string, hostkeys: string[]): ValueCount[] {
+  const counts = new Map<string, number>();
+  for (const hostkey of hostkeys) {
+    const value = hostsByKey.get(hostkey)?.variables?.[variable];
+    if (value !== undefined) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  const collator = new Intl.Collator(undefined, { numeric: true });
+  return [...counts.entries()]
+    .map(([value, hosts]) => ({ value, hosts }))
+    .sort((a, b) => b.hosts - a.hosts || collator.compare(a.value, b.value));
+}
+
 // Compare dotted version strings numerically where possible.
 export function compareVersions(a: string, b: string): number {
   const pa = a.split(/[.\-p]/);
@@ -495,6 +538,8 @@ export const ENTRY_TYPES: EntryType[] = [
   "cloud",
   "service",
   "role",
+  "variable",
+  "value",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -513,6 +558,8 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   cloud: "Clouds",
   service: "Services",
   role: "Roles",
+  variable: "Variables",
+  value: "Values",
 };
 
 // All entries of one type, sorted by name (numerically where names are
@@ -630,6 +677,8 @@ interface Info {
   services: Record<string, ServiceInfo>;
   // The CFEngine roles, "Hub" and "Client".
   roles: Record<string, DescribedInfo>;
+  // CFEngine special variables such as "sys.arch".
+  variables: Record<string, DescribedInfo>;
 }
 
 export interface ServiceInfo extends DescribedInfo {
@@ -705,6 +754,10 @@ export function getRoleInfo(name: string): DescribedInfo | undefined {
   return info.roles[name];
 }
 
+export function getVariableInfo(name: string): DescribedInfo | undefined {
+  return info.variables[name];
+}
+
 export function getClassInfo(name: string): DescribedInfo | undefined {
   return info.classes[name];
 }
@@ -735,7 +788,7 @@ export function getOsColor(os: string): string {
 // External links for an entry, from info.json. Empty for entry types
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
-  if (entry.type === "version") return [];
+  if (entry.type === "version" || entry.type === "value") return [];
   return infoFor(entry)?.links ?? [];
 }
 
@@ -759,6 +812,11 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getServiceInfo(entry.name);
     case "role":
       return getRoleInfo(entry.name);
+    case "variable":
+      return getVariableInfo(entry.name);
+    case "value":
+      // Values share the variable's logo (they have no links of their own).
+      return getVariableInfo(parseValueEntryName(entry.name).variable);
     case "version":
       // Versions share the software's description, links and logo.
       return getSoftwareInfo(parseVersionEntryName(entry.name).software);
@@ -779,6 +837,8 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
   const related: EntryRef[] = [];
   if (entry.type === "version") {
     related.push({ type: "software", name: parseVersionEntryName(entry.name).software });
+  } else if (entry.type === "value") {
+    related.push({ type: "variable", name: parseValueEntryName(entry.name).variable });
   } else if (entry.type === "service") {
     const software = getServiceInfo(entry.name)?.software;
     if (software) related.push({ type: "software", name: software });
@@ -833,6 +893,7 @@ export const NO_CLASS_INFO = "No information available about this class.";
 export const NO_CLOUD_INFO = "No information available about this cloud provider.";
 export const NO_SERVICE_INFO = "No information available about this service.";
 export const NO_ROLE_INFO = "No information available about this role.";
+export const NO_VARIABLE_INFO = "No information available about this variable.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -849,6 +910,8 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   cloud: "A cloud provider that hosts run in.",
   service: "A systemd service running on hosts.",
   role: "A host's CFEngine role: a hub the clients report to, or a client.",
+  variable: "A CFEngine variable defined on hosts.",
+  value: "The value a CFEngine variable has on some hosts.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -885,6 +948,13 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "role") {
     return getRoleInfo(entry.name)?.description ?? NO_ROLE_INFO;
+  }
+  if (entry.type === "variable") {
+    return getVariableInfo(entry.name)?.description ?? NO_VARIABLE_INFO;
+  }
+  if (entry.type === "value") {
+    const { variable, value } = parseValueEntryName(entry.name);
+    return `The variable ${variable} has the value ${value}.`;
   }
   if (entry.type === "version") {
     const { software, version } = parseVersionEntryName(entry.name);
@@ -968,6 +1038,12 @@ export function summarizeEntry(entry: Entry): string {
     case "version":
       // Version pages are kept short: the software page has the numbers.
       return "";
+    case "variable": {
+      const values = aggregateValues(entry.name, entry.hosts).length;
+      return `${entry.name} is defined on ${hosts} in your infrastructure, with ${plural(values, "different value")}.`;
+    }
+    case "value":
+      return `${hosts} in your infrastructure ${n === 1 ? "has" : "have"} this value.`;
     case "service":
       return `${entry.name} is running on ${hosts} in your infrastructure, across ${oses()}.`;
     case "os":

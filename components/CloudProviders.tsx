@@ -1,5 +1,5 @@
 import PieChart, { PieItem } from "@/components/PieChart";
-import { aggregateClouds, Entry } from "@/lib/data";
+import { aggregateClouds, Entry, parseValueEntryName } from "@/lib/data";
 
 export const NO_CLOUD_LABEL = "None";
 
@@ -17,6 +17,12 @@ function sectionText(entry: Entry): string {
       return "The hosts listening to this port run in these clouds:";
     case "role":
       return `The CFEngine ${entry.name.toLowerCase()}s run in these clouds:`;
+    case "variable":
+      return `The hosts defining ${entry.name} run in these clouds:`;
+    case "value": {
+      const { variable, value } = parseValueEntryName(entry.name);
+      return `The hosts where ${variable} is ${value} run in these clouds:`;
+    }
     default:
       return "The hosts run in these clouds:";
   }

@@ -16,6 +16,7 @@ import {
   getPortInfo,
   Host,
   ROLE_HUB,
+  valueEntryName,
   versionEntryName,
 } from "@/lib/data";
 
@@ -225,6 +226,26 @@ function HostDetails({ host }: { host: Host }) {
               type: "class",
               label: cls,
               href: entryHref({ type: "class", name: cls }),
+            }))}
+          />
+        </dd>
+        <dt>Variables</dt>
+        <dd data-testid="host-variables">
+          <ListModal
+            title={`Variables on ${host.hostname}`}
+            singular="variable"
+            plural="variables"
+            verb="defined"
+            testId="variables-modal"
+            rows={Object.entries(host.variables ?? {}).map(([variable, value]) => ({
+              key: variable,
+              type: "variable",
+              label: variable,
+              href: entryHref({ type: "variable", name: variable }),
+              extra: {
+                label: value,
+                href: entryHref({ type: "value", name: valueEntryName(variable, value) }),
+              },
             }))}
           />
         </dd>

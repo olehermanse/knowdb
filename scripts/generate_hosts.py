@@ -265,6 +265,36 @@ DEFAULT_MEMORY_MB = [4096, 8192, 16384]
 # Accounts people actually log in as, and get their password guessed on.
 LOGIN_USERS = {"root", "Administrator"}
 
+# CFEngine special variables (sys.*) reported by every host, see
+# https://docs.cfengine.com/docs/master/reference/special-variables/sys.
+# The same variables are defined on all hosts, with values that follow
+# from the host's OS, hostname, addresses, hub and CFEngine version.
+KERNEL_RELEASES = {
+    "Ubuntu 26": "6.14.0-15-generic",
+    "Ubuntu 24": "6.8.0-45-generic",
+    "Ubuntu 22": "5.15.0-118-generic",
+    "Ubuntu 20": "5.4.0-192-generic",
+    "Debian 12": "6.1.0-25-amd64",
+    "Debian 11": "5.10.0-32-amd64",
+    "RHEL 9": "5.14.0-427.33.1.el9_4.x86_64",
+    "RHEL 8": "4.18.0-553.16.1.el8_10.x86_64",
+    "CentOS 7": "3.10.0-1160.119.1.el7.x86_64",
+    "Fedora 40": "6.10.10-200.fc40.x86_64",
+    "SUSE 15": "5.14.21-150500.55.73-default",
+    "Windows 2022": "10.0.20348",
+    "Windows 2019": "10.0.17763",
+    "Windows 2016": "10.0.14393",
+}
+# Domains by environment (first word of the hostname).
+DOMAINS = {
+    "production": "prod.example.com",
+    "staging": "staging.example.com",
+    "testing": "test.example.com",
+    "dev": "dev.example.com",
+}
+# CPU cores follow the memory size: 2 GB per core.
+CPUS_BY_MEMORY_MB = {2048: 1, 4096: 2, 8192: 4, 16384: 8, 32768: 16, 65536: 32}
+
 
 def generate_id():
     return "SHA=" + secrets.token_hex(32)
@@ -451,6 +481,40 @@ def generate_user_details(os_name, users, last_seen):
     return details
 
 
+def generate_variables(host):
+    """The sys.* variables of a host, keyed by name, all values strings."""
+    os_name = host["os"]
+    windows = os_name.startswith("Windows")
+    family = os_name.split(" ")[0].lower().replace("rhel", "redhat")
+    flavor = f"{family}_{os_name.split(' ')[1]}"
+    sys_os = "windows" if windows else "linux"
+    ipv4 = [ip for ip in host["ips"] if "." in ip and ip != "127.0.0.1"]
+    environment = host["hostname"].split("-")[0].rstrip("0123456789")
+    domain = DOMAINS.get(environment, "example.com")
+    workdir = "C:\\Program Files\\Cfengine" if windows else "/var/cfengine"
+    sep = "\\" if windows else "/"
+    return {
+        "sys.arch": "x86_64",
+        "sys.cf_version": host["software-versions"]["cfengine"],
+        "sys.class": sys_os,
+        "sys.cpus": str(CPUS_BY_MEMORY_MB.get(host["memory"]["total-mb"], 2)),
+        "sys.domain": domain,
+        "sys.flavor": flavor,
+        "sys.fqhost": f"{host['hostname']}.{domain}",
+        "sys.inputdir": f"{workdir}{sep}inputs",
+        "sys.interface": "Ethernet" if windows else random.choice(["eth0", "ens5", "enp0s3"]),
+        "sys.ipv4": ipv4[0] if ipv4 else "127.0.0.1",
+        "sys.key_digest": host["id"],
+        "sys.os": sys_os,
+        "sys.ostype": f"{sys_os}_x86_64",
+        "sys.policy_hub": host["hub"],
+        "sys.release": KERNEL_RELEASES.get(os_name, "6.1.0"),
+        "sys.uptime": str(random.randint(30, 400 * 24 * 60)),
+        "sys.uqhost": host["hostname"],
+        "sys.workdir": workdir,
+    }
+
+
 def generate_classes(os_name, hostname):
     return list(OS_CLASSES.get(os_name, ["any", "cfengine"]))
 
@@ -538,6 +602,8 @@ def generate_host(used_hostnames, used_macs):
         # role and hub are filled in by assign_roles once all hosts exist.
         "role": None,
         "hub": None,
+        # variables are filled in afterwards too: some depend on the hub.
+        "variables": None,
         "cloud-provider": generate_cloud_provider(),
         "online": online,
         "first-seen": first_seen,
@@ -550,6 +616,8 @@ def main():
     used_macs = set()
     hosts = [generate_host(used_hostnames, used_macs) for _ in range(NUM_HOSTS)]
     assign_roles(hosts)
+    for host in hosts:
+        host["variables"] = generate_variables(host)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(hosts, f, indent=2)
