@@ -47,14 +47,16 @@ list: hosts, but also the ports, versions and similar entries in the tabs.
 ## Pinned software, classes and variables
 
 Every row in the Software, Classes and Variables modals on a host page has
-a thumbtack (📌). Pinning a row shows it in a "Pinned" list on every host
-page, below the host's basic information and above the modal buttons,
-with the same links (and version, or value and host count) as in the
-modal. When the host does not have the pinned item, the row says
-`(not installed)` for software and `(not defined)` for classes and
-variables, in gray italics. Which items are pinned is stored in the
-browser's local storage, shared across all hosts; unpin from the list or
-the modal.
+a pin icon (from the lucide icon library). Pinning a row shows it on every
+host page as a name/value pair, styled like the host's basic fields and
+laid out in three columns, below those fields and above the modal
+buttons: the name links to the entry and the value is the software's
+version, `defined` for a class, or the variable's value (linking to the
+version or value entry). When the host does not have the pinned item, the
+value reads `(not installed)` for software and `(not defined)` for classes
+and variables, in gray italics. Which items are pinned is stored in the
+browser's local storage, shared across all hosts; unpin with the icon next
+to the value or in the modal.
 
 ## Comments
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pin } from "lucide-react";
 
 // A row in the modal: a badge, a main link and optionally a second link
 // (e.g. a software's version), joined by a separator (a space by default,
@@ -14,10 +15,10 @@ export interface ModalRow {
   note?: { label: string; href?: string };
 }
 
-// A thumbtack toggling whether the row is pinned to the host view. The
-// state lives in the browser's local storage, so the layout's inline
-// script sets aria-pressed and the class after loading; React must not
-// warn when they differ from what the server rendered.
+// A pin icon (lucide) toggling whether the row is pinned to the host
+// view. The state lives in the browser's local storage, so the layout's
+// inline script sets aria-pressed and the class after loading; React must
+// not warn when they differ from what the server rendered.
 export function PinButton({ name }: { name: string }) {
   return (
     <button
@@ -30,7 +31,7 @@ export function PinButton({ name }: { name: string }) {
       suppressHydrationWarning
       data-testid="pin-button"
     >
-      📌
+      <Pin size={16} aria-hidden="true" />
     </button>
   );
 }

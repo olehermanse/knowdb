@@ -541,18 +541,27 @@ a,
   display: none;
 }
 
-/* Thumbtack at the right edge of a row, faded until pinned or hovered. */
+/* Pin icon at the right edge of a row, faded until pinned or hovered. */
 .pin-button {
   margin-left: auto;
   border: 1px solid transparent;
   border-radius: 0.3rem;
   background: none;
+  color: inherit;
   cursor: pointer;
   font: inherit;
-  line-height: 1.4;
-  padding: 0 0.3rem;
+  line-height: 1;
+  padding: 0.15rem;
   opacity: 0.4;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pin-button svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 .pin-button:hover,
@@ -565,17 +574,36 @@ a,
   opacity: 1;
 }
 
-/* Pinned software, classes and variables in the host view. */
+/* Pinned software, classes and variables in the host view: name/value
+   pairs like the details above, in three columns. */
 .host-pinned {
   margin-top: 1.5rem;
+  grid-template-columns: repeat(3, max-content minmax(0, 1fr));
+  column-gap: 1.5rem;
 }
 
-.pinned-list li.pinned-empty {
-  border-style: dashed;
+.host-pinned .pinned-empty {
+  grid-column: 1 / -1;
+}
+
+.pinned-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pinned-value .pin-button {
+  margin-left: 0;
 }
 
 .pinned-missing {
   font-style: italic;
+}
+
+@media (max-width: 40rem) {
+  .host-pinned {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
 }
 
 /* Entry pages: the entry on the left, its host(s) on the right. */

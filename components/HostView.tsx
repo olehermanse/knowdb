@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PinOff } from "lucide-react";
 import Comments from "@/components/Comments";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
@@ -84,7 +85,7 @@ function RoleDetails({ host }: { host: Host }) {
 
 // Shown while nothing is pinned. The same text is in listModalScript.ts.
 const PINNED_EMPTY =
-  '<li class="muted pinned-empty" data-pinned-empty>Nothing pinned. Pin software, classes or variables with 📌 in the lists below.</li>';
+  '<div class="muted pinned-empty" data-pinned-empty>Nothing pinned. Use the pin icon in the lists below to keep software, classes or variables here.</div>';
 
 function HostDetails({ host }: { host: Host }) {
   const groups = getHostGroups(host.id);
@@ -173,21 +174,21 @@ function HostDetails({ host }: { host: Host }) {
           </dd>
         </dl>
       </div>
-      {/* Software, classes and variables pinned from the lists below, kept
-          in local storage and filled in by the layout's inline script (see
-          components/listModalScript.ts), so the server renders the hint. */}
-      <dl className="host-details host-pinned" data-testid="host-pinned">
-        <dt>Pinned</dt>
-        <dd>
-          <ul
-            className="entry-list pinned-list"
-            data-pinned
-            data-testid="pinned-list"
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: PINNED_EMPTY }}
-          />
-        </dd>
-      </dl>
+      {/* Software, classes and variables pinned from the lists below, as
+          name/value pairs in three columns like the details above. Kept in
+          local storage and filled in by the layout's inline script (see
+          components/listModalScript.ts), so the server renders the hint.
+          The hidden icon is what the script copies for the unpin buttons. */}
+      <dl
+        className="host-details host-pinned"
+        data-pinned
+        data-testid="pinned-list"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: PINNED_EMPTY }}
+      />
+      <span hidden data-icon="pin-off">
+        <PinOff size={16} aria-hidden="true" />
+      </span>
       <dl className="host-details host-details-wide" data-testid="host-details-wide">
           <dt>Software</dt>
         <dd data-testid="host-software">
