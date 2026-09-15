@@ -19,22 +19,24 @@ host is online.
 
 Every entry page except a host's has its title across the top and is
 split in two below it. The left side holds the entry's own information and
-its Ports, Similar, Resources and (for software) Versions tabs. The right side is
+its Similar, Resources and (for software) Versions tabs. The right side is
 about the entry's hosts: when exactly one host matches it shows that host
 exactly as on the host page, and when several match it shows a "Hosts"
-heading with two tabs: Charts (the default) with the Operating systems and
-Clouds pie charts, each skipped when there is only one option, and List
-with the paginated hosts. The chosen tab is remembered (in a cookie) while
-moving between entries. In detail: the operating systems they run (a pie chart and ranked list), the
+heading with three tabs: Charts (the default) with the Operating systems and
+Clouds pie charts, each skipped when there is only one option, List with
+the paginated hosts, and Ports with the ports those hosts listen on. The
+chosen tab is remembered (in a cookie) while moving between entries. In
+detail: the operating systems they run (a pie chart and ranked list), the
 cloud providers they run on (likewise, with hosts outside any cloud as
-their own slice), the ports they listen on, and the host list itself.
-Software pages have a Versions tab as well, and every page has a Similar
-tab listing entries of the same type whose names start with the same three
-or more characters, longest match first; it is shown grayed out with (0)
-when there are none. The operating systems tab is
-hidden on OS pages, the clouds tab on cloud pages and the ports tab on
-port pages. An IP address, MAC address or hostname belonging to a single
-host shows only the Hosts and Similar tabs.
+their own slice), the host list itself, and the ports they listen on (one
+card per port with the number of hosts, linking to a search for them).
+Software pages have a Versions tab on the left as well, and every page has
+a Similar tab listing entries of the same type whose names start with the
+same three or more characters, longest match first; it is shown grayed out
+with (0) when there are none. The operating systems chart is hidden on OS
+pages, the clouds chart on cloud pages and the Ports tab on port pages. An
+IP address, MAC address or hostname belonging to a single host shows only
+the host and the Similar tab.
 
 Lists show at most 10 items at a time, with pagination links below the
 list: hosts, but also the ports, versions and similar entries in the tabs.

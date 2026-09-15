@@ -449,13 +449,15 @@ test("group page shows an operating system pie chart and ranked list", async ({
   }
 
   // On the right, the Hosts heading sits above the operating systems
-  // section; the ports tab lives on the left side, below the title.
+  // section, and the Ports tab is on the right side too, below the heading.
   const osBox = (await page.getByTestId("os-heading").boundingBox())!;
   const hostsBox = (await page.getByTestId("hosts-heading").boundingBox())!;
   const portsBox = (await page.getByTestId("ports-heading").boundingBox())!;
   const titleBox = (await page.getByTestId("entry-header").boundingBox())!;
   expect(hostsBox.y).toBeLessThan(osBox.y);
-  expect(portsBox.x).toBeLessThan(hostsBox.x);
+  expect(portsBox.x).toBeGreaterThanOrEqual(hostsBox.x - 1);
+  expect(portsBox.y).toBeGreaterThan(hostsBox.y);
+  expect(portsBox.y).toBeLessThan(osBox.y);
   expect(hostsBox.y).toBeGreaterThan(titleBox.y + titleBox.height - 1);
   expect(titleBox.x).toBeLessThan(hostsBox.x);
 });
@@ -561,7 +563,7 @@ test("group page aggregates listening ports of its hosts", async ({
   page,
 }) => {
   const group = groups.find((g) => g.name === "Windows")!;
-  await page.goto(`${groupHref(group.name)}?tab=ports`);
+  await page.goto(`${groupHref(group.name)}?htab=ports`);
   await expectAggregatedPorts(
     page,
     hosts.filter((h) => inGroup(h, group)),
@@ -571,7 +573,7 @@ test("group page aggregates listening ports of its hosts", async ({
 test("software page aggregates listening ports of its hosts", async ({
   page,
 }) => {
-  await page.goto("/entry/software/dpkg?tab=ports");
+  await page.goto("/entry/software/dpkg?htab=ports");
   await expectAggregatedPorts(
     page,
     hosts.filter((h) => h.software.includes("dpkg")),
@@ -580,7 +582,7 @@ test("software page aggregates listening ports of its hosts", async ({
 
 test("os page aggregates listening ports of its hosts", async ({ page }) => {
   const os = someHost.os;
-  await page.goto(`/entry/os/${encodeURIComponent(os)}?tab=ports`);
+  await page.goto(`/entry/os/${encodeURIComponent(os)}?htab=ports`);
   await expectAggregatedPorts(
     page,
     hosts.filter((h) => h.os === os),
@@ -608,19 +610,19 @@ test("hosts and ports sections have short headings and descriptions", async ({
   await expect(page.getByTestId("ports-description")).toHaveText(
     "The dpkg hosts are listening to these ports:",
   );
-  await page.goto(`${groupHref("Windows")}?tab=ports`);
+  await page.goto(`${groupHref("Windows")}?htab=ports`);
   await expect(page.getByTestId("ports-description")).toHaveText(
     "The hosts are listening to these ports:",
   );
-  await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}?tab=ports`);
+  await page.goto(`/entry/os/${encodeURIComponent(someHost.os)}?htab=ports`);
   await expect(page.getByTestId("ports-description")).toHaveText(
     `The ${someHost.os} hosts are listening to these ports:`,
   );
-  await page.goto("/entry/class/any?tab=ports");
+  await page.goto("/entry/class/any?htab=ports");
   await expect(page.getByTestId("ports-description")).toHaveText(
     "The any hosts are listening to these ports:",
   );
-  await page.goto("/entry/user/root?tab=ports");
+  await page.goto("/entry/user/root?htab=ports");
   await expect(page.getByTestId("ports-description")).toHaveText(
     "The hosts with the root user are listening to these ports:",
   );
@@ -644,7 +646,7 @@ test("the number of hosts on a port links to a search of those hosts", async ({
 
   const sortedPorts = [...counts.keys()].sort((a, b) => a - b);
   const portPage = Math.floor(sortedPorts.indexOf(port) / PAGE_SIZE) + 1;
-  await page.goto(`${groupHref(group.name)}?tab=ports${portPage > 1 ? `&tpage=${portPage}` : ""}`);
+  await page.goto(`${groupHref(group.name)}?htab=ports${portPage > 1 ? `&page=${portPage}` : ""}`);
   const item = page
     .getByTestId("aggregated-port")
     .filter({ has: page.getByRole("link", { name: String(port), exact: true }) });
@@ -1523,12 +1525,12 @@ test("software has versions which are entries of their own", async ({
   await expect(page.getByTestId("os-section")).toContainText(
     `The cfengine ${topVersion} software version is installed on these operating systems:`,
   );
+  await expect(page.getByTestId("os-heading")).toBeVisible();
   await openTab(page, "ports");
   await expect(page.getByTestId("ports-description")).toHaveText(
     `The hosts with cfengine ${topVersion} are listening to these ports:`,
   );
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${topCount})`);
-  await expect(page.getByTestId("os-heading")).toBeVisible();
   await openTab(page, "hosts");
   await expect(page.getByTestId("hosts-description")).toHaveText(
     `Hosts with cfengine version ${topVersion} installed:`,
@@ -1806,7 +1808,7 @@ test("port cards show a logo when the port has one", async ({ page }) => {
   test.skip(!mysqlHost, "no host listening on 3306 in the generated data");
   const anyPorts = [...new Set(hosts.flatMap((h) => h["ports-listening"]))].sort((a, b) => a - b);
   const mysqlPage = Math.floor(anyPorts.indexOf(3306) / PAGE_SIZE) + 1;
-  await page.goto(`/entry/class/any?tab=ports${mysqlPage > 1 ? `&tpage=${mysqlPage}` : ""}`);
+  await page.goto(`/entry/class/any?htab=ports${mysqlPage > 1 ? `&page=${mysqlPage}` : ""}`);
   const mysql = page
     .getByTestId("aggregated-port")
     .filter({ has: page.getByRole("link", { name: "3306", exact: true }) });
@@ -1814,7 +1816,7 @@ test("port cards show a logo when the port has one", async ({ page }) => {
     "src",
     "/logos/mysql.svg",
   );
-  await page.goto("/entry/class/any?tab=ports");
+  await page.goto("/entry/class/any?htab=ports");
   const ssh = page
     .getByTestId("aggregated-port")
     .filter({ has: page.getByRole("link", { name: "22", exact: true }) });
@@ -2449,7 +2451,7 @@ test("right side has Charts and List tabs, Charts by default", async ({ page }) 
 
 test("switching a tab on one side keeps the other side's tab", async ({ page }) => {
   // dpkg is on every Debian-like host: several pages of hosts, and it has
-  // Ports and Resources tabs on the left.
+  // Versions and Resources tabs on the left.
   const dpkgHosts = hosts.filter((h) => h.software.includes("dpkg")).length;
   test.skip(dpkgHosts <= PAGE_SIZE, "not enough dpkg hosts to paginate");
   await page.goto("/entry/software/dpkg?tab=resources");
@@ -2468,17 +2470,23 @@ test("switching a tab on one side keeps the other side's tab", async ({ page }) 
   await expect(page.getByTestId("resources-heading")).toHaveAttribute("aria-selected", "true");
 
   // And switching the left side keeps the right side's tab and page.
-  await page.getByTestId("ports-heading").click();
+  await page.getByTestId("versions-heading").click();
   await expect(page).toHaveURL(/htab=list/);
   await expect(page).toHaveURL(/page=2/);
-  await expect(page.getByTestId("ports-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("versions-heading")).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("list-tab")).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("hosts-sections").getByTestId("pagination-summary")).toContainText(
     `Showing ${PAGE_SIZE + 1}–`,
   );
   await page.getByTestId("charts-tab").click();
-  await expect(page.getByTestId("ports-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("versions-heading")).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("tab-charts")).toBeVisible();
+  // The Ports tab is on the right as well, and keeps the left tab.
+  await page.getByTestId("ports-heading").click();
+  await expect(page).toHaveURL(/htab=ports/);
+  await expect(page.getByTestId("ports-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("versions-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("tab-ports")).toBeVisible();
 });
 
 test("the Charts/List choice follows the user between entries", async ({
@@ -2529,13 +2537,14 @@ test("tab lists are paginated like host lists", async ({ page }) => {
     Math.min(PAGE_SIZE, similar.length - PAGE_SIZE),
   );
 
-  // Ports on a big entry paginate too, independently of the host list page.
-  await page.goto("/entry/class/any?tab=ports&tpage=2&htab=list&page=3");
+  // Ports on a big entry paginate too, on the right, with the same `page`
+  // parameter as the host list (only one of the two is shown at a time).
+  await page.goto("/entry/class/any?tab=comments&htab=ports&page=2");
   await expect(page.getByTestId("aggregated-port").first()).toBeVisible();
-  const left = page.getByTestId("entry-tabs").getByTestId("pagination-summary");
-  await expect(left).toContainText(`Showing ${PAGE_SIZE + 1}–`);
+  await expect(page.getByTestId("comments-heading")).toHaveAttribute("aria-selected", "true");
   const right = page.getByTestId("hosts-sections").getByTestId("pagination-summary");
-  await expect(right).toContainText(`Showing ${2 * PAGE_SIZE + 1}–`);
+  await expect(right).toContainText(`Showing ${PAGE_SIZE + 1}–`);
+  await expect(page.getByTestId("entry-tabs").getByTestId("pagination-summary")).toHaveCount(0);
 });
 
 import commentsJson from "../data/comments.json";

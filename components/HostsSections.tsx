@@ -2,9 +2,11 @@ import Link from "next/link";
 import CloudProviders from "@/components/CloudProviders";
 import HostList from "@/components/HostList";
 import OperatingSystems from "@/components/OperatingSystems";
+import PortsSection from "@/components/PortsSection";
 import {
   aggregateClouds,
   aggregateOs,
+  aggregatePorts,
   Entry,
   entryHref,
   getHost,
@@ -56,7 +58,8 @@ function describeLinkedHosts(entry: Entry): string {
 }
 
 
-export type HostsTab = "charts" | "list";
+export type HostsTab = "charts" | "list" | "ports";
+const HOSTS_TABS: HostsTab[] = ["charts", "list", "ports"];
 
 // Cookie remembering the last chosen tab, so the choice follows the user
 // from entry to entry. Set by the small script in the layout when a tab is
@@ -65,14 +68,15 @@ export const HOSTS_TAB_COOKIE = "hosts-tab";
 
 export function parseHostsTab(raw: string | string[] | undefined): HostsTab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
-  return value === "charts" || value === "list" ? value : undefined;
+  return (HOSTS_TABS as string[]).includes(value ?? "") ? (value as HostsTab) : undefined;
 }
 
 // The right side of an entry page when it matches several hosts: a
-// "Hosts" heading and two tabs. "Charts" (the default) holds the operating
-// systems and cloud provider pie charts, each skipped when there is only
-// one option; "List" holds the paginated list of the hosts. With nothing
-// to chart, Charts is disabled and List is shown.
+// "Hosts" heading and three tabs. "Charts" (the default) holds the
+// operating systems and cloud provider pie charts, each skipped when there
+// is only one option; "List" holds the paginated list of the hosts; and
+// "Ports" the ports they listen on, except on port pages. With nothing to
+// chart, Charts is disabled and List is shown.
 export default function HostsSections({
   entry,
   page,
@@ -91,7 +95,12 @@ export default function HostsSections({
   const osCount = aggregateOs(entry.hosts).length;
   const cloudCount = aggregateClouds(entry.hosts).length;
   const charts = (osCount > 1 ? 1 : 0) + (cloudCount > 1 ? 1 : 0);
-  const current: HostsTab = charts === 0 ? "list" : tab ?? "charts";
+  const portCount = aggregatePorts(entry.hosts).length;
+  const showPorts = entry.type !== "port";
+  const available = HOSTS_TABS.filter(
+    (t) => (t !== "charts" || charts > 0) && (t !== "ports" || showPorts),
+  );
+  const current: HostsTab = tab && available.includes(tab) ? tab : available[0];
   const href = (t: HostsTab, n = 1) => {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(keep)) if (value) params.set(key, value);
@@ -139,6 +148,18 @@ export default function HostsSections({
         >
           List <span className="muted">({entry.hosts.length})</span>
         </Link>
+        {showPorts && (
+          <Link
+            href={href("ports")}
+            role="tab"
+            aria-selected={current === "ports"}
+            className={tabClass("ports")}
+            data-hosts-tab="ports"
+            data-testid="ports-heading"
+          >
+            Ports <span className="muted">({portCount})</span>
+          </Link>
+        )}
       </nav>
       {current === "charts" && (
         <div className="tab-panel" role="tabpanel" data-testid="tab-charts">
@@ -166,6 +187,11 @@ export default function HostsSections({
             {describeLinkedHosts(entry)}
           </p>
           <HostList hosts={hosts} page={page} hrefForPage={(n) => href("list", n)} />
+        </div>
+      )}
+      {current === "ports" && (
+        <div className="tab-panel" role="tabpanel" data-testid="tab-ports">
+          <PortsSection entry={entry} page={page} hrefForPage={(n) => href("ports", n)} />
         </div>
       )}
     </section>

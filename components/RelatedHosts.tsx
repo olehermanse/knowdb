@@ -1,13 +1,12 @@
-import Image from "next/image";
 import Link from "next/link";
 import EntryLink from "@/components/EntryLink";
 import Comments from "@/components/Comments";
 import Pagination, { paginate } from "@/components/Pagination";
+import { hostsLabel } from "@/components/PortsSection";
 import {
   describeEntry,
   similarEntries,
   TYPE_LABELS,
-  aggregatePorts,
   aggregateValues,
   aggregateVersions,
   Entry,
@@ -16,31 +15,26 @@ import {
   getComments,
   getEntryLinks,
   filterSearchHref,
-  getPortInfo,
-  parseValueEntryName,
   valueEntryName,
   versionEntryName,
 } from "@/lib/data";
 
 // The entry's own tabs, shown on the left of an entry page: versions (for
-// software), values (for variables), the ports its hosts listen on, and
-// similar entries.
-export type Tab = "versions" | "values" | "ports" | "similar" | "resources" | "comments";
-const TAB_ORDER: Tab[] = ["versions", "values", "ports", "similar", "resources", "comments"];
+// software), values (for variables), similar entries, resources and
+// comments. The hosts' ports are a tab on the right, with the hosts.
+export type Tab = "versions" | "values" | "similar" | "resources" | "comments";
+const TAB_ORDER: Tab[] = ["versions", "values", "similar", "resources", "comments"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
   return (TAB_ORDER as string[]).includes(value ?? "") ? (value as Tab) : undefined;
 }
 
-// Versions only for software and values only for variables; ports unless
-// the entry is a port or matches a single host (whose ports are already
-// shown in the host view).
+// Versions only for software and values only for variables.
 export function entryTabs(entry: Entry): Tab[] {
   const tabs: Tab[] = [];
   if (entry.type === "software") tabs.push("versions");
   if (entry.type === "variable") tabs.push("values");
-  if (entry.type !== "port" && entry.hosts.length > 1) tabs.push("ports");
   tabs.push("similar", "resources", "comments");
   return tabs;
 }
@@ -99,55 +93,6 @@ function TabPagination({
       noun={noun}
       hrefForPage={(n) => tabHref(entry, tabs, tab, n, keep)}
     />
-  );
-}
-
-function hostsLabel(n: number): string {
-  return `${n} ${n === 1 ? "host" : "hosts"}`;
-}
-
-// "22 (ssh, 50 hosts)": the port number links to the port, the number of
-// hosts links to a search for exactly those hosts.
-function AggregatedPort({
-  entry,
-  port,
-  hosts,
-}: {
-  entry: Entry;
-  port: number;
-  hosts: number;
-}) {
-  const info = getPortInfo(port);
-  const searchHref = filterSearchHref([
-    { type: "port", name: String(port) },
-    { type: entry.type, name: entry.name },
-  ]);
-  return (
-    <li className="host-item" data-testid="aggregated-port">
-      <span className="type-badge">port</span>
-      {info?.logo && (
-        <Image
-          className="list-logo"
-          src={info.logo}
-          alt={`${info.name} logo`}
-          width={32}
-          height={32}
-          unoptimized
-          data-testid="port-logo"
-        />
-      )}
-      <div className="host-summary">
-        <div>
-          <EntryLink type="port" name={String(port)} />
-          {info && <span className="muted"> ({info.name})</span>}
-        </div>
-        <div className="muted host-facts">
-          <Link href={searchHref} className="entry-link" data-testid="port-hosts-link">
-            {hostsLabel(hosts)}
-          </Link>
-        </div>
-      </div>
-    </li>
   );
 }
 
@@ -248,34 +193,6 @@ function ValuesPanel({ entry, tabs, page, keep }: PanelProps) {
   );
 }
 
-function portsDescription(entry: Entry): string {
-  switch (entry.type) {
-    case "software":
-      return `The ${entry.name} hosts are listening to these ports:`;
-    case "service":
-      return `The hosts running ${entry.name} are listening to these ports:`;
-    case "user":
-      return `The hosts with the ${entry.name} user are listening to these ports:`;
-    case "version":
-      return `The hosts with ${entry.name} are listening to these ports:`;
-    case "os":
-    case "class":
-      return `The ${entry.name} hosts are listening to these ports:`;
-    case "cloud":
-      return `The hosts in ${entry.name} are listening to these ports:`;
-    case "role":
-      return `The CFEngine ${entry.name.toLowerCase()}s are listening to these ports:`;
-    case "variable":
-      return `The hosts defining ${entry.name} are listening to these ports:`;
-    case "value": {
-      const { variable, value } = parseValueEntryName(entry.name);
-      return `The hosts where ${variable} is ${value} are listening to these ports:`;
-    }
-    default:
-      return "The hosts are listening to these ports:";
-  }
-}
-
 // Entries of the same type with similar names, longest shared prefix first.
 function SimilarPanel({ entry, tabs, page, keep }: PanelProps) {
   const similar = similarEntries(entry);
@@ -345,37 +262,6 @@ function ResourcesPanel({ entry }: { entry: Entry }) {
 }
 
 // The ports the related hosts listen on, one card per port, ascending.
-function PortsPanel({ entry, tabs, page, keep }: PanelProps) {
-  const ports = aggregatePorts(entry.hosts);
-  const paged = paginate(ports, page);
-  return (
-    <>
-      <p className="muted" data-testid="ports-description">
-        {portsDescription(entry)}
-      </p>
-      {ports.length === 0 && <p className="muted">None</p>}
-      <ul className="entry-list" data-testid="aggregated-ports">
-        {paged.shown.map(({ port, hosts }) => (
-          <AggregatedPort key={port} entry={entry} port={port} hosts={hosts} />
-        ))}
-      </ul>
-      <TabPagination
-        entry={entry}
-        tabs={tabs}
-        keep={keep}
-        tab="ports"
-        page={page}
-        total={ports.length}
-        shown={paged.shown.length}
-        start={paged.start}
-        current={paged.current}
-        totalPages={paged.totalPages}
-        noun="ports"
-      />
-    </>
-  );
-}
-
 export default function RelatedHosts({
   entry,
   tabs,
@@ -407,12 +293,10 @@ export default function RelatedHosts({
     comments: getComments(entry).length,
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     values: entry.type === "variable" ? aggregateValues(entry.name, entry.hosts).length : 0,
-    ports: aggregatePorts(entry.hosts).length,
   };
   const labels: Record<Tab, string> = {
     versions: "Versions",
     values: "Values",
-    ports: "Ports",
     similar: "Similar",
     resources: "Resources",
     comments: "Comments",
@@ -420,7 +304,6 @@ export default function RelatedHosts({
   const testIds: Record<Tab, string> = {
     versions: "versions-heading",
     values: "values-heading",
-    ports: "ports-heading",
     similar: "similar-heading",
     resources: "resources-heading",
     comments: "comments-heading",
@@ -472,7 +355,6 @@ export default function RelatedHosts({
           {current === "values" && (
             <ValuesPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}
-          {current === "ports" && <PortsPanel entry={entry} tabs={tabs} page={page} keep={keep} />}
           {current === "similar" && (
             <SimilarPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}
