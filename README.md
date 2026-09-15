@@ -138,8 +138,8 @@ types with matching names, ignoring case and punctuation: the group
 `Ubuntu 24`, the class `cfengine` and the software `cfengine`.
 Well-known software, operating systems and ports can also have a `logo`,
 the URL of an image shown next to the entry's title (currently served
-from Simple Icons, https://simpleicons.org/, and Wikimedia Commons for
-logos Simple Icons lacks, such as Windows).
+from Simple Icons, https://simpleicons.org/, Wikimedia Commons for logos
+Simple Icons lacks, such as Windows, and cfengine.com for CFEngine).
 Keep the list short: most entries need none or one link, and more than a
 handful is too many. Edit this file to improve or extend the descriptions;
 the frontend reads it at build time.

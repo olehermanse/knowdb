@@ -882,6 +882,15 @@ test("well-known entries show a logo and official links", async ({ page }) => {
     );
   }
 
+  // CFEngine: software, its port and its services share the official logo.
+  for (const url of ["/entry/software/cfengine", "/entry/port/5308", "/entry/service/cf-serverd"]) {
+    await page.goto(url);
+    await expect(page.getByTestId("entry-logo")).toHaveAttribute(
+      "src",
+      /cfengine\.com\/images\/cfengine-logo\.svg/,
+    );
+  }
+
   // Entries without a logo show none.
   await page.goto("/entry/user/root");
   await expect(page.getByTestId("entry-logo")).toHaveCount(0);
