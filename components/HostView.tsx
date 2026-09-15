@@ -5,8 +5,10 @@ import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
 import SeenLine from "@/components/SeenLine";
 import {
+  conditionHref,
   describeHost,
   entryHref,
+  freePercent,
   getHostGroups,
   getPortInfo,
   Host,
@@ -17,6 +19,17 @@ import {
 function portLabel(port: number): string {
   const info = getPortInfo(port);
   return info ? `${port} (${info.name})` : String(port);
+}
+
+// "1.5 TB", "42 GB"; "3.1 GB", "512 MB".
+function formatGb(gb: number): string {
+  return gb >= 1000 ? `${trim(gb / 1000)} TB` : `${trim(gb)} GB`;
+}
+function formatMb(mb: number): string {
+  return mb >= 1024 ? `${trim(mb / 1024)} GB` : `${trim(mb)} MB`;
+}
+function trim(n: number): string {
+  return Number(n.toFixed(1)).toString();
 }
 
 function HostDetails({ host }: { host: Host }) {
@@ -68,7 +81,31 @@ function HostDetails({ host }: { host: Host }) {
               <EntryLink key={mac} type="mac" name={mac} />
             ))}
           </dd>
-          <dt>Listening ports</dt>
+          <dt>Disk space</dt>
+        <dd data-testid="host-disk">
+          <Link
+            href={conditionHref("disk", freePercent(host, "disk"))}
+            className="entry-link"
+            title="Find hosts with a smaller share of free disk space"
+            data-testid="host-disk-link"
+          >
+            {formatGb(host.disk["free-gb"])} free of {formatGb(host.disk["total-gb"])} (
+            {freePercent(host, "disk")}%)
+          </Link>
+        </dd>
+        <dt>Memory</dt>
+        <dd data-testid="host-memory">
+          <Link
+            href={conditionHref("memory", freePercent(host, "memory"))}
+            className="entry-link"
+            title="Find hosts with a smaller share of free memory"
+            data-testid="host-memory-link"
+          >
+            {formatMb(host.memory["free-mb"])} free of {formatMb(host.memory["total-mb"])} (
+            {freePercent(host, "memory")}%)
+          </Link>
+        </dd>
+        <dt>Listening ports</dt>
           <dd className="inline-links">
             {host["ports-listening"].map((port) => (
               <EntryLink

@@ -250,6 +250,12 @@ WINDOWS_USER_GROUPS = {
     "DefaultAccount": ["System Managed Accounts Group"],
     "SYSTEM": [],
 }
+# Disk and memory sizes by role (GB and MB); free space is a random share.
+ROLE_DISK_GB = {"db": [500, 1000, 2000], "backup": [2000, 4000, 8000], "mail": [200, 500], "hub": [200, 500]}
+ROLE_MEMORY_MB = {"db": [16384, 32768, 65536], "hub": [8192, 16384], "monitor": [8192, 16384], "client": [2048, 4096]}
+DEFAULT_DISK_GB = [50, 100, 200]
+DEFAULT_MEMORY_MB = [4096, 8192, 16384]
+
 # Accounts people actually log in as, and get their password guessed on.
 LOGIN_USERS = {"root", "Administrator"}
 
@@ -389,6 +395,18 @@ def generate_users(os_name, hostname):
     return sorted(set(users))
 
 
+def generate_disk(hostname):
+    total = random.choice(ROLE_DISK_GB.get(role_of(hostname), DEFAULT_DISK_GB))
+    free = round(total * random.uniform(0.05, 0.9), 1)
+    return {"total-gb": total, "free-gb": free}
+
+
+def generate_memory(hostname):
+    total = random.choice(ROLE_MEMORY_MB.get(role_of(hostname), DEFAULT_MEMORY_MB))
+    free = int(total * random.uniform(0.1, 0.8))
+    return {"total-mb": total, "free-mb": free}
+
+
 def generate_user_details(os_name, users, last_seen):
     """Home, shell, groups and login times for each local user on a host."""
     windows = os_name.startswith("Windows")
@@ -480,6 +498,8 @@ def generate_host(used_hostnames, used_macs):
         "software-versions": generate_software_versions(software),
         "local-users": users,
         "user-details": generate_user_details(os_name, users, last_seen),
+        "disk": generate_disk(hostname),
+        "memory": generate_memory(hostname),
         "classes": generate_classes(os_name, hostname),
         "cloud-provider": generate_cloud_provider(),
         "online": online,

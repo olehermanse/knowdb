@@ -18,6 +18,9 @@ export interface Host {
   "local-users": string[];
   // Details of each local user, keyed by user name.
   "user-details": Record<string, UserDetails>;
+  // Disk space and memory, total and currently free.
+  disk: { "total-gb": number; "free-gb": number };
+  memory: { "total-mb": number; "free-mb": number };
   // CFEngine classes reported by the host, e.g. "linux", "ubuntu_22".
   classes: string[];
   // Whether the host has reported in recently.
@@ -940,24 +943,73 @@ export interface SearchFilter {
   name: string;
 }
 
+// A numeric condition on a host resource: free disk or memory as a
+// percentage of the total, e.g. `disk<42%`.
+export type Metric = "disk" | "memory";
+export type ConditionOp = "<" | "<=" | ">" | ">=";
+export interface Condition {
+  metric: Metric;
+  op: ConditionOp;
+  percent: number;
+}
+
 export interface ParsedQuery {
   filters: SearchFilter[];
+  conditions: Condition[];
   text: string;
 }
 
+// Percentage of disk or memory that is free on a host, rounded.
+export function freePercent(host: Host, metric: Metric): number {
+  const ratio =
+    metric === "disk"
+      ? host.disk["free-gb"] / host.disk["total-gb"]
+      : host.memory["free-mb"] / host.memory["total-mb"];
+  return Math.round(ratio * 100);
+}
+
+function matchesCondition(host: Host, c: Condition): boolean {
+  const value = freePercent(host, c.metric);
+  switch (c.op) {
+    case "<":
+      return value < c.percent;
+    case "<=":
+      return value <= c.percent;
+    case ">":
+      return value > c.percent;
+    case ">=":
+      return value >= c.percent;
+  }
+}
+
+// The search URL for hosts with less free disk or memory than `percent`.
+export function conditionHref(metric: Metric, percent: number): string {
+  return `/search?q=${encodeURIComponent(`${metric}<${percent}%`)}`;
+}
+
+const CONDITION = /^(disk|memory)(<=|>=|<|>)(\d{1,3})%?$/i;
+
 export function parseSearchQuery(query: string): ParsedQuery {
   const filters: SearchFilter[] = [];
+  const conditions: Condition[] = [];
   const rest: string[] = [];
   const token = /(\S+?):(?:"([^"]*)"|(\S+))|"([^"]*)"|(\S+)/g;
   for (const m of query.matchAll(token)) {
     const [, type, quoted, bare, quotedText, word] = m;
-    if (type !== undefined && isEntryType(type)) {
+    const condition = CONDITION.exec(m[0]);
+    if (condition) {
+      conditions.push({
+        metric: condition[1].toLowerCase() as Metric,
+        op: condition[2] as ConditionOp,
+        percent: Number(condition[3]),
+      });
+    } else if (type !== undefined && isEntryType(type)) {
       filters.push({ type, name: quoted ?? bare ?? "" });
     } else {
       rest.push(m[0].startsWith('"') ? (quotedText ?? "") : (word ?? m[0]));
     }
   }
-  return { filters, text: rest.join(" ").trim() };
+  return { filters, conditions, text: rest.join(" ").trim() };
 }
 
 function quoteFilterValue(name: string): string {
@@ -982,6 +1034,7 @@ export function searchHosts(parsed: ParsedQuery): Host[] {
   const text = parsed.text.toLowerCase();
   const hosts = [...(keys ?? hostsByKey.keys())]
     .map((k) => hostsByKey.get(k)!)
+    .filter((h) => parsed.conditions.every((c) => matchesCondition(h, c)))
     .filter(
       (h) =>
         !text ||
@@ -989,6 +1042,12 @@ export function searchHosts(parsed: ParsedQuery): Host[] {
         h.id.toLowerCase().includes(text),
     );
   return hosts.sort((a, b) => a.hostname.localeCompare(b.hostname));
+}
+
+// "free disk below 42%" for a summary sentence.
+export function describeCondition(c: Condition): string {
+  const words: Record<ConditionOp, string> = { "<": "below", "<=": "at most", ">": "above", ">=": "at least" };
+  return `free ${c.metric} ${words[c.op]} ${c.percent}%`;
 }
 
 // "port 22 in group Windows" for a summary sentence.

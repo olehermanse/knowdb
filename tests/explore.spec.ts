@@ -1949,6 +1949,8 @@ test("host page has two columns with software and classes below", async ({
   await expect(right.locator("dt")).toHaveText([
     "IP addresses",
     "MAC addresses",
+    "Disk space",
+    "Memory",
     "Listening ports",
   ]);
   await expect(wide.locator("dt")).toHaveText(["Software", "Services", "Classes"]);
@@ -2457,6 +2459,56 @@ test("user pages show home, shell, groups and logins in two columns", async ({ p
   // Other entry types have no such section.
   await page.goto("/entry/port/22");
   await expect(page.getByTestId("user-details")).toHaveCount(0);
+});
+
+type Resources = {
+  disk: { "total-gb": number; "free-gb": number };
+  memory: { "total-mb": number; "free-mb": number };
+};
+const resourcesOf = (h: Host) => h as unknown as Resources;
+const freePct = (h: Host, metric: "disk" | "memory") => {
+  const r = resourcesOf(h);
+  const ratio =
+    metric === "disk"
+      ? r.disk["free-gb"] / r.disk["total-gb"]
+      : r.memory["free-mb"] / r.memory["total-mb"];
+  return Math.round(ratio * 100);
+};
+
+test("host disk and memory link to a search for hosts with less free", async ({ page }) => {
+  const host = someHost;
+  const diskPct = freePct(host, "disk");
+  const memPct = freePct(host, "memory");
+  await page.goto(`/entry/host/${encodeURIComponent(host.id)}`);
+  const disk = page.getByTestId("host-disk-link");
+  await expect(disk).toContainText(`(${diskPct}%)`);
+  await expect(disk).toContainText("free of");
+  await expect(disk).toHaveAttribute("href", `/search?q=${encodeURIComponent(`disk<${diskPct}%`)}`);
+  await expect(page.getByTestId("host-memory-link")).toContainText(`(${memPct}%)`);
+
+  // Clicking opens the search filtered to hosts with a smaller free share.
+  await disk.click();
+  await expect(page).toHaveURL(`/search?q=${encodeURIComponent(`disk<${diskPct}%`)}`);
+  const below = hosts.filter((h) => freePct(h, "disk") < diskPct);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${below.length} ${below.length === 1 ? "host" : "hosts"} matching free disk below ${diskPct}%.`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, below.length));
+  // The search box shows the condition, ready to be edited.
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue(`disk<${diskPct}%`);
+  await page.getByTestId("search-input").nth(1).fill("disk<15%");
+  await page.getByTestId("search-input").nth(1).press("Enter");
+  const under15 = hosts.filter((h) => freePct(h, "disk") < 15);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${under15.length} ${under15.length === 1 ? "host" : "hosts"} matching free disk below 15%.`,
+  );
+
+  // Conditions combine with filters and other operators work too.
+  const bigMem = hosts.filter((h) => freePct(h, "memory") >= 50 && h["ports-listening"].includes(22));
+  await page.goto(`/search?q=${encodeURIComponent("memory>=50% port:22")}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${bigMem.length} ${bigMem.length === 1 ? "host" : "hosts"} matching port 22, free memory at least 50%.`,
+  );
 });
 
 test("entry types are distinct namespaces", async ({ page }) => {

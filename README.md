@@ -70,8 +70,9 @@ The search page also lists everything of one type with `/search?type=port`
 (this is what the front page buttons link to).
 
 A query can also contain filters like `port:22 group:Windows` or
-`os:"Ubuntu 24"` (quote values with spaces). Then only hosts matching all
-filters are listed. The "N hosts" links next to aggregated ports on group,
+`os:"Ubuntu 24"` (quote values with spaces), and conditions on free disk or
+memory like `disk<20%` or `memory>=50%`. Then only hosts matching all of
+them are listed. The "N hosts" links next to aggregated ports on group,
 software and OS pages use this to show exactly those hosts.
 
 ## Running the frontend
@@ -201,6 +202,15 @@ with host counts, and a version page links back to the software and lists
 the hosts on it.
 `cfengine` is installed on every host.
 
+## Disk space and memory
+
+Each host reports its disk (`disk`: total and free GB) and memory
+(`memory`: total and free MB). The host page shows them as "42 GB free of
+100 GB (42%)". Clicking one opens a search for hosts with a smaller share
+free than this host, using a condition such as `disk<42%` or
+`memory<38%` in the search box, where the percentage (or the operator:
+`<`, `<=`, `>`, `>=`) can be edited.
+
 ## Local users
 
 Besides the list of local user names, each host reports details of each
@@ -242,6 +252,8 @@ The relevant information from a host looks like this:
   "software": ["apache", "cfengine", "dpkg", "apt", "apt-get", "brew", "curl", "wget"],
   "software-versions": {"apache": "2.4.62", "cfengine": "3.27.0", "dpkg": "1.22.6"},
   "services": ["apache2", "cf-execd", "cf-serverd", "cron", "ssh", "systemd-journald"],
+  "disk": {"total-gb": 100, "free-gb": 42.5},
+  "memory": {"total-mb": 8192, "free-mb": 3100},
   "user-details": {
     "root": {
       "home": "/root", "shell": "/bin/bash", "groups": ["root"],
@@ -276,6 +288,7 @@ Some guidelines for generating random hosts:
 - `classes` should be the CFEngine hard classes for the host's operating system, taken from `data/classes.json`, plus role-specific classes such as `policy_server` on hubs.
 - `services` should be the running systemd units: a few base units on every Linux host, distribution-specific ones (`systemd-networkd` on Ubuntu, `NetworkManager` and `firewalld` on RHEL-like systems), and one per installed daemon using the distribution's unit name (`ssh` on Debian-like, `sshd` on RHEL-like). Windows hosts have none.
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
+- `disk` and `memory` sizes should follow the role (database and backup servers have bigger disks, databases and hubs more memory), with a random share free.
 - `user-details` should give each local user a believable home directory, shell and groups (`/root`, `/bin/bash` and `root` for root; `/var/www`, a nologin shell and `www-data` for www-data; Windows accounts have no shell). Only accounts people log in as (root, Administrator) get login times: most were used within the last month, and about a third have a more recent failed login.
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.
