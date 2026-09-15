@@ -239,6 +239,20 @@ are their own entry type: a provider page lists the hosts on it with their
 operating systems and ports, and a host page links to its provider. Common
 providers are described in `data/info.json` under `cloud-providers`.
 
+## CFEngine roles and hubs
+
+Every host has a CFEngine `role`, either `Hub` or `Client`, and a `hub`
+field with the IP address of the hub it reports to. A hub is its own hub,
+so its `hub` field is one of its own public IP addresses, never the
+loopback address. Of the 100 generated hosts, 5 are hubs. Roles are their
+own entry type: the Hub and Client pages describe what the role means
+(from `data/info.json` under `roles`) and list the hosts with it. A host
+page shows its Role (linking to the role page) and its Hub (the IP address,
+linking to that address, with the hub's hostname linking to the hub); a hub
+also shows "Clients: N hosts", linking to a search for the clients
+reporting to it. In search, `hub:<ip>` filters hosts by the hub they
+report to, so `role:Client hub:18.130.49.157` lists that hub's clients.
+
 ## Host data format
 
 The relevant information from a host looks like this:
@@ -263,7 +277,9 @@ The relevant information from a host looks like this:
     }
   },
   "local-users": ["root", "nickanderson"],
-  "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3"],
+  "classes": ["any", "linux", "ubuntu", "ubuntu_24", "x86_64", "cfengine_3", "policy_server", "am_policy_hub"],
+  "role": "Hub",
+  "hub": "124.56.78.77",
   "online": true,
   "cloud-provider": "AWS",
   "first-seen": "2024-03-02T09:14:55Z",
@@ -292,6 +308,7 @@ Some guidelines for generating random hosts:
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
 - `disk` and `memory` sizes should follow the role (database and backup servers have bigger disks, databases and hubs more memory), with a random share free.
 - `user-details` should give each local user a believable home directory, shell and groups (`/root`, `/bin/bash` and `root` for root; `/var/www`, a nologin shell and `www-data` for www-data; Windows accounts have no shell). Only accounts people log in as (root, Administrator) get login times: most were used within the last month, and about a third have a more recent failed login.
+- `role` is `Hub` for exactly 5 hosts (hosts named "hub" first) and `Client` for the rest. `hub` is the IP address of the host's hub: for a hub one of its own public IPv4 addresses (never `127.0.0.1`, added if it has none), for a client the address of one of the hubs, spread evenly. Hubs get the `policy_server` and `am_policy_hub` classes.
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.
 - `online` is whether the host has reported in recently. Around 70% of hosts should be online.

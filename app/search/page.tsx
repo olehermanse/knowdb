@@ -77,7 +77,7 @@ export default async function SearchPage({
   const rawType = Array.isArray(params.type) ? params.type[0] : params.type;
   const listType = rawType && isEntryType(rawType) ? rawType : undefined;
   const parsed = parseSearchQuery(query);
-  const filtered = parsed.filters.length > 0 || parsed.conditions.length > 0;
+  const filtered = parsed.filters.length > 0 || parsed.conditions.length > 0 || parsed.hubs.length > 0;
   const hostResults = filtered ? searchHosts(parsed) : [];
   const results = query && !filtered ? searchEntries(query) : [];
 
@@ -90,7 +90,8 @@ export default async function SearchPage({
         <p className="muted" data-testid="search-hint">
           Search for anything: a hostname, port number, software, user,
           operating system, group, or words from a description. Use filters
-          like <code>port:22 group:Windows</code> to list only the hosts
+          like <code>port:22 group:Windows</code> or{" "}
+          <code>role:Client hub:18.130.49.157</code> to list only the hosts
           matching all of them, or conditions like <code>disk&lt;20%</code> and{" "}
           <code>memory&lt;10%</code> for hosts with little free disk or memory.
         </p>
@@ -98,7 +99,7 @@ export default async function SearchPage({
       {query && filtered && (
         <p className="muted" data-testid="search-summary">
           {`${hostResults.length} ${hostResults.length === 1 ? "host" : "hosts"} matching ${[
-            describeFilters(parsed.filters),
+            describeFilters(parsed.filters, parsed.hubs),
             ...parsed.conditions.map(describeCondition),
           ]
             .filter(Boolean)

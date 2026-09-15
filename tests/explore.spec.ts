@@ -102,12 +102,12 @@ async function expectAggregatedPorts(
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
 
-test("front page shows 13 random entries", async ({ page }) => {
+test("front page shows 14 random entries", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Or pick one of the randomly selected entries below:")).toBeVisible();
   const items = page.getByTestId("entry-list").locator("li");
-  await expect(items).toHaveCount(13);
-  await expect(items.locator("a.entry-link")).toHaveCount(13);
+  await expect(items).toHaveCount(14);
+  await expect(items.locator("a.entry-link")).toHaveCount(14);
 });
 
 test("front page always shows at least one entry of each type", async ({
@@ -127,12 +127,13 @@ test("front page always shows at least one entry of each type", async ({
     "version",
     "cloud",
     "service",
+    "role",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
     const badges = page.getByTestId("entry-list").locator(".type-badge");
-    await expect(badges).toHaveCount(13);
+    await expect(badges).toHaveCount(14);
     const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
     for (const type of allTypes) {
       expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
@@ -1734,6 +1735,131 @@ test("hosts have a cloud provider, or none for their own data center", async ({
   );
 });
 
+// Every host has a CFEngine role (Hub or Client) and the IP address of its
+// hub; a hub is its own hub. The test data has exactly 5 hubs.
+type RoledHost = Host & { role: string; hub: string };
+const roled = hosts as unknown as RoledHost[];
+const hubs = roled.filter((h) => h.role === "Hub");
+const clients = roled.filter((h) => h.role === "Client");
+const clientsOf = (hub: RoledHost) => clients.filter((c) => hub.ips.includes(c.hub));
+
+test("hosts are CFEngine hubs or clients and point at a hub", () => {
+  expect(hubs.length).toBe(5);
+  expect(clients.length).toBe(hosts.length - 5);
+  for (const hub of hubs) {
+    // A hub's own public address, not loopback or a private range.
+    expect(hub.ips).toContain(hub.hub);
+    expect(hub.hub).not.toBe("127.0.0.1");
+    expect(hub.hub).not.toMatch(/^(10\.|172\.31\.|192\.168\.)/);
+    expect(hub.hub).toMatch(/^\d+\.\d+\.\d+\.\d+$/);
+    expect(hub.classes).toContain("policy_server");
+    expect(clientsOf(hub).length).toBeGreaterThan(0);
+  }
+  const hubIps = new Set(hubs.map((h) => h.hub));
+  for (const client of clients) expect(hubIps.has(client.hub)).toBe(true);
+  // Every client is counted by exactly one hub.
+  expect(hubs.reduce((n, hub) => n + clientsOf(hub).length, 0)).toBe(clients.length);
+});
+
+test("a hub shows its role, its own hub address and a link to its clients", async ({ page }) => {
+  const hub = hubs[0];
+  const expected = clientsOf(hub);
+  await page.goto(`/entry/host/${encodeURIComponent(hub.id)}`);
+  await expect(page.getByTestId("host-role").getByRole("link", { name: "Hub" })).toHaveAttribute(
+    "href",
+    "/entry/role/Hub",
+  );
+  await expect(page.getByTestId("host-hub")).toHaveText(`${hub.hub}(this host)`);
+  await expect(page.getByTestId("host-hub").getByRole("link", { name: hub.hub })).toHaveAttribute(
+    "href",
+    `/entry/ip/${encodeURIComponent(hub.hub)}`,
+  );
+  // "Clients: N hosts" comes right after the Hub field.
+  const left = page.getByTestId("host-details-left");
+  await expect(left.locator("dt")).toContainText(["Hostname", "Operating system", "Cloud provider", "Role", "Hub", "Clients"]);
+  const link = page.getByTestId("host-clients-link");
+  await expect(link).toHaveText(`${expected.length} hosts`);
+  await expect(link).toHaveAttribute(
+    "href",
+    `/search?q=${encodeURIComponent(`role:Client hub:${hub.hub}`)}`,
+  );
+
+  // Clicking it searches for the clients reporting to this hub.
+  await link.click();
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${expected.length} hosts matching role Client, hub ${hub.hub}.`,
+  );
+  const items = page.getByTestId("search-results").getByTestId("host-item");
+  await expect(items).toHaveCount(Math.min(PAGE_SIZE, expected.length));
+  const sorted = [...expected].sort((a, b) => a.hostname.localeCompare(b.hostname));
+  for (const [i, client] of sorted.slice(0, PAGE_SIZE).entries()) {
+    await expect(items.nth(i)).toContainText(client.hostname);
+  }
+  // The hub itself is not among its clients.
+  await page.goto(`/search?q=${encodeURIComponent(`role:Client hub:${hub.hub}`)}`);
+  await expect(page.getByTestId("search-results")).not.toContainText(hub.hostname);
+});
+
+test("a client shows its role and links to its hub", async ({ page }) => {
+  const client = clients[0];
+  const hub = hubs.find((h) => h.ips.includes(client.hub))!;
+  await page.goto(`/entry/host/${encodeURIComponent(client.id)}`);
+  await expect(page.getByTestId("host-role").getByRole("link", { name: "Client" })).toHaveAttribute(
+    "href",
+    "/entry/role/Client",
+  );
+  await expect(page.getByTestId("host-hub")).toHaveText(`${client.hub}(${hub.hostname})`);
+  await expect(page.getByTestId("host-hub").getByRole("link", { name: client.hub })).toHaveAttribute(
+    "href",
+    `/entry/ip/${encodeURIComponent(client.hub)}`,
+  );
+  await expect(page.getByTestId("host-hub-name")).toHaveAttribute(
+    "href",
+    `/entry/host/${encodeURIComponent(hub.id)}`,
+  );
+  await expect(page.getByTestId("host-clients")).toHaveCount(0);
+  // Clicking the role opens the role page.
+  await page.getByTestId("host-role").getByRole("link", { name: "Client" }).click();
+  await expect(page.getByTestId("entry-name")).toHaveText("Client");
+  await expect(page.getByTestId("entry-header").locator(".type-badge")).toHaveText("role");
+});
+
+test("role pages describe the role and list its hosts", async ({ page }) => {
+  const roles = info.roles as Record<string, { description: string }>;
+  for (const [name, selected] of [["Hub", hubs], ["Client", clients]] as const) {
+    await page.goto(`/entry/role/${name}`);
+    await expect(page.getByTestId("entry-description")).toHaveText(roles[name].description);
+    await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", "/logos/cfengine.svg");
+    await expect(page.getByTestId("entry-summary")).toHaveText(
+      `${selected.length} hosts in your infrastructure are CFEngine ${name.toLowerCase()}s, across ${pluralize(distinctOs(selected), "operating system")}.`,
+    );
+    await expect(page.getByTestId("see-also")).toContainText("cfengine (software)");
+    // The right pane remembers the List tab from the previous role page.
+    await page.getByTestId("charts-tab").click();
+    await openTab(page, "os");
+    await expect(page.getByTestId("os-section")).toContainText(
+      `The CFEngine ${name.toLowerCase()}s run these operating systems:`,
+    );
+    await openTab(page, "ports");
+    await expect(page.getByTestId("ports-description")).toHaveText(
+      `The CFEngine ${name.toLowerCase()}s are listening to these ports:`,
+    );
+    await openTab(page, "hosts");
+    await expect(page.getByTestId("hosts-description")).toHaveText(`Hosts with the CFEngine role ${name}:`);
+    await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${selected.length})`);
+  }
+  // Hubs are also marked by the policy server classes.
+  await page.goto("/entry/role/Hub");
+  await expect(page.getByTestId("see-also")).toContainText("policy_server (class)");
+
+  // Roles are browsable from the front page and work as search filters.
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-role")).toHaveText("Roles (2)");
+  await page.goto("/search?q=role:Hub");
+  await expect(page.getByTestId("search-summary")).toHaveText(`${hubs.length} hosts matching role Hub.`);
+  await expect(page.getByTestId("search-results").getByTestId("host-item")).toHaveCount(hubs.length);
+});
+
 test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
   const providerOf = (h: Host) => (h as unknown as { "cloud-provider": string })["cloud-provider"];
   const counts = new Map<string, number>();
@@ -1803,7 +1929,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(13);
+  await expect(buttons).toHaveCount(14);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -1960,10 +2086,14 @@ test("host page has two columns with software and classes below", async ({
   const left = page.getByTestId("host-details-left");
   const right = page.getByTestId("host-details-right");
   const wide = page.getByTestId("host-details-wide");
+  const isHub = (someHost as unknown as { role: string }).role === "Hub";
   await expect(left.locator("dt")).toHaveText([
     "Hostname",
     "Operating system",
     "Cloud provider",
+    "Role",
+    "Hub",
+    ...(isHub ? ["Clients"] : []),
     "Local users",
     "Groups",
   ]);

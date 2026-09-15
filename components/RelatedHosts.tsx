@@ -209,6 +209,8 @@ function portsDescription(entry: Entry): string {
       return `The ${entry.name} hosts are listening to these ports:`;
     case "cloud":
       return `The hosts in ${entry.name} are listening to these ports:`;
+    case "role":
+      return `The CFEngine ${entry.name.toLowerCase()}s are listening to these ports:`;
     default:
       return "The hosts are listening to these ports:";
   }

@@ -23,6 +23,10 @@ export interface Host {
   memory: { "total-mb": number; "free-mb": number };
   // CFEngine classes reported by the host, e.g. "linux", "ubuntu_22".
   classes: string[];
+  // The host's CFEngine role, and the IP address of the hub it reports to
+  // (a hub's own address for hubs).
+  role: Role;
+  hub: string;
   // Whether the host has reported in recently.
   online: boolean;
   // Cloud provider the host runs in, or "" for your own data center.
@@ -31,6 +35,10 @@ export interface Host {
   "first-seen": string;
   "last-seen": string;
 }
+
+export type Role = "Hub" | "Client";
+export const ROLE_HUB: Role = "Hub";
+export const ROLE_CLIENT: Role = "Client";
 
 export interface UserDetails {
   home: string | null;
@@ -115,7 +123,9 @@ export type EntryType =
   // A cloud provider hosts run in (AWS, Azure, ...).
   | "cloud"
   // A running systemd service, e.g. "sshd".
-  | "service";
+  | "service"
+  // A host's CFEngine role: "Hub" or "Client".
+  | "role";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -186,7 +196,7 @@ export function normalizeName(name: string): string {
 }
 
 // Entry types whose names are worth matching against each other.
-const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service"];
+const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service", "role"];
 
 function buildIndex() {
   const hostsByKey = new Map<string, Host>();
@@ -227,6 +237,7 @@ function buildIndex() {
     for (const user of host["local-users"]) link("user", user, host.id);
     for (const cls of host.classes ?? []) link("class", cls, host.id);
     if (host["cloud-provider"]) link("cloud", host["cloud-provider"], host.id);
+    if (host.role) link("role", host.role, host.id);
     const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
     for (const name of hostGroups) link("group", name, host.id);
     groupsByHost.set(host.id, hostGroups);
@@ -264,6 +275,34 @@ export function getEntry(type: EntryType, name: string): Entry | undefined {
 
 export function getHost(hostkey: string): Host | undefined {
   return hostsByKey.get(hostkey);
+}
+
+// The hub a host reports to: the host whose addresses include the IP in
+// the host's `hub` field. Undefined if no host has that address. A hub is
+// its own hub.
+export function getHubOf(host: Host): Host | undefined {
+  const entry = entries.get(entryKey("ip", host.hub));
+  if (!entry) return undefined;
+  for (const key of entry.hosts) {
+    const candidate = hostsByKey.get(key);
+    if (candidate?.role === ROLE_HUB) return candidate;
+  }
+  return undefined;
+}
+
+// The clients reporting to a hub: hosts with the Client role whose `hub`
+// field is one of the hub's IP addresses, sorted by hostname.
+export function getClientsOfHub(hub: Host): Host[] {
+  const addresses = new Set(hub.ips);
+  return hosts
+    .filter((h) => h.role === ROLE_CLIENT && addresses.has(h.hub))
+    .sort((a, b) => a.hostname.localeCompare(b.hostname));
+}
+
+// The search URL for the clients of a hub: hosts with the Client role
+// whose hub is the given IP address.
+export function clientsSearchHref(hubIp: string): string {
+  return `/search?q=${encodeURIComponent(`role:${ROLE_CLIENT} hub:${hubIp}`)}`;
 }
 
 export function getGroup(name: string): Group | undefined {
@@ -455,6 +494,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "version",
   "cloud",
   "service",
+  "role",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -472,6 +512,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   version: "Versions",
   cloud: "Clouds",
   service: "Services",
+  role: "Roles",
 };
 
 // All entries of one type, sorted by name (numerically where names are
@@ -587,6 +628,8 @@ interface Info {
   classes: Record<string, DescribedInfo>;
   "cloud-providers": Record<string, DescribedInfo>;
   services: Record<string, ServiceInfo>;
+  // The CFEngine roles, "Hub" and "Client".
+  roles: Record<string, DescribedInfo>;
 }
 
 export interface ServiceInfo extends DescribedInfo {
@@ -658,6 +701,10 @@ export function getCloudProviderInfo(name: string): DescribedInfo | undefined {
   return info["cloud-providers"][name];
 }
 
+export function getRoleInfo(name: string): DescribedInfo | undefined {
+  return info.roles[name];
+}
+
 export function getClassInfo(name: string): DescribedInfo | undefined {
   return info.classes[name];
 }
@@ -710,6 +757,8 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getCloudProviderInfo(entry.name);
     case "service":
       return getServiceInfo(entry.name);
+    case "role":
+      return getRoleInfo(entry.name);
     case "version":
       // Versions share the software's description, links and logo.
       return getSoftwareInfo(parseVersionEntryName(entry.name).software);
@@ -745,6 +794,12 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
     for (const [name, sw] of Object.entries(info.software)) {
       if (sw.ports?.includes(port)) related.push({ type: "software", name });
     }
+  } else if (entry.type === "role") {
+    // Both roles run CFEngine; hubs are also marked by the policy server classes.
+    related.push({ type: "software", name: "cfengine" });
+    if (entry.name === ROLE_HUB) {
+      related.push({ type: "class", name: "policy_server" }, { type: "class", name: "am_policy_hub" });
+    }
   }
   // Entries of other types with a matching name, e.g. the class "linux"
   // for the group "Linux". Ports are also matched by their common name.
@@ -777,6 +832,7 @@ export const NO_OS_INFO = "No information available about this operating system.
 export const NO_CLASS_INFO = "No information available about this class.";
 export const NO_CLOUD_INFO = "No information available about this cloud provider.";
 export const NO_SERVICE_INFO = "No information available about this service.";
+export const NO_ROLE_INFO = "No information available about this role.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -792,6 +848,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   version: "A specific version of a piece of software.",
   cloud: "A cloud provider that hosts run in.",
   service: "A systemd service running on hosts.",
+  role: "A host's CFEngine role: a hub the clients report to, or a client.",
 };
 
 export function describeEntry(entry: EntryRef): string {
@@ -825,6 +882,9 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "service") {
     return getServiceInfo(entry.name)?.description ?? NO_SERVICE_INFO;
+  }
+  if (entry.type === "role") {
+    return getRoleInfo(entry.name)?.description ?? NO_ROLE_INFO;
   }
   if (entry.type === "version") {
     const { software, version } = parseVersionEntryName(entry.name);
@@ -922,6 +982,10 @@ export function summarizeEntry(entry: Entry): string {
       return `This class is set on ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
     case "cloud":
       return `${hosts} in your infrastructure ${n === 1 ? "runs" : "run"} in ${entry.name}, across ${oses()}.`;
+    case "role": {
+      const role = entry.name.toLowerCase();
+      return `${hosts} in your infrastructure ${n === 1 ? `is a CFEngine ${role}` : `are CFEngine ${role}s`}, across ${oses()}.`;
+    }
     case "ip":
       return `This IP address is used by ${hosts} in your infrastructure.`;
     case "mac":
@@ -956,6 +1020,8 @@ export interface Condition {
 export interface ParsedQuery {
   filters: SearchFilter[];
   conditions: Condition[];
+  // `hub:<ip>`: only hosts reporting to the hub with this IP address.
+  hubs: string[];
   text: string;
 }
 
@@ -992,6 +1058,7 @@ const CONDITION = /^(disk|memory)(<=|>=|<|>)(\d{1,3})%?$/i;
 export function parseSearchQuery(query: string): ParsedQuery {
   const filters: SearchFilter[] = [];
   const conditions: Condition[] = [];
+  const hubs: string[] = [];
   const rest: string[] = [];
   const token = /(\S+?):(?:"([^"]*)"|(\S+))|"([^"]*)"|(\S+)/g;
   for (const m of query.matchAll(token)) {
@@ -1005,11 +1072,13 @@ export function parseSearchQuery(query: string): ParsedQuery {
       });
     } else if (type !== undefined && isEntryType(type)) {
       filters.push({ type, name: quoted ?? bare ?? "" });
+    } else if (type?.toLowerCase() === "hub") {
+      hubs.push(quoted ?? bare ?? "");
     } else {
       rest.push(m[0].startsWith('"') ? (quotedText ?? "") : (word ?? m[0]));
     }
   }
-  return { filters, conditions, text: rest.join(" ").trim() };
+  return { filters, conditions, hubs, text: rest.join(" ").trim() };
 }
 
 function quoteFilterValue(name: string): string {
@@ -1035,6 +1104,7 @@ export function searchHosts(parsed: ParsedQuery): Host[] {
   const hosts = [...(keys ?? hostsByKey.keys())]
     .map((k) => hostsByKey.get(k)!)
     .filter((h) => parsed.conditions.every((c) => matchesCondition(h, c)))
+    .filter((h) => parsed.hubs.every((ip) => h.hub === ip))
     .filter(
       (h) =>
         !text ||
@@ -1050,11 +1120,13 @@ export function describeCondition(c: Condition): string {
   return `free ${c.metric} ${words[c.op]} ${c.percent}%`;
 }
 
-// "port 22 in group Windows" for a summary sentence.
-export function describeFilters(filters: SearchFilter[]): string {
-  return filters
-    .map((f) => (f.type === "port" ? `port ${f.name}` : `${f.type} ${f.name}`))
-    .join(", ");
+// "port 22, group Windows" for a summary sentence; hub filters read
+// "hub 18.130.49.157".
+export function describeFilters(filters: SearchFilter[], hubs: string[] = []): string {
+  return [
+    ...filters.map((f) => (f.type === "port" ? `port ${f.name}` : `${f.type} ${f.name}`)),
+    ...hubs.map((ip) => `hub ${ip}`),
+  ].join(", ");
 }
 
 // Environments recognised from the first part of a hostname, e.g.

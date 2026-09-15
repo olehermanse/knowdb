@@ -37,6 +37,8 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts with the class ${entry.name} set:`;
     case "cloud":
       return `Hosts running in ${entry.name}:`;
+    case "role":
+      return `Hosts with the CFEngine role ${entry.name}:`;
     case "version": {
       const { software, version } = parseVersionEntryName(entry.name);
       return `Hosts with ${software} version ${version} installed:`;

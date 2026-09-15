@@ -15,6 +15,8 @@ function sectionText(entry: Entry): string {
       return `The ${entry.name} hosts run in these clouds:`;
     case "port":
       return "The hosts listening to this port run in these clouds:";
+    case "role":
+      return `The CFEngine ${entry.name.toLowerCase()}s run in these clouds:`;
     default:
       return "The hosts run in these clouds:";
   }

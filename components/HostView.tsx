@@ -5,13 +5,17 @@ import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
 import SeenLine from "@/components/SeenLine";
 import {
+  clientsSearchHref,
   conditionHref,
   describeHost,
   entryHref,
   freePercent,
+  getClientsOfHub,
   getHostGroups,
+  getHubOf,
   getPortInfo,
   Host,
+  ROLE_HUB,
   versionEntryName,
 } from "@/lib/data";
 
@@ -30,6 +34,49 @@ function formatMb(mb: number): string {
 }
 function trim(n: number): string {
   return Number(n.toFixed(1)).toString();
+}
+
+// "Role: Hub" or "Role: Client"; "Hub: <ip> (hostname)", the hub's own
+// address for a hub; and for hubs, "Clients: N hosts" linking to a search
+// for the clients reporting to it.
+function RoleDetails({ host }: { host: Host }) {
+  const hub = getHubOf(host);
+  const isHub = host.role === ROLE_HUB;
+  const clients = isHub ? getClientsOfHub(host) : [];
+  return (
+    <>
+      <dt>Role</dt>
+      <dd className="inline-links" data-testid="host-role">
+        <EntryLink type="role" name={host.role} />
+      </dd>
+      <dt>Hub</dt>
+      <dd className="inline-links" data-testid="host-hub">
+        <EntryLink type="ip" name={host.hub} />
+        {isHub ? (
+          <span className="muted">(this host)</span>
+        ) : hub ? (
+          <Link href={entryHref({ type: "host", name: hub.id })} className="muted" data-testid="host-hub-name">
+            ({hub.hostname})
+          </Link>
+        ) : null}
+      </dd>
+      {isHub && (
+        <>
+          <dt>Clients</dt>
+          <dd data-testid="host-clients">
+            <Link
+              href={clientsSearchHref(host.hub)}
+              className="entry-link"
+              title="Find the clients reporting to this hub"
+              data-testid="host-clients-link"
+            >
+              {clients.length} {clients.length === 1 ? "host" : "hosts"}
+            </Link>
+          </dd>
+        </>
+      )}
+    </>
+  );
 }
 
 function HostDetails({ host }: { host: Host }) {
@@ -54,6 +101,7 @@ function HostDetails({ host }: { host: Host }) {
               <span className="muted">None</span>
             )}
           </dd>
+          <RoleDetails host={host} />
           <dt>Local users</dt>
           <dd className="inline-links">
             {host["local-users"].map((user) => (

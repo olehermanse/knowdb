@@ -11,6 +11,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 NUM_HOSTS = 100
+# CFEngine roles: a few hosts are hubs (policy servers), the rest clients.
+NUM_HUBS = 5
+ROLE_HUB = "Hub"
+ROLE_CLIENT = "Client"
 OUTPUT_PATH = Path(__file__).parent.parent / "tmp" / "hosts.json"
 CLASSES_PATH = Path(__file__).parent.parent / "data" / "classes.json"
 
@@ -80,8 +84,10 @@ HOSTNAME_IDENTIFIERS = [
 ]
 
 # Common cloud-provider-like IPv4 prefixes (AWS and similar ranges),
-# so most addresses don't look completely random.
-IPV4_PREFIXES = ["3.120", "13.48", "18.130", "34.240", "52.28", "54.93", "10.0", "172.31"]
+# so most addresses don't look completely random. The first six are
+# public; hubs are reached on a public address.
+PUBLIC_IPV4_PREFIXES = ["3.120", "13.48", "18.130", "34.240", "52.28", "54.93"]
+IPV4_PREFIXES = PUBLIC_IPV4_PREFIXES + ["10.0", "172.31"]
 IPV6_PREFIX = "2a05:d014"
 
 # MAC address prefixes (OUIs) so addresses look like real hardware and
@@ -279,9 +285,13 @@ def generate_hostname(used):
             return hostname
 
 
-def generate_ipv4():
-    prefix = random.choice(IPV4_PREFIXES)
+def generate_ipv4(prefixes=IPV4_PREFIXES):
+    prefix = random.choice(prefixes)
     return f"{prefix}.{random.randint(0, 255)}.{random.randint(1, 254)}"
+
+
+def is_public_ipv4(ip):
+    return any(ip.startswith(prefix + ".") for prefix in PUBLIC_IPV4_PREFIXES)
 
 
 def generate_ipv6():
@@ -442,10 +452,34 @@ def generate_user_details(os_name, users, last_seen):
 
 
 def generate_classes(os_name, hostname):
-    classes = list(OS_CLASSES.get(os_name, ["any", "cfengine"]))
-    if role_of(hostname) == "hub":
-        classes += ["policy_server", "am_policy_hub"]
-    return classes
+    return list(OS_CLASSES.get(os_name, ["any", "cfengine"]))
+
+
+def assign_roles(hosts):
+    """Make NUM_HUBS hosts CFEngine hubs and point every host at its hub.
+
+    Hosts named "hub" are hubs first; more are picked at random if needed.
+    Every host gets a "hub" field with the IP address of its hub, a public
+    IPv4 address; a hub's own hub is itself. Hubs also get the policy
+    server classes, and clients are spread over the hubs.
+    """
+    named = [h for h in hosts if role_of(h["hostname"]) == "hub"]
+    others = [h for h in hosts if h not in named]
+    random.shuffle(others)
+    hubs = (named + others)[:NUM_HUBS]
+    for hub in hubs:
+        public = [ip for ip in hub["ips"] if is_public_ipv4(ip)]
+        if not public:
+            ip = generate_ipv4(PUBLIC_IPV4_PREFIXES)
+            hub["ips"] = sorted(hub["ips"] + [ip])
+            public = [ip]
+        hub["role"] = ROLE_HUB
+        hub["hub"] = public[0]
+        hub["classes"] = hub["classes"] + ["policy_server", "am_policy_hub"]
+    for host in hosts:
+        if host.get("role") != ROLE_HUB:
+            host["role"] = ROLE_CLIENT
+            host["hub"] = random.choice(hubs)["hub"]
 
 
 NOW = datetime.now(timezone.utc).replace(microsecond=0)
@@ -501,6 +535,9 @@ def generate_host(used_hostnames, used_macs):
         "disk": generate_disk(hostname),
         "memory": generate_memory(hostname),
         "classes": generate_classes(os_name, hostname),
+        # role and hub are filled in by assign_roles once all hosts exist.
+        "role": None,
+        "hub": None,
         "cloud-provider": generate_cloud_provider(),
         "online": online,
         "first-seen": first_seen,
@@ -512,6 +549,7 @@ def main():
     used_hostnames = set()
     used_macs = set()
     hosts = [generate_host(used_hostnames, used_macs) for _ in range(NUM_HOSTS)]
+    assign_roles(hosts)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(hosts, f, indent=2)

@@ -140,6 +140,8 @@
       "policy_server",
       "am_policy_hub"
     ],
+    "role": "Hub",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2024-10-02T18:58:07Z",
@@ -274,6 +276,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "DigitalOcean",
     "online": true,
     "first-seen": "2025-12-27T18:21:58Z",
@@ -444,6 +448,8 @@
       "policy_server",
       "am_policy_hub"
     ],
+    "role": "Hub",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-10-26T13:10:52Z",
@@ -566,6 +572,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2025-09-11T16:14:42Z",
@@ -681,6 +689,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2026-07-20T15:47:22Z",
@@ -772,6 +782,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2024-10-15T07:50:58Z",
@@ -910,6 +922,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-08-11T22:25:22Z",
@@ -1051,6 +1065,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2024-03-25T12:22:44Z",
@@ -1180,6 +1196,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-09-29T01:14:16Z",
@@ -1294,6 +1312,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2024-02-23T00:57:22Z",
@@ -1376,6 +1396,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2026-03-02T09:26:40Z",
@@ -1528,6 +1550,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "DigitalOcean",
     "online": false,
     "first-seen": "2024-03-09T08:21:55Z",
@@ -1671,6 +1695,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-07-28T11:27:56Z",
@@ -1824,6 +1850,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-03-13T00:16:35Z",
@@ -1976,6 +2004,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "GCP",
     "online": false,
     "first-seen": "2025-06-08T02:07:38Z",
@@ -2078,6 +2108,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2026-01-17T09:35:27Z",
@@ -2232,6 +2264,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2024-08-14T11:03:06Z",
@@ -2400,6 +2434,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2026-04-22T05:08:06Z",
@@ -2520,6 +2556,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2025-08-05T16:55:03Z",
@@ -2661,6 +2699,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-07-28T02:32:59Z",
@@ -2830,6 +2870,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2025-07-15T09:56:53Z",
@@ -2947,6 +2989,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-05-24T01:51:24Z",
@@ -3048,6 +3092,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2025-02-14T12:29:09Z",
@@ -3199,6 +3245,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2023-10-07T11:51:50Z",
@@ -3339,6 +3387,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2026-09-13T23:17:58Z",
@@ -3480,6 +3530,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-04-06T20:24:31Z",
@@ -3607,6 +3659,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2025-02-25T01:59:40Z",
@@ -3776,6 +3830,8 @@
       "policy_server",
       "am_policy_hub"
     ],
+    "role": "Hub",
+    "hub": "34.240.185.202",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2025-12-25T00:59:33Z",
@@ -3895,6 +3951,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2026-06-06T16:09:11Z",
@@ -4011,6 +4069,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-03-26T10:58:23Z",
@@ -4167,6 +4227,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2026-01-07T06:19:29Z",
@@ -4250,6 +4312,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2025-01-23T16:58:23Z",
@@ -4386,6 +4450,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2026-08-26T09:35:42Z",
@@ -4465,6 +4531,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2023-11-12T01:43:41Z",
@@ -4618,6 +4686,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2026-04-11T07:43:10Z",
@@ -4747,6 +4817,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-10-24T21:05:26Z",
@@ -4870,6 +4942,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2025-04-14T07:08:07Z",
@@ -4970,6 +5044,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2023-10-13T12:29:57Z",
@@ -5102,6 +5178,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2024-07-24T12:09:16Z",
@@ -5221,6 +5299,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-12-29T16:32:01Z",
@@ -5384,6 +5464,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2026-04-06T20:07:36Z",
@@ -5482,6 +5564,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-01-23T09:02:11Z",
@@ -5637,6 +5721,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2024-03-27T19:53:06Z",
@@ -5773,6 +5859,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2024-11-07T16:02:02Z",
@@ -5914,6 +6002,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "",
     "online": false,
     "first-seen": "2023-10-15T02:41:10Z",
@@ -6043,6 +6133,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2026-02-26T16:06:59Z",
@@ -6169,6 +6261,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2023-11-11T19:45:37Z",
@@ -6296,6 +6390,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2025-10-12T14:23:38Z",
@@ -6446,6 +6542,8 @@
       "policy_server",
       "am_policy_hub"
     ],
+    "role": "Hub",
+    "hub": "52.28.73.179",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2023-09-20T14:42:38Z",
@@ -6568,6 +6666,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-10-26T08:20:51Z",
@@ -6698,6 +6798,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2023-11-27T08:35:15Z",
@@ -6837,6 +6939,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-06-27T11:23:25Z",
@@ -6964,6 +7068,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2025-12-31T17:50:54Z",
@@ -7107,6 +7213,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-02-21T08:01:21Z",
@@ -7260,6 +7368,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-01-15T07:08:33Z",
@@ -7379,6 +7489,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2023-10-05T00:51:46Z",
@@ -7516,6 +7628,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2023-11-13T15:23:47Z",
@@ -7666,6 +7780,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "GCP",
     "online": false,
     "first-seen": "2024-10-22T05:00:18Z",
@@ -7821,6 +7937,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2023-11-18T18:53:39Z",
@@ -7961,6 +8079,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2026-09-06T21:00:00Z",
@@ -8109,6 +8229,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2024-04-16T08:05:19Z",
@@ -8258,6 +8380,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-08-29T00:39:09Z",
@@ -8389,6 +8513,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "DigitalOcean",
     "online": true,
     "first-seen": "2025-04-24T15:34:28Z",
@@ -8530,6 +8656,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-06-28T18:56:23Z",
@@ -8658,6 +8786,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2025-01-22T11:38:04Z",
@@ -8822,6 +8952,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-02-04T10:19:16Z",
@@ -8942,6 +9074,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2026-03-13T21:02:46Z",
@@ -9090,6 +9224,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2025-12-07T14:54:17Z",
@@ -9228,6 +9364,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2026-01-07T09:19:28Z",
@@ -9341,6 +9479,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-05-28T13:04:44Z",
@@ -9457,6 +9597,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2023-12-12T02:16:58Z",
@@ -9577,6 +9719,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2024-09-30T12:28:18Z",
@@ -9697,6 +9841,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "",
     "online": false,
     "first-seen": "2025-06-29T12:44:24Z",
@@ -9826,6 +9972,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "GCP",
     "online": false,
     "first-seen": "2024-02-05T08:53:59Z",
@@ -9976,6 +10124,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-05-23T00:42:17Z",
@@ -10096,6 +10246,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2024-09-23T23:27:33Z",
@@ -10248,6 +10400,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-09-24T15:04:14Z",
@@ -10388,6 +10542,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2024-07-05T16:53:31Z",
@@ -10534,6 +10690,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "Hetzner",
     "online": true,
     "first-seen": "2024-05-17T13:10:54Z",
@@ -10658,6 +10816,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2023-10-18T20:38:50Z",
@@ -10804,6 +10964,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-02-07T23:12:18Z",
@@ -10919,6 +11081,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Hetzner",
     "online": false,
     "first-seen": "2024-11-28T11:19:11Z",
@@ -11054,6 +11218,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2025-03-05T21:06:45Z",
@@ -11222,6 +11388,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "",
     "online": false,
     "first-seen": "2024-04-13T19:10:42Z",
@@ -11371,6 +11539,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2026-08-08T17:30:27Z",
@@ -11525,6 +11695,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "GCP",
     "online": false,
     "first-seen": "2026-06-12T16:21:46Z",
@@ -11661,6 +11833,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "52.28.73.179",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2024-05-06T08:20:58Z",
@@ -11807,6 +11981,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2024-11-28T16:04:01Z",
@@ -11935,6 +12111,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2024-03-06T07:09:08Z",
@@ -12065,6 +12243,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.49.157",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-11-01T07:55:20Z",
@@ -12188,6 +12368,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2026-04-08T12:24:45Z",
@@ -12304,6 +12486,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Hetzner",
     "online": false,
     "first-seen": "2024-09-28T19:45:15Z",
@@ -12384,6 +12568,8 @@
       "cfengine_3",
       "cfengine_3_27"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "AWS",
     "online": true,
     "first-seen": "2025-05-28T13:34:05Z",
@@ -12511,6 +12697,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2024-08-21T09:05:33Z",
@@ -12648,6 +12836,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "54.93.114.134",
     "cloud-provider": "Azure",
     "online": false,
     "first-seen": "2023-12-17T18:05:42Z",
@@ -12812,6 +13002,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "AWS",
     "online": false,
     "first-seen": "2026-06-03T14:06:49Z",
@@ -12962,6 +13154,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "18.130.158.231",
     "cloud-provider": "Azure",
     "online": true,
     "first-seen": "2024-02-13T11:12:58Z",
@@ -13110,6 +13304,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "",
     "online": true,
     "first-seen": "2025-05-24T15:42:52Z",
@@ -13269,6 +13465,8 @@
       "policy_server",
       "am_policy_hub"
     ],
+    "role": "Hub",
+    "hub": "54.93.114.134",
     "cloud-provider": "GCP",
     "online": true,
     "first-seen": "2025-01-11T02:38:27Z",
@@ -13406,6 +13604,8 @@
       "cfengine_3_27",
       "specific_linux_os"
     ],
+    "role": "Client",
+    "hub": "34.240.185.202",
     "cloud-provider": "",
     "online": false,
     "first-seen": "2024-06-12T11:08:51Z",
