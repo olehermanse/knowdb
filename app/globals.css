@@ -541,6 +541,43 @@ a,
   display: none;
 }
 
+/* Thumbtack at the right edge of a row, faded until pinned or hovered. */
+.pin-button {
+  margin-left: auto;
+  border: 1px solid transparent;
+  border-radius: 0.3rem;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.4;
+  padding: 0 0.3rem;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.pin-button:hover,
+.pin-button:focus-visible {
+  opacity: 1;
+  border-color: var(--border);
+}
+
+.pin-button-pinned {
+  opacity: 1;
+}
+
+/* Pinned software, classes and variables in the host view. */
+.host-pinned {
+  margin-top: 1.5rem;
+}
+
+.pinned-list li.pinned-empty {
+  border-style: dashed;
+}
+
+.pinned-missing {
+  font-style: italic;
+}
+
 /* Entry pages: the entry on the left, its host(s) on the right. */
 .entry-split {
   display: grid;

@@ -14,6 +14,27 @@ export interface ModalRow {
   note?: { label: string; href?: string };
 }
 
+// A thumbtack toggling whether the row is pinned to the host view. The
+// state lives in the browser's local storage, so the layout's inline
+// script sets aria-pressed and the class after loading; React must not
+// warn when they differ from what the server rendered.
+export function PinButton({ name }: { name: string }) {
+  return (
+    <button
+      type="button"
+      className="pin-button"
+      data-pin-toggle
+      aria-pressed={false}
+      aria-label={`Pin ${name}`}
+      title="Pin to the host view"
+      suppressHydrationWarning
+      data-testid="pin-button"
+    >
+      📌
+    </button>
+  );
+}
+
 // A count plus a "Show all" button opening a popover that lists every row
 // vertically. This is a server component: opening and closing use the
 // native HTML popover attribute, and the live filter is a few lines of
@@ -26,6 +47,7 @@ export default function ListModal({
   verb,
   rows,
   testId,
+  pinnable = false,
 }: {
   title: string;
   singular: string;
@@ -34,6 +56,9 @@ export default function ListModal({
   verb: string;
   rows: ModalRow[];
   testId: string;
+  // Give every row a pin button; pinned rows are shown in the host view
+  // (see PinButton and components/listModalScript.ts).
+  pinnable?: boolean;
 }) {
   const id = `${testId}-popover`;
   const count = `${rows.length} ${rows.length === 1 ? singular : plural}`;
@@ -90,9 +115,11 @@ export default function ListModal({
                 key={row.key}
                 data-list-modal-row
                 data-label={`${row.label} ${row.extra?.label ?? ""}`.trim().toLowerCase()}
+                data-pin-type={pinnable ? row.type : undefined}
+                data-pin-name={pinnable ? row.label : undefined}
               >
                 <span className="type-badge">{row.type}</span>
-                <span>
+                <span data-pin-content={pinnable ? "" : undefined}>
                   <Link className="entry-link" href={row.href}>
                     {row.label}
                   </Link>
@@ -117,6 +144,7 @@ export default function ListModal({
                     </span>
                   )}
                 </span>
+                {pinnable && <PinButton name={row.label} />}
               </li>
             ))}
             <li className="muted" data-list-modal-empty hidden>

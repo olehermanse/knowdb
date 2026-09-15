@@ -1,8 +1,10 @@
 // Plain JavaScript inlined by the root layout; works on the static HTML
 // without any framework code in the browser. It filters the list modals
 // (components/ListModal.tsx) as the user types, resets and focuses the
-// filter when a popover opens, and remembers the Charts/List tab choice in
-// a cookie (components/HostsSections.tsx).
+// filter when a popover opens, remembers the Charts/List/Ports tab choice
+// in a cookie (components/HostsSections.tsx), stores comments, and keeps
+// the software, classes and variables pinned to the host view in local
+// storage (components/HostView.tsx).
 export const LIST_MODAL_SCRIPT = `
 (function () {
   function update(modal) {
@@ -106,8 +108,120 @@ export const LIST_MODAL_SCRIPT = `
     appendComment(section, comment);
     form.querySelector("textarea[name=text]").value = "";
   });
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initComments);
-  else initComments();
+  // Pins: "type:name" strings in local storage, shared by all hosts. Each
+  // pinned item is shown in the host view, copied from its row in the list
+  // modal when the host has it, or as "(not defined)" / "(not installed)".
+  var PIN_KEY = "knowdb-pins";
+  var PINNED_EMPTY = "Nothing pinned. Pin software, classes or variables with \uD83D\uDCCC in the lists below.";
+  function loadPins() {
+    try {
+      var pins = JSON.parse(localStorage.getItem(PIN_KEY) || "[]");
+      return Array.isArray(pins) ? pins : [];
+    } catch (err) { return []; }
+  }
+  function pinOf(el) {
+    var row = el.closest("[data-pin-type]");
+    return row ? row.getAttribute("data-pin-type") + ":" + row.getAttribute("data-pin-name") : null;
+  }
+  function pinButton(name, pinned) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pin-button" + (pinned ? " pin-button-pinned" : "");
+    btn.setAttribute("data-pin-toggle", "");
+    btn.setAttribute("data-testid", "pin-button");
+    btn.setAttribute("aria-pressed", pinned ? "true" : "false");
+    btn.setAttribute("aria-label", (pinned ? "Unpin " : "Pin ") + name);
+    btn.title = pinned ? "Unpin from the host view" : "Pin to the host view";
+    btn.textContent = "\uD83D\uDCCC";
+    return btn;
+  }
+  function modalRow(type, name) {
+    var rows = document.querySelectorAll("[data-list-modal-row][data-pin-type]");
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].getAttribute("data-pin-type") === type && rows[i].getAttribute("data-pin-name") === name) return rows[i];
+    }
+    return null;
+  }
+  function pinnedItem(pin) {
+    var sep = pin.indexOf(":");
+    var type = pin.slice(0, sep);
+    var name = pin.slice(sep + 1);
+    var li = document.createElement("li");
+    li.className = "host-item pinned-item";
+    li.setAttribute("data-testid", "pinned-item");
+    li.setAttribute("data-pin-type", type);
+    li.setAttribute("data-pin-name", name);
+    var badge = document.createElement("span");
+    badge.className = "type-badge";
+    badge.textContent = type;
+    li.appendChild(badge);
+    var row = modalRow(type, name);
+    var content = row && row.querySelector("[data-pin-content]");
+    if (content) {
+      li.appendChild(content.cloneNode(true));
+    } else {
+      // Not on this host: link to the entry, and say so in gray italics.
+      var span = document.createElement("span");
+      var link = document.createElement("a");
+      link.className = "entry-link";
+      link.href = "/entry/" + type + "/" + encodeURIComponent(name);
+      link.textContent = name;
+      var missing = document.createElement("em");
+      missing.className = "muted pinned-missing";
+      missing.setAttribute("data-testid", "pinned-missing");
+      missing.textContent = type === "software" ? "(not installed)" : "(not defined)";
+      span.appendChild(link);
+      span.appendChild(document.createTextNode(" "));
+      span.appendChild(missing);
+      li.appendChild(span);
+    }
+    li.appendChild(pinButton(name, true));
+    return li;
+  }
+  function renderPins() {
+    var pins = loadPins();
+    var buttons = document.querySelectorAll("[data-list-modal-row] [data-pin-toggle]");
+    for (var i = 0; i < buttons.length; i++) {
+      var pin = pinOf(buttons[i]);
+      var on = pin !== null && pins.indexOf(pin) !== -1;
+      var name = pin ? pin.slice(pin.indexOf(":") + 1) : "";
+      buttons[i].setAttribute("aria-pressed", on ? "true" : "false");
+      buttons[i].setAttribute("aria-label", (on ? "Unpin " : "Pin ") + name);
+      buttons[i].title = on ? "Unpin from the host view" : "Pin to the host view";
+      if (on) buttons[i].classList.add("pin-button-pinned");
+      else buttons[i].classList.remove("pin-button-pinned");
+    }
+    var lists = document.querySelectorAll("[data-pinned]");
+    for (var j = 0; j < lists.length; j++) {
+      lists[j].innerHTML = "";
+      if (pins.length === 0) {
+        var empty = document.createElement("li");
+        empty.className = "muted pinned-empty";
+        empty.setAttribute("data-pinned-empty", "");
+        empty.textContent = PINNED_EMPTY;
+        lists[j].appendChild(empty);
+      }
+      for (var k = 0; k < pins.length; k++) lists[j].appendChild(pinnedItem(pins[k]));
+    }
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest && e.target.closest("[data-pin-toggle]");
+    if (!btn) return;
+    var pin = pinOf(btn);
+    if (!pin) return;
+    var pins = loadPins();
+    var at = pins.indexOf(pin);
+    if (at === -1) pins.push(pin);
+    else pins.splice(at, 1);
+    localStorage.setItem(PIN_KEY, JSON.stringify(pins));
+    renderPins();
+  });
+  function init() {
+    initComments();
+    renderPins();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
   document.addEventListener("input", function (e) {
     var modal = e.target && e.target.closest && e.target.closest("[data-list-modal]");
     if (modal) update(modal);

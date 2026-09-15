@@ -1694,7 +1694,8 @@ test("host pages list variables with their values as links", async ({ page }) =>
     // value linking to a search for them.
     const shared = hosts.filter((h) => variablesOf(h)[variable] === value).length;
     const count = `(${shared} ${shared === 1 ? "host" : "hosts"})`;
-    await expect(item).toHaveText(`variable${variable}=${value} ${count}`);
+    // The row ends with the pin button's thumbtack.
+    await expect(item).toHaveText(`variable${variable}=${value} ${count}📌`);
     await expect(item.getByTestId("list-modal-note").getByRole("link")).toHaveAttribute(
       "href",
       `/search?q=${encodeURIComponent(`value:${quoteIfNeeded(`${variable}=${value}`)}`)}`,
@@ -1730,6 +1731,111 @@ test("host pages show software versions as links", async ({ page }) => {
       `/entry/version/${encodeURIComponent(`${sw} ${version}`)}`,
     );
   }
+});
+
+test("pinned software, classes and variables follow the user between hosts", async ({ page }) => {
+  // A Linux host and a Windows host that lacks some of its software and classes.
+  const linux = hosts.find((h) => !h.os.startsWith("Windows"))!;
+  const windows = hosts.find((h) => h.os.startsWith("Windows"))!;
+  const software = linux.software.find((sw) => !windows.software.includes(sw))!;
+  const cls = linux.classes.find((c) => !windows.classes.includes(c))!;
+  const hostUrl = (h: Host) => `/entry/host/${encodeURIComponent(h.id)}`;
+  const pins = () => page.evaluate(() => JSON.parse(localStorage.getItem("knowdb-pins") ?? "[]"));
+
+  await page.goto(hostUrl(linux));
+  // Nothing pinned: a hint, between the two columns and the modal buttons.
+  const pinned = page.getByTestId("host-pinned");
+  await expect(pinned.locator("dt")).toHaveText("Pinned");
+  await expect(page.getByTestId("pinned-list")).toContainText("Nothing pinned.");
+  await expect(page.getByTestId("pinned-item")).toHaveCount(0);
+  const columns = (await page.getByTestId("host-details-left").boundingBox())!;
+  const pinnedBox = (await pinned.boundingBox())!;
+  const wideBox = (await page.getByTestId("host-details-wide").boundingBox())!;
+  expect(pinnedBox.y).toBeGreaterThan(columns.y + columns.height - 1);
+  expect(wideBox.y).toBeGreaterThan(pinnedBox.y + pinnedBox.height - 1);
+  // Services cannot be pinned; software, classes and variables can.
+  await page.getByTestId("services-modal-open").click();
+  await expect(page.getByTestId("services-modal-list").getByTestId("pin-button")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  // Pin a class from its modal: the thumbtack turns pressed and the class
+  // appears in the pinned list with its link.
+  await page.getByTestId("classes-modal-open").click();
+  const classRow = page
+    .getByTestId("classes-modal-list")
+    .locator(`li[data-pin-name="${cls}"]`);
+  const classPin = classRow.getByTestId("pin-button");
+  await expect(classPin).toHaveAttribute("aria-pressed", "false");
+  await expect(classPin).toHaveAttribute("aria-label", `Pin ${cls}`);
+  await classPin.click();
+  await expect(classPin).toHaveAttribute("aria-pressed", "true");
+  await expect(classPin).toHaveAttribute("aria-label", `Unpin ${cls}`);
+  await page.keyboard.press("Escape");
+  const items = page.getByTestId("pinned-item");
+  await expect(items).toHaveCount(1);
+  await expect(items.first().locator(".type-badge")).toHaveText("class");
+  await expect(items.first().getByRole("link", { name: cls, exact: true })).toHaveAttribute(
+    "href",
+    `/entry/class/${encodeURIComponent(cls)}`,
+  );
+  await expect(page.getByTestId("pinned-list")).not.toContainText("Nothing pinned.");
+  expect(await pins()).toEqual([`class:${cls}`]);
+
+  // Pin a piece of software and a variable too: version, value and count
+  // come along from the modal rows.
+  await page.getByTestId("software-modal-open").click();
+  await page.getByTestId("software-modal-list").locator(`li[data-pin-name="${software}"]`).getByTestId("pin-button").click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("variables-modal-open").click();
+  await page.getByTestId("variables-modal-list").locator('li[data-pin-name="sys.flavor"]').getByTestId("pin-button").click();
+  await page.keyboard.press("Escape");
+  await expect(items).toHaveCount(3);
+  const version = (linux["software-versions"] as unknown as Record<string, string>)[software];
+  await expect(items.nth(1).getByRole("link", { name: version, exact: true })).toHaveAttribute(
+    "href",
+    `/entry/version/${encodeURIComponent(`${software} ${version}`)}`,
+  );
+  const flavor = variablesOf(linux)["sys.flavor"];
+  const sharing = hosts.filter((h) => variablesOf(h)["sys.flavor"] === flavor).length;
+  await expect(items.nth(2)).toHaveText(`variablesys.flavor=${flavor} (${sharing} hosts)📌`);
+  expect(await pins()).toEqual([`class:${cls}`, `software:${software}`, "variable:sys.flavor"]);
+
+  // Pins survive a reload and follow the user to other hosts, where missing
+  // items are said to be not installed / not defined, in gray italics.
+  await page.reload();
+  await expect(items).toHaveCount(3);
+  await page.goto(hostUrl(windows));
+  await expect(items).toHaveCount(3);
+  const missing = page.getByTestId("pinned-missing");
+  await expect(missing).toHaveCount(2);
+  await expect(items.nth(0).getByTestId("pinned-missing")).toHaveText("(not defined)");
+  await expect(items.nth(1).getByTestId("pinned-missing")).toHaveText("(not installed)");
+  await expect(missing.first()).toHaveCSS("font-style", "italic");
+  const mutedColor = await page.locator(".muted").first().evaluate((el) => getComputedStyle(el).color);
+  await expect(missing.first()).toHaveCSS("color", mutedColor);
+  await expect(items.nth(0).getByRole("link", { name: cls, exact: true })).toHaveAttribute(
+    "href",
+    `/entry/class/${encodeURIComponent(cls)}`,
+  );
+  // The variable is defined on every host, so it shows the Windows value.
+  await expect(items.nth(2)).toContainText(`sys.flavor=${variablesOf(windows)["sys.flavor"]}`);
+  // A pinned variable no host has is "(not defined)" as well.
+  await page.evaluate(() => {
+    const p = JSON.parse(localStorage.getItem("knowdb-pins") ?? "[]");
+    p.push("variable:sys.nonexistent");
+    localStorage.setItem("knowdb-pins", JSON.stringify(p));
+  });
+  await page.reload();
+  await expect(items).toHaveCount(4);
+  await expect(items.nth(3).getByTestId("pinned-missing")).toHaveText("(not defined)");
+
+  // Unpinning from the pinned list removes it everywhere.
+  await items.nth(0).getByTestId("pin-button").click();
+  await expect(items).toHaveCount(3);
+  await expect(items.nth(0).locator(".type-badge")).toHaveText("software");
+  expect(await pins()).toEqual([`software:${software}`, "variable:sys.flavor", "variable:sys.nonexistent"]);
+  await page.getByTestId("classes-modal-open").click();
+  await expect(page.getByTestId("classes-modal-list").getByTestId("pin-button").first()).toHaveAttribute("aria-pressed", "false");
 });
 
 test("avatars show an online/offline dot and about 70% of hosts are online", async ({

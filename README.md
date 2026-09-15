@@ -44,6 +44,18 @@ the host and the Similar tab.
 Lists show at most 10 items at a time, with pagination links below the
 list: hosts, but also the ports, versions and similar entries in the tabs.
 
+## Pinned software, classes and variables
+
+Every row in the Software, Classes and Variables modals on a host page has
+a thumbtack (📌). Pinning a row shows it in a "Pinned" list on every host
+page, below the host's basic information and above the modal buttons,
+with the same links (and version, or value and host count) as in the
+modal. When the host does not have the pinned item, the row says
+`(not installed)` for software and `(not defined)` for classes and
+variables, in gray italics. Which items are pinned is stored in the
+browser's local storage, shared across all hosts; unpin from the list or
+the modal.
+
 ## Comments
 
 Every entry has a Comments tab (the last tab on the left), and a host page

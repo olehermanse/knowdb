@@ -82,6 +82,10 @@ function RoleDetails({ host }: { host: Host }) {
   );
 }
 
+// Shown while nothing is pinned. The same text is in listModalScript.ts.
+const PINNED_EMPTY =
+  '<li class="muted pinned-empty" data-pinned-empty>Nothing pinned. Pin software, classes or variables with 📌 in the lists below.</li>';
+
 function HostDetails({ host }: { host: Host }) {
   const groups = getHostGroups(host.id);
   return (
@@ -169,6 +173,21 @@ function HostDetails({ host }: { host: Host }) {
           </dd>
         </dl>
       </div>
+      {/* Software, classes and variables pinned from the lists below, kept
+          in local storage and filled in by the layout's inline script (see
+          components/listModalScript.ts), so the server renders the hint. */}
+      <dl className="host-details host-pinned" data-testid="host-pinned">
+        <dt>Pinned</dt>
+        <dd>
+          <ul
+            className="entry-list pinned-list"
+            data-pinned
+            data-testid="pinned-list"
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: PINNED_EMPTY }}
+          />
+        </dd>
+      </dl>
       <dl className="host-details host-details-wide" data-testid="host-details-wide">
           <dt>Software</dt>
         <dd data-testid="host-software">
@@ -178,6 +197,7 @@ function HostDetails({ host }: { host: Host }) {
             plural="software packages"
             verb="installed"
             testId="software-modal"
+            pinnable
             rows={host.software.map((sw) => {
               const version = host["software-versions"]?.[sw];
               return {
@@ -223,6 +243,7 @@ function HostDetails({ host }: { host: Host }) {
             plural="classes"
             verb="defined"
             testId="classes-modal"
+            pinnable
             rows={host.classes.map((cls) => ({
               key: cls,
               type: "class",
@@ -239,6 +260,7 @@ function HostDetails({ host }: { host: Host }) {
             plural="variables"
             verb="defined"
             testId="variables-modal"
+            pinnable
             rows={Object.entries(host.variables ?? {}).map(([variable, value]) => {
               // "sys.arch=x86_64 (87 hosts)": the count of hosts sharing the
               // value links to a search for them.
