@@ -1872,11 +1872,27 @@ test("pinned software, classes and variables follow the user between hosts", asy
   await expect(items).toHaveCount(4);
   await expect(items.nth(3).getByTestId("pinned-missing")).toHaveText("(not defined)");
 
-  // Unpinning with the icon next to a value removes it everywhere.
-  await expect(items.nth(0).getByTestId("pin-button")).toHaveAttribute("aria-label", `Unpin ${cls}`);
-  await items.nth(0).getByTestId("pin-button").click();
+  // The toggle next to a value is the modal's pin button in its pressed
+  // state: same icon, softer than plain text. Unpinning fades the item
+  // out, then the others take its place.
+  const unpin = items.nth(0).getByTestId("pin-button");
+  await expect(unpin).toHaveAttribute("aria-label", `Unpin ${cls}`);
+  await expect(unpin).toHaveAttribute("aria-pressed", "true");
+  await expect(unpin).toHaveClass(/pin-button-pinned/);
+  await expect(unpin.locator("svg")).toHaveCount(1);
+  const opacity = await unpin.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+  expect(opacity).toBeLessThan(0.9);
+  expect(opacity).toBeGreaterThan(0.4);
+  const secondBefore = (await names.nth(1).boundingBox())!;
+  await unpin.click();
+  await expect(items.nth(0)).toHaveClass(/pinned-leaving/);
   await expect(items).toHaveCount(3);
   await expect(names.nth(0)).toHaveText(software);
+  // The second item moves into the first slot once the slide finishes.
+  await expect.poll(async () => (await names.nth(0).boundingBox())!.x, { timeout: 2000 }).toBeLessThan(
+    secondBefore.x,
+  );
+  await expect(names.nth(0)).not.toHaveAttribute("style", /transform: translate/);
   expect(await pins()).toEqual([`software:${software}`, "variable:sys.flavor", "variable:sys.nonexistent"]);
   await page.getByTestId("classes-modal-open").click();
   await expect(page.getByTestId("classes-modal-list").getByTestId("pin-button").first()).toHaveAttribute("aria-pressed", "false");

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PinOff } from "lucide-react";
+import { Pin } from "lucide-react";
 import Comments from "@/components/Comments";
 import EntryLink from "@/components/EntryLink";
 import HostAvatar from "@/components/HostAvatar";
@@ -192,7 +192,7 @@ function HostLists({ host }: { host: Host }) {
           name/value pairs in three columns like the details above. Kept in
           local storage and filled in by the layout's inline script (see
           components/listModalScript.ts), so the server renders the hint.
-          The hidden icon is what the script copies for the unpin buttons. */}
+          The hidden icon is what the script copies for the pin toggles. */}
       <dl
         className="host-details host-pinned"
         data-pinned
@@ -200,8 +200,8 @@ function HostLists({ host }: { host: Host }) {
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: PINNED_EMPTY }}
       />
-      <span hidden data-icon="pin-off">
-        <PinOff size={16} aria-hidden="true" />
+      <span hidden data-icon="pin">
+        <Pin size={16} aria-hidden="true" />
       </span>
       <dl className="host-details host-details-wide" data-testid="host-details-wide">
           <dt>Software</dt>

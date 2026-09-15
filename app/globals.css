@@ -541,21 +541,23 @@ a,
   display: none;
 }
 
-/* Pin icon at the right edge of a row, faded until pinned or hovered. */
+/* Pin toggle at the right edge of a row (and next to a pinned value):
+   faint when not pinned, soft link-coloured when pinned, full on hover. */
 .pin-button {
   margin-left: auto;
   border: 1px solid transparent;
   border-radius: 0.3rem;
   background: none;
-  color: inherit;
+  color: var(--muted);
   cursor: pointer;
   font: inherit;
   line-height: 1;
   padding: 0.15rem;
-  opacity: 0.4;
+  opacity: 0.45;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  transition: opacity 150ms ease, color 150ms ease;
 }
 
 .pin-button svg {
@@ -571,7 +573,13 @@ a,
 }
 
 .pin-button-pinned {
-  opacity: 1;
+  color: var(--link);
+  opacity: 0.7;
+}
+
+.pin-button-pinned svg {
+  fill: currentColor;
+  fill-opacity: 0.2;
 }
 
 /* Pinned software, classes and variables in the host view: name/value
@@ -598,6 +606,26 @@ a,
 
 .pinned-missing {
   font-style: italic;
+}
+
+/* Unpinning: the item fades out, then the others slide into place (the
+   slide is an inline transform transition set by the script). */
+.host-pinned dt,
+.host-pinned dd {
+  transition: opacity 250ms ease;
+}
+
+.host-pinned .pinned-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-button,
+  .host-pinned dt,
+  .host-pinned dd {
+    transition: none;
+  }
 }
 
 @media (max-width: 40rem) {

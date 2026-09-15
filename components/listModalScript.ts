@@ -131,8 +131,9 @@ export const LIST_MODAL_SCRIPT = `
     var row = el.closest("[data-pin-type]");
     return row ? row.getAttribute("data-pin-type") + ":" + row.getAttribute("data-pin-name") : null;
   }
-  // The unpin button of a pinned item; its icon is copied from the hidden
-  // lucide icon rendered by HostView.
+  // The toggle next to a pinned item: the same pin button as in the modal
+  // rows, in its pressed state. The icon is copied from the hidden lucide
+  // icon rendered by HostView.
   function unpinButton(name) {
     var btn = document.createElement("button");
     btn.type = "button";
@@ -142,7 +143,7 @@ export const LIST_MODAL_SCRIPT = `
     btn.setAttribute("aria-pressed", "true");
     btn.setAttribute("aria-label", "Unpin " + name);
     btn.title = "Unpin from the host view";
-    var icon = document.querySelector("[data-icon=pin-off] svg");
+    var icon = document.querySelector("[data-icon=pin] svg");
     if (icon) btn.appendChild(icon.cloneNode(true));
     else btn.textContent = "\u00D7";
     return btn;
@@ -163,10 +164,12 @@ export const LIST_MODAL_SCRIPT = `
     var name = pin.slice(sep + 1);
     var dt = document.createElement("dt");
     dt.setAttribute("data-testid", "pinned-name");
+    dt.setAttribute("data-pin-key", pin);
     dt.textContent = name;
     var dd = document.createElement("dd");
     dd.className = "pinned-value";
     dd.setAttribute("data-testid", "pinned-item");
+    dd.setAttribute("data-pin-key", pin);
     dd.setAttribute("data-pin-type", type);
     dd.setAttribute("data-pin-name", name);
     var row = modalRow(type, name);
@@ -220,17 +223,87 @@ export const LIST_MODAL_SCRIPT = `
       for (var k = 0; k < pins.length; k++) appendPinnedItem(lists[j], pins[k]);
     }
   }
+  function savePins(pins) { localStorage.setItem(PIN_KEY, JSON.stringify(pins)); }
+  var FADE_MS = 250;
+  var MOVE_MS = 300;
+  function reducedMotion() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+  // Positions of the pinned names and values, by pin key and tag.
+  function positions() {
+    var map = {};
+    var els = document.querySelectorAll("[data-pinned] [data-pin-key]");
+    for (var i = 0; i < els.length; i++) {
+      map[els[i].getAttribute("data-pin-key") + "|" + els[i].tagName] = els[i].getBoundingClientRect();
+    }
+    return map;
+  }
+  // Unpin with animation: the item fades out, then the remaining items
+  // slide from where they were to their new places (FLIP).
+  function unpinAnimated(pins, pin) {
+    var leaving = [];
+    var els = document.querySelectorAll("[data-pinned] [data-pin-key]");
+    for (var i = 0; i < els.length; i++) if (els[i].getAttribute("data-pin-key") === pin) leaving.push(els[i]);
+    if (leaving.length === 0 || reducedMotion()) {
+      savePins(pins);
+      renderPins();
+      return;
+    }
+    var before = positions();
+    for (var j = 0; j < leaving.length; j++) {
+      leaving[j].classList.add("pinned-leaving");
+      var btn = leaving[j].querySelector("[data-pin-toggle]");
+      if (btn) btn.disabled = true;
+    }
+    setTimeout(function () {
+      savePins(pins);
+      renderPins();
+      var moving = [];
+      var after = document.querySelectorAll("[data-pinned] [data-pin-key]");
+      for (var k = 0; k < after.length; k++) {
+        var el = after[k];
+        var old = before[el.getAttribute("data-pin-key") + "|" + el.tagName];
+        if (!old) continue;
+        var now = el.getBoundingClientRect();
+        var dx = old.left - now.left;
+        var dy = old.top - now.top;
+        if (!dx && !dy) continue;
+        el.style.transition = "none";
+        el.style.transform = "translate(" + dx + "px, " + dy + "px)";
+        moving.push(el);
+      }
+      if (moving.length === 0) return;
+      void document.body.offsetWidth; // apply the start positions first
+      requestAnimationFrame(function () {
+        for (var m = 0; m < moving.length; m++) {
+          moving[m].classList.add("pinned-moving");
+          moving[m].style.transition = "transform " + MOVE_MS + "ms ease";
+          moving[m].style.transform = "";
+        }
+        setTimeout(function () {
+          for (var m = 0; m < moving.length; m++) {
+            moving[m].classList.remove("pinned-moving");
+            moving[m].style.transition = "";
+          }
+        }, MOVE_MS + 50);
+      });
+    }, FADE_MS);
+  }
   document.addEventListener("click", function (e) {
     var btn = e.target && e.target.closest && e.target.closest("[data-pin-toggle]");
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     var pin = pinOf(btn);
     if (!pin) return;
     var pins = loadPins();
     var at = pins.indexOf(pin);
-    if (at === -1) pins.push(pin);
-    else pins.splice(at, 1);
-    localStorage.setItem(PIN_KEY, JSON.stringify(pins));
-    renderPins();
+    if (at === -1) {
+      pins.push(pin);
+      savePins(pins);
+      renderPins();
+    } else {
+      pins.splice(at, 1);
+      unpinAnimated(pins, pin);
+    }
   });
   function init() {
     initComments();

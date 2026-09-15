@@ -55,8 +55,11 @@ quiet) and the value is the software's version, `defined` for a class, or
 the variable's value, linking to the version, class or value entry. When the host does not have the pinned item, the
 value reads `(not installed)` for software and `(not defined)` for classes
 and variables, in gray italics. Which items are pinned is stored in the
-browser's local storage, shared across all hosts; unpin with the icon next
-to the value or in the modal. The host preview on the right of other
+browser's local storage, shared across all hosts. The pin next to a value
+is the same toggle as in the modal, shown in its pressed state (softly
+coloured); clicking either unpins: the item fades out and the remaining
+items slide into their new places (no animation when the browser asks
+for reduced motion). The host preview on the right of other
 entries shows only the basic fields: no pinned items and no Software,
 Services, Classes or Variables buttons.
 
