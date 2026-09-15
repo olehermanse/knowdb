@@ -1734,8 +1734,11 @@ test("host pages show software versions as links", async ({ page }) => {
 });
 
 test("pinned software, classes and variables follow the user between hosts", async ({ page }) => {
-  // A Linux host and a Windows host that lacks some of its software and classes.
-  const linux = hosts.find((h) => !h.os.startsWith("Windows"))!;
+  // A Linux client (so its page links to its hub) and a Windows host that
+  // lacks some of its software and classes.
+  const linux = hosts.find(
+    (h) => !h.os.startsWith("Windows") && (h as unknown as { role: string }).role === "Client",
+  )!;
   const windows = hosts.find((h) => h.os.startsWith("Windows"))!;
   const software = linux.software.find((sw) => !windows.software.includes(sw))!;
   const cls = linux.classes.find((c) => !windows.classes.includes(c))!;
@@ -1797,13 +1800,26 @@ test("pinned software, classes and variables follow the user between hosts", asy
   );
   const flavor = variablesOf(linux)["sys.flavor"];
   const sharing = hosts.filter((h) => variablesOf(h)["sys.flavor"] === flavor).length;
-  await expect(items.nth(2)).toHaveText(`variablesys.flavor=${flavor} (${sharing} hosts)📌`);
+  await expect(items.nth(2)).toHaveText(
+    `variablesys.flavor=${flavor} (${sharing} ${sharing === 1 ? "host" : "hosts"})📌`,
+  );
   expect(await pins()).toEqual([`class:${cls}`, `software:${software}`, "variable:sys.flavor"]);
 
-  // Pins survive a reload and follow the user to other hosts, where missing
-  // items are said to be not installed / not defined, in gray italics.
+  // Pins survive a reload and follow the user to other hosts, also when
+  // getting there by a link (no page load); where an item is missing it
+  // is said to be not installed / not defined, in gray italics.
   await page.reload();
   await expect(items).toHaveCount(3);
+  await page.getByTestId("host-hub-name").click();
+  await expect(page).not.toHaveURL(hostUrl(linux));
+  await expect(page.getByTestId("entry-name")).not.toContainText(linux.hostname);
+  await expect(items).toHaveCount(3);
+  await expect(page.getByTestId("pinned-list")).not.toContainText("Nothing pinned.");
+  await page.getByTestId("variables-modal-open").click();
+  await expect(
+    page.getByTestId("variables-modal-list").locator('li[data-pin-name="sys.flavor"]').getByTestId("pin-button"),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("Escape");
   await page.goto(hostUrl(windows));
   await expect(items).toHaveCount(3);
   const missing = page.getByTestId("pinned-missing");
@@ -2766,6 +2782,16 @@ test("posting a comment stores it in the browser only", async ({ page }) => {
   await expect(page.getByTestId("comments-heading")).toHaveText("Comments (1)");
   await expect(page.getByTestId("comment-text")).toHaveValue("");
   await expect(page.getByTestId("comments-list").locator(".comments-empty")).toHaveCount(0);
+
+  // Leaving by a link and coming back the same way (no page load) still
+  // shows it, exactly once.
+  await page.getByTestId("see-also").getByRole("link", { name: "cfengine (software)", exact: true }).click();
+  await expect(page).toHaveURL(/\/entry\/software\/cfengine/);
+  await page.getByTestId("see-also").getByRole("link", { name: "port 5308 (cfengine)", exact: true }).click();
+  await expect(page).toHaveURL(/\/entry\/port\/5308/);
+  await openTab(page, "comments");
+  await expect(page.getByTestId("comment-card")).toHaveCount(1);
+  await expect(page.getByTestId("comments-heading")).toHaveText("Comments (1)");
 
   // It survives a reload (local storage), alongside the examples elsewhere.
   await page.reload();

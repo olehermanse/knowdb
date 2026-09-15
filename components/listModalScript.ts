@@ -85,9 +85,15 @@ export const LIST_MODAL_SCRIPT = `
     var counts = document.querySelectorAll("[data-comments-count]");
     for (var i = 0; i < counts.length; i++) counts[i].textContent = "(" + total + ")";
   }
+  // Sections whose stored comments were added, since init runs again after
+  // client-side navigation. Kept here rather than as an attribute, which
+  // would make React's hydration see a changed element and warn.
+  var loadedSections = new WeakSet();
   function initComments() {
     var sections = document.querySelectorAll("[data-comments]");
     for (var i = 0; i < sections.length; i++) {
+      if (loadedSections.has(sections[i])) continue;
+      loadedSections.add(sections[i]);
       var stored = loadComments(sections[i]);
       for (var j = 0; j < stored.length; j++) appendComment(sections[i], stored[j]);
     }
@@ -222,6 +228,29 @@ export const LIST_MODAL_SCRIPT = `
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
+  // Following a link swaps the page content without reloading, so the
+  // new page's pinned list and comments arrive after init ran. Run it
+  // again whenever such a container is added. Our own rendering only adds
+  // rows inside the containers, so it does not trigger this.
+  var NEW_CONTENT = "[data-pinned], [data-comments], [data-list-modal-row]";
+  var scheduled = false;
+  function needsInit(node) {
+    return node.nodeType === 1 && (node.matches(NEW_CONTENT) || !!node.querySelector(NEW_CONTENT));
+  }
+  new MutationObserver(function (records) {
+    if (scheduled) return;
+    for (var i = 0; i < records.length && !scheduled; i++) {
+      var added = records[i].addedNodes;
+      for (var j = 0; j < added.length; j++) {
+        if (needsInit(added[j])) { scheduled = true; break; }
+      }
+    }
+    if (!scheduled) return;
+    requestAnimationFrame(function () {
+      scheduled = false;
+      init();
+    });
+  }).observe(document.body, { childList: true, subtree: true });
   document.addEventListener("input", function (e) {
     var modal = e.target && e.target.closest && e.target.closest("[data-list-modal]");
     if (modal) update(modal);
