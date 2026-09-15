@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "KnowDB",
-  description: "Explore your infrastructure, Wikipedia-style.",
+  description: "Explore your infrastructure.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
