@@ -87,7 +87,11 @@ function RoleDetails({ host }: { host: Host }) {
 const PINNED_EMPTY =
   '<div class="muted pinned-empty" data-pinned-empty>Nothing pinned. Use the pin icon in the lists below to keep software, classes or variables here.</div>';
 
-function HostDetails({ host }: { host: Host }) {
+// The host's details. Embedded on the right of another entry, only the
+// two columns of basic fields are shown: the pinned items and the
+// software, services, classes and variables lists belong to the host's
+// own page.
+function HostDetails({ host, embedded = false }: { host: Host; embedded?: boolean }) {
   const groups = getHostGroups(host.id);
   return (
     <div data-testid="host-details">
@@ -174,6 +178,16 @@ function HostDetails({ host }: { host: Host }) {
           </dd>
         </dl>
       </div>
+      {!embedded && <HostLists host={host} />}
+    </div>
+  );
+}
+
+// The pinned items and the Software, Services, Classes and Variables
+// modals, below the basic fields on the host's own page.
+function HostLists({ host }: { host: Host }) {
+  return (
+    <>
       {/* Software, classes and variables pinned from the lists below, as
           name/value pairs in three columns like the details above. Kept in
           local storage and filled in by the layout's inline script (see
@@ -283,7 +297,7 @@ function HostDetails({ host }: { host: Host }) {
           />
         </dd>
       </dl>
-    </div>
+    </>
   );
 }
 
@@ -307,7 +321,7 @@ export default function HostView({ host, embedded = false }: { host: Host; embed
         </h1>
       </div>
       <p data-testid={tid("entry-summary")}>{describeHost(host)}</p>
-      <HostDetails host={host} />
+      <HostDetails host={host} embedded={embedded} />
       {!embedded && <Comments entry={{ type: "host", name: host.id }} heading />}
       {embedded && (
         <Link

@@ -220,8 +220,14 @@ test("single-host hostnames, IPs and MACs show the host view and only entry tabs
     await expect(leftTabs.nth(0)).toContainText("Similar");
     await expect(leftTabs.nth(1)).toContainText("Resources");
     await expect(leftTabs.nth(2)).toContainText("Comments");
-    // The host preview has no comments; the host's own page does.
+    // The host preview has no comments, pinned items or the software,
+    // services, classes and variables lists; the host's own page does.
     await expect(page.getByTestId("hosts-pane").getByTestId("comments")).toHaveCount(0);
+    await expect(page.getByTestId("hosts-pane").getByTestId("pinned-list")).toHaveCount(0);
+    await expect(page.getByTestId("hosts-pane").getByTestId("host-details-wide")).toHaveCount(0);
+    await expect(page.getByTestId("hosts-pane").getByRole("button")).toHaveCount(0);
+    await expect(page.getByTestId("hosts-pane").getByTestId("host-details-left")).toBeVisible();
+    await expect(page.getByTestId("hosts-pane").getByTestId("host-details-right")).toBeVisible();
     await expect(page.getByTestId("hosts-sections")).toHaveCount(0);
     await expect(page.getByTestId("os-heading")).toHaveCount(0);
     await expect(page.getByTestId("clouds-heading")).toHaveCount(0);

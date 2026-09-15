@@ -56,7 +56,9 @@ the variable's value, linking to the version or value entry. When the host does 
 value reads `(not installed)` for software and `(not defined)` for classes
 and variables, in gray italics. Which items are pinned is stored in the
 browser's local storage, shared across all hosts; unpin with the icon next
-to the value or in the modal.
+to the value or in the modal. The host preview on the right of other
+entries shows only the basic fields: no pinned items and no Software,
+Services, Classes or Variables buttons.
 
 ## Comments
 
