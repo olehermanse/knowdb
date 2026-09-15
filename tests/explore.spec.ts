@@ -2209,9 +2209,18 @@ test("role pages describe the role and list its hosts", async ({ page }) => {
     await expect(page.getByTestId("hosts-description")).toHaveText(`Hosts with the CFEngine role ${name}:`);
     await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${selected.length})`);
   }
-  // Hubs are also marked by the policy server classes.
+  // Hubs are also marked by the policy server classes, and the two roles
+  // link to each other.
   await page.goto("/entry/role/Hub");
   await expect(page.getByTestId("see-also")).toContainText("policy_server (class)");
+  await expect(
+    page.getByTestId("see-also").getByRole("link", { name: "Client (role)", exact: true }),
+  ).toHaveAttribute("href", "/entry/role/Client");
+  await page.getByTestId("see-also").getByRole("link", { name: "Client (role)", exact: true }).click();
+  await expect(page.getByTestId("entry-name")).toHaveText("Client");
+  await expect(
+    page.getByTestId("see-also").getByRole("link", { name: "Hub (role)", exact: true }),
+  ).toHaveAttribute("href", "/entry/role/Hub");
 
   // Roles are browsable from the front page and work as search filters.
   await page.goto("/");

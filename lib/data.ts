@@ -873,7 +873,9 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
       if (sw.ports?.includes(port)) related.push({ type: "software", name });
     }
   } else if (entry.type === "role") {
-    // Both roles run CFEngine; hubs are also marked by the policy server classes.
+    // The two roles point at each other; both run CFEngine, and hubs are
+    // also marked by the policy server classes.
+    related.push({ type: "role", name: entry.name === ROLE_HUB ? ROLE_CLIENT : ROLE_HUB });
     related.push({ type: "software", name: "cfengine" });
     if (entry.name === ROLE_HUB) {
       related.push({ type: "class", name: "policy_server" }, { type: "class", name: "am_policy_hub" });

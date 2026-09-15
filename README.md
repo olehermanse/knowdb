@@ -295,6 +295,7 @@ linking to that address, with the hub's hostname linking to the hub); a hub
 also shows "Clients: N hosts", linking to a search for the clients
 reporting to it. In search, `hub:<ip>` filters hosts by the hub they
 report to, so `role:Client hub:18.130.49.157` lists that hub's clients.
+The Hub and Client pages link to each other in their "See also" line.
 
 ## Host data format
 
