@@ -617,6 +617,10 @@ test("hosts and ports sections have short headings and descriptions", async ({
   await expect(page.getByTestId("ports-description")).toHaveText(
     "The any hosts are listening to these ports:",
   );
+  await page.goto("/entry/user/root?tab=ports");
+  await expect(page.getByTestId("ports-description")).toHaveText(
+    "The hosts with the root user are listening to these ports:",
+  );
   await expect(page.getByText("Listening ports")).toHaveCount(0);
 });
 
