@@ -138,9 +138,11 @@ types with matching names, ignoring case and punctuation: the group
 `Linux` and the class `linux`, the class `ubuntu_24` and the OS
 `Ubuntu 24`, the class `cfengine` and the software `cfengine`.
 Well-known software, operating systems and ports can also have a `logo`,
-the URL of an image shown next to the entry's title (currently served
-from Simple Icons, https://simpleicons.org/, Wikimedia Commons for logos
-Simple Icons lacks, such as Windows, and cfengine.com for CFEngine).
+the path of an SVG in `public/logos/` (like `/logos/nginx.svg`) shown
+next to the entry's title. Logos are committed to the repository, never
+linked from third party websites; most come from Simple Icons,
+https://simpleicons.org/, a few (Windows, AWS, Azure) from Wikimedia
+Commons, and CFEngine's is the official logo.
 Keep the list short: most entries need none or one link, and more than a
 handful is too many. Edit this file to improve or extend the descriptions;
 the frontend reads it at build time.

@@ -850,7 +850,7 @@ test("well-known entries show a logo and official links", async ({ page }) => {
   await page.goto("/entry/software/nginx?tab=resources");
   const logo = page.getByTestId("entry-logo");
   await expect(logo).toBeVisible();
-  await expect(logo).toHaveAttribute("src", /cdn\.simpleicons\.org\/nginx/);
+  await expect(logo).toHaveAttribute("src", "/logos/nginx.svg");
   await expect(logo).toHaveAttribute("alt", "nginx logo");
   const links = page.getByTestId("external-links");
   // Non-Wikipedia links are shown as their bare address.
@@ -869,12 +869,12 @@ test("well-known entries show a logo and official links", async ({ page }) => {
   await page.goto("/entry/port/3306");
   await expect(page.getByTestId("entry-logo")).toHaveAttribute(
     "src",
-    /cdn\.simpleicons\.org\/mysql/,
+    "/logos/mysql.svg",
   );
   await page.goto(`/entry/os/${encodeURIComponent("Ubuntu 24")}`);
   await expect(page.getByTestId("entry-logo")).toHaveAttribute(
     "src",
-    /cdn\.simpleicons\.org\/ubuntu/,
+    "/logos/ubuntu.svg",
   );
 
   const windows = hosts.find((h) => h.os.startsWith("Windows"));
@@ -882,7 +882,7 @@ test("well-known entries show a logo and official links", async ({ page }) => {
     await page.goto(`/entry/os/${encodeURIComponent(windows.os)}`);
     await expect(page.getByTestId("entry-logo")).toHaveAttribute(
       "src",
-      /upload\.wikimedia\.org\/.*Windows_logo/,
+      "/logos/windows.svg",
     );
   }
 
@@ -891,7 +891,7 @@ test("well-known entries show a logo and official links", async ({ page }) => {
     await page.goto(url);
     await expect(page.getByTestId("entry-logo")).toHaveAttribute(
       "src",
-      /cfengine\.com\/images\/cfengine-logo\.svg/,
+      "/logos/cfengine.svg",
     );
   }
 
@@ -900,6 +900,27 @@ test("well-known entries show a logo and official links", async ({ page }) => {
   await expect(page.getByTestId("entry-logo")).toHaveCount(0);
   await page.goto(`/entry/host/${encodeURIComponent(someHost.id)}`);
   await expect(page.getByTestId("entry-logo")).toHaveCount(0);
+});
+
+test("every logo is a local SVG committed in public/logos", async ({ request }) => {
+  // Logos must never be linked from third party websites.
+  const logos = new Set<string>();
+  const collect = (section: unknown) => {
+    for (const entry of Object.values(section as Record<string, { logo?: string }>)) {
+      if (entry && typeof entry === "object" && entry.logo) logos.add(entry.logo);
+    }
+  };
+  for (const [key, section] of Object.entries(info)) {
+    if (key.startsWith("_")) continue;
+    collect(section);
+  }
+  expect(logos.size).toBeGreaterThan(40);
+  for (const logo of logos) {
+    expect(logo, `${logo} should be a local path`).toMatch(/^\/logos\/[a-z0-9-]+\.svg$/);
+    const response = await request.get(logo);
+    expect(response.status(), `${logo} should be served`).toBe(200);
+    expect(response.headers()["content-type"], `${logo} should be an SVG`).toContain("image/svg+xml");
+  }
 });
 
 test("special IP addresses are described exactly or by range", async ({
@@ -1632,7 +1653,7 @@ test("port cards show a logo when the port has one", async ({ page }) => {
     .filter({ has: page.getByRole("link", { name: "3306", exact: true }) });
   await expect(mysql.getByTestId("port-logo")).toHaveAttribute(
     "src",
-    /cdn\.simpleicons\.org\/mysql/,
+    "/logos/mysql.svg",
   );
   await page.goto("/entry/class/any?tab=ports");
   const ssh = page
@@ -1690,7 +1711,7 @@ test("hosts have a cloud provider, or none for their own data center", async ({
   await expect(page.getByTestId("entry-description")).toHaveText(
     (info["cloud-providers"] as Record<string, { description: string }>)["AWS"].description,
   );
-  await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", /Amazon_Web_Services/);
+  await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", "/logos/aws.svg");
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `${awsHosts.length} hosts in your infrastructure run in AWS, across ${pluralize(distinctOs(awsHosts), "operating system")}.`,
   );
