@@ -2284,7 +2284,7 @@ test("similar tab is disabled when nothing is similar", async ({ page }) => {
   await expect(page.getByTestId("similar")).toHaveCount(0);
 });
 
-test("host page has two columns with software and classes below", async ({
+test("host page has two columns with software, classes and variables spread below", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1100, height: 900 });
@@ -2320,6 +2320,22 @@ test("host page has two columns with software and classes below", async ({
   expect(Math.abs(r.y - l.y)).toBeLessThan(2);
   expect(w.y).toBeGreaterThanOrEqual(Math.max(l.y + l.height, r.y + r.height) - 1);
   expect(w.width).toBeGreaterThan(l.width * 1.5);
+  // The four lists are spread horizontally: labels on one line, left to
+  // right, each count button directly below its label.
+  const labels = wide.locator("dt");
+  const buttons = wide.locator("dd");
+  let previous: { x: number; y: number; width: number } | undefined;
+  for (let i = 0; i < 4; i++) {
+    const label = (await labels.nth(i).boundingBox())!;
+    const button = (await buttons.nth(i).boundingBox())!;
+    if (previous) {
+      expect(Math.abs(label.y - previous.y)).toBeLessThan(2);
+      expect(label.x).toBeGreaterThan(previous.x + previous.width - 1);
+    }
+    expect(Math.abs(button.x - label.x)).toBeLessThan(2);
+    expect(button.y).toBeGreaterThan(label.y);
+    previous = label;
+  }
 });
 
 test("software and classes open in a filterable modal", async ({ page }) => {

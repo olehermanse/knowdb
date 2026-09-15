@@ -440,13 +440,27 @@ a,
   align-items: start;
 }
 
+/* Software, services, classes and variables spread horizontally across the
+   host view, one column each: the label above its count button. */
 .host-details-wide {
   margin-top: 1.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  grid-auto-flow: column;
+  gap: 0.35rem 1.5rem;
 }
 
 @media (max-width: 40rem) {
   .host-columns {
     grid-template-columns: 1fr;
+  }
+
+  /* Back to label/value rows when there is no room for four columns. */
+  .host-details-wide {
+    grid-template-columns: max-content 1fr;
+    grid-template-rows: none;
+    grid-auto-flow: row;
+    gap: 0.5rem 1.5rem;
   }
 }
 
