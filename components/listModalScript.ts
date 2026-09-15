@@ -154,7 +154,8 @@ export const LIST_MODAL_SCRIPT = `
     }
     return null;
   }
-  // A pinned item as a <dt> (the name, linking to its entry) and a <dd>
+  // A pinned item as a <dt> (the name, plain text like the labels of the
+  // fields above, even though it is an entry: the value links) and a <dd>
   // (its value on this host, and the unpin button), appended to the list.
   function appendPinnedItem(list, pin) {
     var sep = pin.indexOf(":");
@@ -162,11 +163,7 @@ export const LIST_MODAL_SCRIPT = `
     var name = pin.slice(sep + 1);
     var dt = document.createElement("dt");
     dt.setAttribute("data-testid", "pinned-name");
-    var link = document.createElement("a");
-    link.className = "entry-link";
-    link.href = "/entry/" + type + "/" + encodeURIComponent(name);
-    link.textContent = name;
-    dt.appendChild(link);
+    dt.textContent = name;
     var dd = document.createElement("dd");
     dd.className = "pinned-value";
     dd.setAttribute("data-testid", "pinned-item");

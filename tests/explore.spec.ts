@@ -1780,10 +1780,9 @@ test("pinned software, classes and variables follow the user between hosts", asy
   const items = page.getByTestId("pinned-item");
   const names = page.getByTestId("pinned-name");
   await expect(items).toHaveCount(1);
-  await expect(names.first().getByRole("link", { name: cls, exact: true })).toHaveAttribute(
-    "href",
-    `/entry/class/${encodeURIComponent(cls)}`,
-  );
+  // The name is a plain label, not a link; only values link.
+  await expect(names.first()).toHaveText(cls);
+  await expect(names.first().getByRole("link")).toHaveCount(0);
   await expect(items.first()).toHaveText("defined");
   // No cards: plain name/value pairs like the fields above.
   await expect(pinned.locator("li")).toHaveCount(0);
@@ -1849,10 +1848,8 @@ test("pinned software, classes and variables follow the user between hosts", asy
   await expect(missing.first()).toHaveCSS("font-style", "italic");
   const mutedColor = await page.locator(".muted").first().evaluate((el) => getComputedStyle(el).color);
   await expect(missing.first()).toHaveCSS("color", mutedColor);
-  await expect(names.nth(0).getByRole("link", { name: cls, exact: true })).toHaveAttribute(
-    "href",
-    `/entry/class/${encodeURIComponent(cls)}`,
-  );
+  await expect(names.nth(0)).toHaveText(cls);
+  await expect(pinned.getByRole("link")).toHaveCount(1);
   // The variable is defined on every host, so it shows the Windows value.
   await expect(items.nth(2)).toHaveText(variablesOf(windows)["sys.flavor"]);
   // A pinned variable no host has is "(not defined)" as well.
