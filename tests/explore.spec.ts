@@ -1763,9 +1763,11 @@ test("pinned software, classes and variables follow the user between hosts", asy
   const wideBox = (await page.getByTestId("host-details-wide").boundingBox())!;
   expect(pinnedBox.y).toBeGreaterThan(columns.y + columns.height - 1);
   expect(wideBox.y).toBeGreaterThan(pinnedBox.y + pinnedBox.height - 1);
-  // Services cannot be pinned; software, classes and variables can.
+  // All four lists can be pinned from, services included.
   await page.getByTestId("services-modal-open").click();
-  await expect(page.getByTestId("services-modal-list").getByTestId("pin-button")).toHaveCount(0);
+  await expect(page.getByTestId("services-modal-list").getByTestId("pin-button")).toHaveCount(
+    servicesOf(linux).length,
+  );
   await page.keyboard.press("Escape");
 
   // Pin a class from its modal: the pin icon (an SVG, no emoji) turns
@@ -1809,6 +1811,18 @@ test("pinned software, classes and variables follow the user between hosts", asy
   await page.getByTestId("variables-modal-list").locator('li[data-pin-name="sys.flavor"]').getByTestId("pin-button").click();
   await page.keyboard.press("Escape");
   await expect(items).toHaveCount(3);
+  // And a service: "running", linking to the service, like a class.
+  const service = servicesOf(linux)[0];
+  await page.getByTestId("services-modal-open").click();
+  await page.getByTestId("services-modal-list").locator(`li[data-pin-name="${service}"]`).getByTestId("pin-button").click();
+  await page.keyboard.press("Escape");
+  await expect(items).toHaveCount(4);
+  await expect(items.nth(3)).toHaveText("running");
+  await expect(items.nth(3).getByRole("link", { name: "running", exact: true })).toHaveAttribute(
+    "href",
+    `/entry/service/${encodeURIComponent(service)}`,
+  );
+  await expect(names.nth(3)).toHaveText(service);
   const version = (linux["software-versions"] as unknown as Record<string, string>)[software];
   await expect(items.nth(1).getByRole("link", { name: version, exact: true })).toHaveAttribute(
     "href",
@@ -1821,7 +1835,7 @@ test("pinned software, classes and variables follow the user between hosts", asy
     "href",
     `/entry/value/${encodeURIComponent(`sys.flavor=${flavor}`)}`,
   );
-  expect(await pins()).toEqual([`class:${cls}`, `software:${software}`, "variable:sys.flavor"]);
+  expect(await pins()).toEqual([`class:${cls}`, `software:${software}`, "variable:sys.flavor", `service:${service}`]);
   // Three columns: the three names share a line, left to right, each value
   // right of its name.
   const nameBoxes = [];
@@ -1838,11 +1852,11 @@ test("pinned software, classes and variables follow the user between hosts", asy
   // getting there by a link (no page load); where an item is missing it
   // is said to be not installed / not defined, in gray italics.
   await page.reload();
-  await expect(items).toHaveCount(3);
+  await expect(items).toHaveCount(4);
   await page.getByTestId("host-hub-name").click();
   await expect(page).not.toHaveURL(hostUrl(linux));
   await expect(page.getByTestId("entry-name")).not.toContainText(linux.hostname);
-  await expect(items).toHaveCount(3);
+  await expect(items).toHaveCount(4);
   await expect(pinned).not.toContainText("Nothing pinned.");
   await page.getByTestId("variables-modal-open").click();
   await expect(
@@ -1850,11 +1864,13 @@ test("pinned software, classes and variables follow the user between hosts", asy
   ).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("Escape");
   await page.goto(hostUrl(windows));
-  await expect(items).toHaveCount(3);
+  await expect(items).toHaveCount(4);
   const missing = page.getByTestId("pinned-missing");
-  await expect(missing).toHaveCount(2);
+  // Windows has no systemd, so the service is not running there either.
+  await expect(missing).toHaveCount(3);
   await expect(items.nth(0).getByTestId("pinned-missing")).toHaveText("(not defined)");
   await expect(items.nth(1).getByTestId("pinned-missing")).toHaveText("(not installed)");
+  await expect(items.nth(3).getByTestId("pinned-missing")).toHaveText("(not running)");
   await expect(missing.first()).toHaveCSS("font-style", "italic");
   const mutedColor = await page.locator(".muted").first().evaluate((el) => getComputedStyle(el).color);
   await expect(missing.first()).toHaveCSS("color", mutedColor);
@@ -1869,8 +1885,8 @@ test("pinned software, classes and variables follow the user between hosts", asy
     localStorage.setItem("knowdb-pins", JSON.stringify(p));
   });
   await page.reload();
-  await expect(items).toHaveCount(4);
-  await expect(items.nth(3).getByTestId("pinned-missing")).toHaveText("(not defined)");
+  await expect(items).toHaveCount(5);
+  await expect(items.nth(4).getByTestId("pinned-missing")).toHaveText("(not defined)");
 
   // The toggle next to a value is the modal's pin button in its pressed
   // state: same icon, softer than plain text. Unpinning fades the item
@@ -1886,14 +1902,14 @@ test("pinned software, classes and variables follow the user between hosts", asy
   const secondBefore = (await names.nth(1).boundingBox())!;
   await unpin.click();
   await expect(items.nth(0)).toHaveClass(/pinned-leaving/);
-  await expect(items).toHaveCount(3);
+  await expect(items).toHaveCount(4);
   await expect(names.nth(0)).toHaveText(software);
   // The second item moves into the first slot once the slide finishes.
   await expect.poll(async () => (await names.nth(0).boundingBox())!.x, { timeout: 2000 }).toBeLessThan(
     secondBefore.x,
   );
   await expect(names.nth(0)).not.toHaveAttribute("style", /transform: translate/);
-  expect(await pins()).toEqual([`software:${software}`, "variable:sys.flavor", "variable:sys.nonexistent"]);
+  expect(await pins()).toEqual([`software:${software}`, "variable:sys.flavor", `service:${service}`, "variable:sys.nonexistent"]);
   await page.getByTestId("classes-modal-open").click();
   await expect(page.getByTestId("classes-modal-list").getByTestId("pin-button").first()).toHaveAttribute("aria-pressed", "false");
 });

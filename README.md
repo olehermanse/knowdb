@@ -44,17 +44,19 @@ the host and the Similar tab.
 Lists show at most 10 items at a time, with pagination links below the
 list: hosts, but also the ports, versions and similar entries in the tabs.
 
-## Pinned software, classes and variables
+## Pinned software, services, classes and variables
 
-Every row in the Software, Classes and Variables modals on a host page has
-a pin icon (from the lucide icon library). Pinning a row shows it on every
-host page as a name/value pair, styled like the host's basic fields and
-laid out in three columns, below those fields and above the modal
-buttons: the name is a plain label (not a link, to keep the section
-quiet) and the value is the software's version, `defined` for a class, or
-the variable's value, linking to the version, class or value entry. When the host does not have the pinned item, the
-value reads `(not installed)` for software and `(not defined)` for classes
-and variables, in gray italics. Which items are pinned is stored in the
+Every row in the Software, Services, Classes and Variables modals on a
+host page has a pin icon (from the lucide icon library). Pinning a row
+shows it on every host page as a name/value pair, styled like the host's
+basic fields and laid out in three columns, below those fields and above
+the modal buttons: the name is a plain label (not a link, to keep the
+section quiet) and the value is the software's version, `defined` for a
+class, `running` for a service, or the variable's value, linking to the
+version, class, service or value entry. When the host does not have the
+pinned item, the value reads `(not installed)` for software, `(not
+running)` for services and `(not defined)` for classes and variables, in
+gray italics. Which items are pinned is stored in the
 browser's local storage, shared across all hosts. The pin next to a value
 is the same toggle as in the modal, shown in its pressed state (softly
 coloured); clicking either unpins: the item fades out and the remaining

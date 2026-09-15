@@ -184,7 +184,8 @@ function HostDetails({ host, embedded = false }: { host: Host; embedded?: boolea
 }
 
 // The pinned items and the Software, Services, Classes and Variables
-// modals, below the basic fields on the host's own page.
+// modals, below the basic fields on the host's own page. All four lists
+// can be pinned from.
 function HostLists({ host }: { host: Host }) {
   return (
     <>
@@ -241,6 +242,7 @@ function HostLists({ host }: { host: Host }) {
               plural="services"
               verb="running"
               testId="services-modal"
+              pinnable
               rows={host.services.map((svc) => ({
                 key: svc,
                 type: "service",

@@ -116,9 +116,11 @@ export const LIST_MODAL_SCRIPT = `
   });
   // Pins: "type:name" strings in local storage, shared by all hosts. Each
   // pinned item is a name/value pair in the host view: the version of the
-  // software, "defined" for a class, the value of a variable, taken from
-  // its row in the list modal when the host has it, or otherwise
-  // "(not installed)" / "(not defined)".
+  // software, "defined" for a class, "running" for a service, the value of
+  // a variable, taken from its row in the list modal when the host has it,
+  // or otherwise "(not installed)" / "(not defined)" / "(not running)".
+  var PRESENT = { software: "installed", class: "defined", service: "running", variable: "defined" };
+  var MISSING = { software: "(not installed)", class: "(not defined)", service: "(not running)", variable: "(not defined)" };
   var PIN_KEY = "knowdb-pins";
   var PINNED_EMPTY = "Nothing pinned. Use the pin icon in the lists below to keep software, classes or variables here.";
   function loadPins() {
@@ -175,7 +177,8 @@ export const LIST_MODAL_SCRIPT = `
     var row = modalRow(type, name);
     if (row) {
       // The second link of the row is the version or value, if any. A
-      // class has none: "defined" links to the class itself instead.
+      // class or service has none: "defined" / "running" links to the
+      // entry itself instead.
       var links = row.querySelectorAll("[data-pin-content] > a");
       if (links.length > 1) {
         dd.appendChild(links[1].cloneNode(true));
@@ -183,14 +186,14 @@ export const LIST_MODAL_SCRIPT = `
         var entry = document.createElement("a");
         entry.className = "entry-link";
         entry.href = "/entry/" + type + "/" + encodeURIComponent(name);
-        entry.textContent = type === "software" ? "installed" : "defined";
+        entry.textContent = PRESENT[type] || "defined";
         dd.appendChild(entry);
       }
     } else {
       var missing = document.createElement("em");
       missing.className = "muted pinned-missing";
       missing.setAttribute("data-testid", "pinned-missing");
-      missing.textContent = type === "software" ? "(not installed)" : "(not defined)";
+      missing.textContent = MISSING[type] || "(not defined)";
       dd.appendChild(missing);
     }
     dd.appendChild(unpinButton(name));
