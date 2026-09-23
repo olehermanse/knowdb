@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// `PORT=3100 npm test` runs the dev server and the tests on another port,
+// for when something else is already listening on 3000.
+const port = process.env.PORT ?? "3000";
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -7,7 +11,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -18,7 +22,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3000",
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

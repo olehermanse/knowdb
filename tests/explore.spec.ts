@@ -3213,3 +3213,48 @@ test("a type listing shows type:<type> in the search bar and accepts it as a que
   await page.goto(`/search?q=${encodeURIComponent("type:banana")}`);
   await expect(page.getByTestId("search-summary")).toHaveText("No results for “type:banana”.");
 });
+
+test("filters appended to a type listing stay in the search bar and narrow the listing", async ({
+  page,
+}) => {
+  const allClouds = new Set(hosts.map((h) => h["cloud-provider"]).filter(Boolean));
+  const u24Clouds = new Set(
+    hosts.filter((h) => h.os === "Ubuntu 24").map((h) => h["cloud-provider"]).filter(Boolean),
+  );
+  expect(u24Clouds.size).toBeLessThan(allClouds.size);
+
+  await page.goto(`/search?q=${encodeURIComponent("type:cloud")}`);
+  const input = page.getByTestId("search-input").nth(1);
+  await expect(input).toHaveValue("type:cloud");
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${allClouds.size} clouds in your infrastructure.`,
+  );
+
+  // Appending a filter and pressing Enter: the URL and the search bar agree,
+  // and only the clouds with matching hosts are listed.
+  await input.fill('type:cloud os:"Ubuntu 24"');
+  await input.press("Enter");
+  await expect(page).toHaveURL(/\/search\?q=type(%3A|:)cloud(\+|%20)os(%3A|:)%22Ubuntu(\+|%20)24%22$/);
+  await expect(input).toHaveValue('type:cloud os:"Ubuntu 24"');
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${u24Clouds.size} clouds with hosts matching os Ubuntu 24.`,
+  );
+  const items = page.getByTestId("search-results").locator("li");
+  await expect(items).toHaveCount(u24Clouds.size);
+  for (const cloud of u24Clouds) {
+    await expect(items.getByRole("link", { name: cloud, exact: true })).toBeVisible();
+  }
+
+  // The same with hosts: type:host plus a filter lists just those hosts.
+  const u24 = hosts.filter((h) => h.os === "Ubuntu 24");
+  await page.goto(`/search?q=${encodeURIComponent('type:host os:"Ubuntu 24"')}`);
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue('type:host os:"Ubuntu 24"');
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${u24.length} hosts matching os Ubuntu 24.`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, u24.length));
+
+  // A listing from the front page still shows type:<type>.
+  await page.goto("/search?type=cloud");
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue("type:cloud");
+});

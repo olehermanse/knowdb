@@ -18,14 +18,30 @@ import {
   searchHosts,
 } from "@/lib/data";
 
-// Everything of one type, 50 at a time; hosts use the host cards.
-function TypeListing({ type, page }: { type: EntryType; page: number }) {
-  const all = entriesOfType(type);
+// Everything of one type, a page at a time; hosts use the host cards. With
+// `only` set, just the entries of the type that have at least one of those
+// hosts (`type:cloud os:"Ubuntu 24"` lists the clouds with Ubuntu 24 hosts).
+function TypeListing({
+  type,
+  page,
+  only,
+  narrowedBy,
+  hrefForPage,
+}: {
+  type: EntryType;
+  page: number;
+  only?: Set<string>;
+  narrowedBy?: string;
+  hrefForPage: (n: number) => string;
+}) {
+  const all = entriesOfType(type).filter((e) => !only || e.hosts.some((k) => only.has(k)));
   const label = TYPE_LABELS[type];
-  const hrefForPage = (n: number) => `/search?type=${type}${n > 1 ? `&page=${n}` : ""}`;
+  const noun = all.length === 1 ? label.replace(/s$/, "").toLowerCase() : label.toLowerCase();
   const summary = (
     <p className="muted" data-testid="search-summary">
-      {`${all.length} ${all.length === 1 ? label.replace(/s$/, "") : label.toLowerCase()} in your infrastructure.`}
+      {narrowedBy
+        ? `${all.length} ${noun} ${type === "host" ? "matching" : "with hosts matching"} ${narrowedBy}.`
+        : `${all.length} ${noun} in your infrastructure.`}
     </p>
   );
   if (type === "host") {
@@ -83,12 +99,36 @@ export default async function SearchPage({
   const filtered = parsed.filters.length > 0 || parsed.conditions.length > 0 || parsed.hubs.length > 0;
   const hostResults = searching && filtered ? searchHosts(parsed) : [];
   const results = searching && !filtered ? searchEntries(query) : [];
+  // The search bar shows the query as typed, so it stays in sync with the
+  // URL; a listing from a front page button (`?type=os`) shows `type:os`.
+  const shownQuery = query || (listType ? `type:${listType}` : "");
+  const hrefForPage = (n: number) =>
+    `/search?${query ? `q=${encodeURIComponent(query)}` : `type=${listType}`}${n > 1 ? `&page=${n}` : ""}`;
+  // `type:cloud os:"Ubuntu 24"`: only the clouds with hosts matching the rest.
+  const narrowing = listType && (filtered || parsed.text.length > 0);
+  const narrowedBy = narrowing
+    ? [
+        describeFilters(parsed.filters, parsed.hubs),
+        ...parsed.conditions.map(describeCondition),
+        parsed.text && `“${parsed.text}” in the hostname`,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : undefined;
 
   return (
     <>
       <h1>Search</h1>
-      <SearchForm query={listType ? `type:${listType}` : query} />
-      {listType && <TypeListing type={listType} page={page} />}
+      <SearchForm query={shownQuery} />
+      {listType && (
+        <TypeListing
+          type={listType}
+          page={page}
+          only={narrowing ? new Set(searchHosts(parsed).map((h) => h.id)) : undefined}
+          narrowedBy={narrowedBy}
+          hrefForPage={hrefForPage}
+        />
+      )}
       {!query && !listType && (
         <p className="muted" data-testid="search-hint">
           Search for anything: a hostname, port number, software, user,
@@ -125,9 +165,7 @@ export default async function SearchPage({
           hosts={hostResults}
           page={page}
           testId="search-results"
-          hrefForPage={(n) =>
-            `/search?q=${encodeURIComponent(query)}${n > 1 ? `&page=${n}` : ""}`
-          }
+          hrefForPage={hrefForPage}
         />
       )}
       {results.length > 0 && (

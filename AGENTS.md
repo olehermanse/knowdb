@@ -5,7 +5,9 @@ Then look for new TODOs.
 If something is really unclear, you can create a FAQ entry with a question, similar to what-is-this.md for the human operator to answer.
 In most cases this should not be necessary, but it can be useful to build a knowledge base on what this project is and should be.
 
-Add tests using playwright.
+Add tests using playwright. `npm test` starts the dev server on port 3000
+and reuses one already running there, which is wrong if it belongs to
+another project; `PORT=3100 npm test` runs both on another port.
 
 Keep the README short: how to run it, how it works and a bulleted list of
 entry types. Details about the UI, the data files and the generator belong
@@ -143,7 +145,10 @@ A query can also contain filters like `port:22 group:Windows` or
 `os:"Ubuntu 24"` (quote values with spaces), `hub:<ip>` for the hub a host
 reports to, and conditions on free disk or memory like `disk<20%` or
 `memory>=50%`. Then only hosts matching all of them are listed; a filter
-repeated with different values matches either value. The "N hosts" links
+repeated with different values matches either value. `type:os` lists
+everything of one type, and combined with filters (`type:cloud os:"Ubuntu
+24"`) only the entries of that type with at least one matching host. The
+search bar always shows the query exactly as it is in the URL. The "N hosts" links
 next to aggregated ports on group, software and OS pages use this to show
 exactly those hosts.
 

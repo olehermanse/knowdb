@@ -31,6 +31,9 @@ server for you):
 npm install && npx playwright install chromium && npm test
 ```
 
+Set `PORT=3100` (or any free port) if something else is already listening
+on port 3000.
+
 ## How it works
 
 The frontend reads its data at build time from the `data/` directory:
