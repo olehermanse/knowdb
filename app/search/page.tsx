@@ -75,16 +75,19 @@ export default async function SearchPage({
   const query = (Array.isArray(raw) ? raw[0] : raw ?? "").trim();
   const page = parsePage(params.page);
   const rawType = Array.isArray(params.type) ? params.type[0] : params.type;
-  const listType = rawType && isEntryType(rawType) ? rawType : undefined;
   const parsed = parseSearchQuery(query);
+  // A listing of one type comes from the front page buttons (`?type=os`) or
+  // from typing `type:os` in the search bar; both show `type:os` there.
+  const listType = rawType && isEntryType(rawType) ? rawType : parsed.listType;
+  const searching = query.length > 0 && !listType;
   const filtered = parsed.filters.length > 0 || parsed.conditions.length > 0 || parsed.hubs.length > 0;
-  const hostResults = filtered ? searchHosts(parsed) : [];
-  const results = query && !filtered ? searchEntries(query) : [];
+  const hostResults = searching && filtered ? searchHosts(parsed) : [];
+  const results = searching && !filtered ? searchEntries(query) : [];
 
   return (
     <>
       <h1>Search</h1>
-      <SearchForm query={query} />
+      <SearchForm query={listType ? `type:${listType}` : query} />
       {listType && <TypeListing type={listType} page={page} />}
       {!query && !listType && (
         <p className="muted" data-testid="search-hint">
@@ -92,11 +95,14 @@ export default async function SearchPage({
           operating system, group, or words from a description. Use filters
           like <code>port:22 group:Windows</code> or{" "}
           <code>role:Client hub:18.130.49.157</code> to list only the hosts
-          matching all of them, or conditions like <code>disk&lt;20%</code> and{" "}
-          <code>memory&lt;10%</code> for hosts with little free disk or memory.
+          matching all of them; repeat a filter, like{" "}
+          <code>os:&quot;Ubuntu 24&quot; os:&quot;Ubuntu 22&quot;</code>, to match either.
+          Use conditions like <code>disk&lt;20%</code> and{" "}
+          <code>memory&lt;10%</code> for hosts with little free disk or memory,
+          or <code>type:os</code> to list everything of one type.
         </p>
       )}
-      {query && filtered && (
+      {searching && filtered && (
         <p className="muted" data-testid="search-summary">
           {`${hostResults.length} ${hostResults.length === 1 ? "host" : "hosts"} matching ${[
             describeFilters(parsed.filters, parsed.hubs),
@@ -107,7 +113,7 @@ export default async function SearchPage({
           {parsed.text && ` with “${parsed.text}” in the hostname`}.
         </p>
       )}
-      {query && !filtered && (
+      {searching && !filtered && (
         <p className="muted" data-testid="search-summary">
           {results.length === 0
             ? `No results for “${query}”.`

@@ -1096,8 +1096,10 @@ export function summarizeEntry(entry: Entry): string {
 }
 
 // Structured search: a query can contain filters like `port:22` or
-// `group:"production Linux"`; hosts matching every filter are returned.
-// Any remaining free text narrows the hosts by hostname or host key.
+// `group:"production Linux"`. Filters of the same type are alternatives
+// (`os:"Ubuntu 24" os:"Ubuntu 22"` is either OS); filters of different
+// types all have to match. Any remaining free text narrows the hosts by
+// hostname or host key.
 export interface SearchFilter {
   type: EntryType;
   name: string;
@@ -1118,6 +1120,9 @@ export interface ParsedQuery {
   conditions: Condition[];
   // `hub:<ip>`: only hosts reporting to the hub with this IP address.
   hubs: string[];
+  // `type:os`: list everything of one entry type, like the front page
+  // buttons do; the first one wins.
+  listType?: EntryType;
   text: string;
 }
 
@@ -1156,9 +1161,11 @@ export function parseSearchQuery(query: string): ParsedQuery {
   const conditions: Condition[] = [];
   const hubs: string[] = [];
   const rest: string[] = [];
+  let listType: EntryType | undefined;
   const token = /(\S+?):(?:"([^"]*)"|(\S+))|"([^"]*)"|(\S+)/g;
   for (const m of query.matchAll(token)) {
     const [, type, quoted, bare, quotedText, word] = m;
+    const value = quoted ?? bare ?? "";
     const condition = CONDITION.exec(m[0]);
     if (condition) {
       conditions.push({
@@ -1167,14 +1174,24 @@ export function parseSearchQuery(query: string): ParsedQuery {
         percent: Number(condition[3]),
       });
     } else if (type !== undefined && isEntryType(type)) {
-      filters.push({ type, name: quoted ?? bare ?? "" });
+      filters.push({ type, name: value });
     } else if (type?.toLowerCase() === "hub") {
-      hubs.push(quoted ?? bare ?? "");
+      hubs.push(value);
+    } else if (type?.toLowerCase() === "type" && isEntryType(value.toLowerCase())) {
+      listType ??= value.toLowerCase() as EntryType;
     } else {
       rest.push(m[0].startsWith('"') ? (quotedText ?? "") : (word ?? m[0]));
     }
   }
-  return { filters, conditions, hubs, text: rest.join(" ").trim() };
+  return { filters, conditions, hubs, listType, text: rest.join(" ").trim() };
+}
+
+// Filters grouped by type, in the order the types first appear, so that
+// `os:"Ubuntu 24" port:443 os:"Ubuntu 22"` gives [[os, os], [port]].
+function filtersByType(filters: SearchFilter[]): SearchFilter[][] {
+  const byType = new Map<EntryType, SearchFilter[]>();
+  for (const f of filters) byType.set(f.type, [...(byType.get(f.type) ?? []), f]);
+  return [...byType.values()];
 }
 
 function quoteFilterValue(name: string): string {
@@ -1187,14 +1204,17 @@ export function filterSearchHref(filters: SearchFilter[]): string {
   return `/search?q=${encodeURIComponent(q)}`;
 }
 
-// Hosts matching every filter, sorted by hostname. Unknown filter values
-// match nothing.
+// Hosts matching the filters, sorted by hostname: any one of the filters
+// of each type, and every type. Unknown filter values match nothing.
 export function searchHosts(parsed: ParsedQuery): Host[] {
   let keys: Set<string> | undefined;
-  for (const filter of parsed.filters) {
-    const entry = entries.get(entryKey(filter.type, filter.name));
-    const found = entry ? entry.hosts : new Set<string>();
-    keys = keys ? new Set([...keys].filter((k) => found.has(k))) : new Set(found);
+  for (const alternatives of filtersByType(parsed.filters)) {
+    const found = new Set<string>();
+    for (const filter of alternatives) {
+      const entry = entries.get(entryKey(filter.type, filter.name));
+      for (const k of entry?.hosts ?? []) found.add(k);
+    }
+    keys = keys ? new Set([...keys].filter((k) => found.has(k))) : found;
   }
   const text = parsed.text.toLowerCase();
   const hosts = [...(keys ?? hostsByKey.keys())]
@@ -1216,11 +1236,13 @@ export function describeCondition(c: Condition): string {
   return `free ${c.metric} ${words[c.op]} ${c.percent}%`;
 }
 
-// "port 22, group Windows" for a summary sentence; hub filters read
-// "hub 18.130.49.157".
+// "port 22, group Windows" for a summary sentence; alternatives of one
+// type read "os Ubuntu 24 or Ubuntu 22", hub filters "hub 18.130.49.157".
 export function describeFilters(filters: SearchFilter[], hubs: string[] = []): string {
   return [
-    ...filters.map((f) => (f.type === "port" ? `port ${f.name}` : `${f.type} ${f.name}`)),
+    ...filtersByType(filters).map(
+      (group) => `${group[0].type} ${group.map((f) => f.name).join(" or ")}`,
+    ),
     ...hubs.map((ip) => `hub ${ip}`),
   ].join(", ");
 }

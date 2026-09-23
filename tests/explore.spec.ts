@@ -3137,3 +3137,79 @@ test("the type badge on an entry links to the listing of that type", async ({ pa
   await expect(page).toHaveURL("/search?type=host");
   await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, hosts.length));
 });
+
+test("repeating a filter type matches either value, other types still narrow", async ({ page }) => {
+  const u24 = hosts.filter((h) => h.os === "Ubuntu 24");
+  const u22 = hosts.filter((h) => h.os === "Ubuntu 22");
+  expect(u24.length).toBeGreaterThan(0);
+  expect(u22.length).toBeGreaterThan(0);
+
+  // os:"Ubuntu 24" os:"Ubuntu 22" means either OS.
+  await page.goto(`/search?q=${encodeURIComponent('os:"Ubuntu 24" os:"Ubuntu 22"')}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${u24.length + u22.length} hosts matching os Ubuntu 24 or Ubuntu 22.`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, u24.length + u22.length));
+
+  // A filter of another type narrows the alternatives down.
+  const with443 = [...u24, ...u22].filter((h) => h["ports-listening"].includes(443));
+  expect(with443.length).toBeLessThan(u24.length + u22.length);
+  await page.goto(`/search?q=${encodeURIComponent('os:"Ubuntu 24" os:"Ubuntu 22" port:443')}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${with443.length} hosts matching os Ubuntu 24 or Ubuntu 22, port 443.`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, with443.length));
+  for (const h of with443.slice(0, PAGE_SIZE)) {
+    await expect(page.getByTestId("host-item").getByRole("link", { name: h.hostname })).toBeVisible();
+  }
+
+  // Different types still all have to match, so this is fewer than
+  // Ubuntu 24 alone.
+  const u24with443 = u24.filter((h) => h["ports-listening"].includes(443));
+  expect(u24with443.length).toBeLessThan(u24.length);
+  await page.goto(`/search?q=${encodeURIComponent('os:"Ubuntu 24" port:443')}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${u24with443.length} ${u24with443.length === 1 ? "host" : "hosts"} matching os Ubuntu 24, port 443.`,
+  );
+
+  // A group which contains all of an OS's hosts does not change the result.
+  const linux = hostsInGroup("Linux");
+  expect(u24.every((h) => linux.some((l) => l.id === h.id))).toBe(true);
+  await page.goto(`/search?q=${encodeURIComponent('os:"Ubuntu 24" group:Linux')}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${u24.length} hosts matching os Ubuntu 24, group Linux.`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, u24.length));
+});
+
+test("a type listing shows type:<type> in the search bar and accepts it as a query", async ({ page }) => {
+  const allOs = new Set(hosts.map((h) => h.os));
+  // From the front page button the URL is ?type=os, and the search bar on
+  // the page shows the equivalent query.
+  await page.goto("/");
+  await page.getByTestId("type-button-os").click();
+  await expect(page).toHaveURL("/search?type=os");
+  const input = page.getByTestId("search-input").nth(1);
+  await expect(input).toHaveValue("type:os");
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${allOs.size} operating systems in your infrastructure.`,
+  );
+
+  // Submitting that query again gives the same listing.
+  await input.press("Enter");
+  await expect(page).toHaveURL(/\/search\?q=type(%3A|:)os$/);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${allOs.size} operating systems in your infrastructure.`,
+  );
+  await expect(page.getByTestId("search-results").locator("li")).toHaveCount(Math.min(PAGE_SIZE, allOs.size));
+  await expect(input).toHaveValue("type:os");
+
+  // Hosts are paginated like from the button.
+  await page.goto(`/search?q=${encodeURIComponent("type:host")}`);
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, hosts.length));
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue("type:host");
+
+  // An unknown type is just text.
+  await page.goto(`/search?q=${encodeURIComponent("type:banana")}`);
+  await expect(page.getByTestId("search-summary")).toHaveText("No results for “type:banana”.");
+});
