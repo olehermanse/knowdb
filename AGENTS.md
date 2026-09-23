@@ -178,19 +178,29 @@ search bar always shows the query exactly as it is in the URL. The "N hosts" lin
 next to aggregated ports on group, software and OS pages use this to show
 exactly those hosts.
 
-## Bundles, bodies, promise types, calls, policy variables and classes
+## Bundles, bodies, promise types, calls, and the policy's variables and classes
 
-Six entry types come from the CFEngine policy files themselves, indexed
+Four entry types come from the CFEngine policy files themselves, indexed
 into `data/policy.json` by `scripts/index_policy.mjs` (run it after
 regenerating the hosts): `bundle` and `body`, named by their full heading
-`<keyword> <type> <name>` (`bundle agent main`, `body common control`); `promise-type`, a custom promise type
-defined with a `promise agent <name>` block; `call`, a name called from
-the policy, named by the callee (`ifelse`, `mog`); `policy-var`, a
-variable promised in a `vars:` section, named `<bundle>.<name>`
-(`def.domain`); and `policy-class`, a class promised in a `classes:`
-section. Each call is of a bundle (the value of `usebundle`, or a bare
-call of a defined bundle's name), of a body (`perms => mog(...)` where a
-body `perms mog` exists) or of a function otherwise; the reference says
+`<keyword> <type> <name>` (`bundle agent main`, `body common control`);
+`promise-type`, a custom promise type defined with a `promise agent
+<name>` block; and `call`, a name called from the policy, named by the
+callee (`ifelse`, `mog`). Variables promised in a `vars:` section, named
+`<bundle>.<name>` (`def.domain`), and classes promised in a `classes:`
+section are not separate types: they are `variable` and `class` entries
+like the ones hosts report, so a class both set on hosts and promised in
+the policy is one entry. Their hosts are the hosts reporting them plus the
+hosts whose policy defines them; the summary keeps the two apart ("This
+class is set on 85 hosts ... It is defined in the policy once in 1 policy
+file, on 100 hosts."; "def.domain is not reported by any host ..."), the
+description falls back to where the policy defines it when `info.json`
+has none, the Values tab appears only when hosts report values, and the
+References tab whenever the policy defines it.
+
+Each call is of a bundle (the value of `usebundle`, or a bare call of a
+defined bundle's name), of a body (`perms => mog(...)` where a body
+`perms mog` exists) or of a function otherwise; the reference says
 "Bundle call" or "Body call", the description says what the name refers
 to ("Calls of the body perms mog"), and "See also" links the bundle or
 body. Only functions get a documentation link. Hosts are linked to
@@ -198,22 +208,22 @@ everything their policy files define, so the right pane works as for any
 entry, and `call:ifelse` or `bundle:"bundle common def"` work as search
 filters.
 
-Every entry has a References tab (first) listing each place it is defined
-or called: `def.cf:12` linking to the file page with a `#L12` anchor, the
-line, the bundle or body it is in (variables, classes and calls), and a
-detail (a variable's type, a bundle's parameters, the attribute a
-call is the value of, like `if =>`). Bundles, bodies, promise types and
-policy files have a Contents tab listing what they define or call, each
-row linking to its line. Variables and classes have their bundle in "See
-also", and a `policy-class` links to the `class` of the same name when
-hosts report it. Every line of a file's content is a `<span class="line"
-id="L<n>">`, plain files too, starting with an empty `<a class="line-number"
-href="#L<n>" data-line="<n>">` whose number is drawn by CSS (so it is not
-copied with the text) and links to the line. The line the URL's `#L<n>`
-points at gets the `line-target` class from the inline script on load,
-navigation and `hashchange` (`:target` alone does not follow client-side
-navigation) and is marked with a background; it is scrolled to with about
-five lines of context above it (`scroll-margin-top`).
+Every entry the policy defines or calls has a References tab (first,
+after Values for a variable) listing each place: `def.cf:12` linking to
+the file page with a `#L12` anchor, the line, the bundle or body it is in
+(variables, classes and calls), and a detail (a variable's type, a
+bundle's parameters, the attribute a call is the value of, like `if =>`).
+Bundles, bodies, promise types and policy files have a Contents tab
+listing what they define or call, each row linking to its line. Variables
+and classes have their defining bundle in "See also". Every line of a
+file's content is a `<span class="line" id="L<n>">`, plain files too,
+starting with an empty `<a class="line-number" href="#L<n>"
+data-line="<n>">` whose number is drawn by CSS (so it is not copied with
+the text) and links to the line. The line the URL's `#L<n>` points at gets
+the `line-target` class from the inline script on load, navigation and
+`hashchange` (`:target` alone does not follow client-side navigation) and
+is marked with a background; it is scrolled to with about five lines of
+context above it (`scroll-margin-top`).
 
 The indexer parses with the tree-sitter grammar in
 `public/tree-sitter-cfengine.wasm`, the same grammar `cfengine dev

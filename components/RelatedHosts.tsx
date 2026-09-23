@@ -27,7 +27,6 @@ import {
   getPolicyContents,
   getPolicyRefs,
   filterSearchHref,
-  isPolicyType,
   abbreviateChecksum,
   parseValueEntryName,
   PathCount,
@@ -69,16 +68,18 @@ export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   return (TAB_ORDER as string[]).includes(value ?? "") ? (value as Tab) : undefined;
 }
 
-// Versions only for software, values only for variables, and the file
-// tabs for files, paths and filenames.
+// Versions only for software, values only for variables hosts report, the
+// file tabs for files, paths and filenames, and References for anything
+// the policy defines or calls (bundles, bodies, promise types, calls, and
+// the variables and classes promised in the policy).
 export function entryTabs(entry: Entry): Tab[] {
   const tabs: Tab[] = [];
   if (entry.type === "software") tabs.push("versions");
-  if (entry.type === "variable") tabs.push("values");
+  if (entry.type === "variable" && aggregateValues(entry.name, entry.hosts).length > 0) tabs.push("values");
   if (entry.type === "file") tabs.push("content", "paths");
   if (entry.type === "path") tabs.push("files");
   if (entry.type === "filename") tabs.push("paths", "files");
-  if (isPolicyType(entry.type)) tabs.push("references");
+  if (getPolicyRefs(entry).length > 0) tabs.push("references");
   // Policy files and blocks list what they define; empty for other files.
   if (entry.type === "file" || entry.type === "bundle" || entry.type === "body" || entry.type === "promise-type") {
     if (getPolicyContents(entry).length > 0) tabs.push("contents");
@@ -621,7 +622,7 @@ export default function RelatedHosts({
   const current = tab && enabled.includes(tab) ? tab : enabled[0];
   const counts: Record<Tab, number> = {
     content: 0,
-    references: isPolicyType(entry.type) ? getPolicyRefs(entry).length : 0,
+    references: getPolicyRefs(entry).length,
     contents: getPolicyContents(entry).length,
     similar: similarCount,
     resources: resourceCount,

@@ -89,10 +89,12 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **Groups**: sets of hosts defined in `data/groups.json`, such as `Linux`,
   `Windows`, `webservers` and `production`.
 - **Classes**: CFEngine classes like `linux`, `ubuntu_22` or
-  `policy_server`, reported by the hosts themselves.
-- **Variables and values**: CFEngine `sys.*` variables and their values.
-  A variable page lists its values; a value page (`sys.arch=x86_64`) lists
-  its hosts.
+  `policy_server`, reported by the hosts themselves or promised in the
+  policy (with references to the defining lines).
+- **Variables and values**: CFEngine `sys.*` variables reported by hosts
+  and their values, and variables defined in the policy (`def.domain`). A
+  variable page lists its values and where the policy defines it; a value
+  page (`sys.arch=x86_64`) lists its hosts.
 - **Roles**: `Hub` or `Client`. A host links to its hub, and a hub links to
   a search for its clients.
 - **Cloud providers**: AWS, Azure, GCP and others, or none for hosts in your
@@ -100,11 +102,11 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **IP and MAC addresses**: an address belonging to a single host shows
   that host; well-known addresses and ranges (`127.0.0.1`, `10.0.0.0/8`)
   are described in `data/info.json`.
-- **Bundles, bodies, promise types, calls, policy variables and policy
-  classes**: what the CFEngine policy files define, indexed from their
-  syntax trees. Each shows where in which file (with line links) it is
-  defined or called, and variables, classes and calls (of functions,
-  bundles and bodies) name the bundle they are in.
+- **Bundles, bodies, promise types and calls**: what the CFEngine policy
+  files define, indexed from their syntax trees. Each shows where in which
+  file (with line links) it is defined or called. Variables and classes
+  promised in the policy become variable and class entries with the same
+  references, next to the ones hosts report.
 - **Files, paths and filenames**: the notable files on each host, such as
   the CFEngine policy, `sshd_config`, `authorized_keys` and the cf-agent
   binary. A file is identified by the SHA-256 checksum of its content and

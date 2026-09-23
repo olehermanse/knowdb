@@ -142,8 +142,6 @@ test("front page always shows at least one entry of each type", async ({
     "body",
     "promise-type",
     "call",
-    "policy-var",
-    "policy-class",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
@@ -1680,7 +1678,12 @@ test("variables have values which are entries of their own", async ({ page }) =>
   // Variables and values are browsable from the front page and work as
   // search filters.
   await page.goto("/");
-  await expect(page.getByTestId("type-button-variable")).toHaveText(`Variables (${VARIABLE_NAMES.length})`);
+  // Variables are the ones hosts report and the ones the policy defines.
+  const policyVariables = Object.values(policyFiles).flatMap((f) =>
+    f.vars.map((v) => `${v.block.name.split(" ").pop()}.${v.name}`),
+  );
+  const allVariables = new Set([...VARIABLE_NAMES, ...policyVariables]);
+  await expect(page.getByTestId("type-button-variable")).toHaveText(`Variables (${allVariables.size})`);
   await page.goto(`/search?q=${encodeURIComponent(`value:sys.flavor=${topValue} variable:sys.arch`)}`);
   await expect(page.getByTestId("search-summary")).toHaveText(
     `${topCount} hosts matching value sys.flavor=${topValue}, variable sys.arch.`,
@@ -2316,7 +2319,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(25);
+  await expect(buttons).toHaveCount(23);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -3748,9 +3751,9 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   const first = [...contents].sort((a, b) => a.line - b.line)[0]!;
   await expect(items.first().getByTestId("content-line-link")).toHaveText(`Line ${first.line}`);
   await expect(items.first().locator(".host-facts")).toContainText("def.cf");
-  await expect(items.first().locator(".type-badge")).toHaveText(/^(policy-var|policy-class|call)$/);
+  await expect(items.first().locator(".type-badge")).toHaveText(/^(variable|class|call)$/);
   // The variables are named bundle.name.
-  const someVar = items.filter({ has: page.locator(".type-badge", { hasText: "policy-var" }) }).first();
+  const someVar = items.filter({ has: page.locator(".type-badge", { hasText: "variable" }) }).first();
   await expect(someVar.getByRole("link").first()).toHaveText(/^def\./);
   // Following the line link opens the file at that line.
   await page.getByTestId("references-heading").click();
@@ -3886,15 +3889,34 @@ test("file content has clickable line numbers that are not part of the text", as
   await expect(page.getByTestId("file-content").locator(".line-number")).toHaveCount(3);
 });
 
-test("variables and classes defined in policy refer to their bundle", async ({ page }) => {
+test("variables and classes defined in policy are variables and classes with references", async ({
+  page,
+}) => {
   const domain = Object.entries(policyFiles).flatMap(([checksum, f]) =>
     f.vars.filter((v) => v.name === "domain" && v.block.name === "bundle common def").map((v) => ({ ...v, checksum })),
   )[0]!;
-  await page.goto(`/entry/policy-var/${encodeURIComponent("def.domain")}`);
+  await page.goto(`/entry/variable/${encodeURIComponent("def.domain")}`);
   await expect(page.getByTestId("entry-name")).toHaveText("def.domain");
+  await expect(page.getByTestId("entry-type-link")).toHaveText("variable");
   await expect(page.getByTestId("entry-description")).toHaveText(
     "The string variable def.domain of bundle common def, defined in def.cf.",
   );
+  // Not reported by any host, so no Values tab; the policy defining it is
+  // on every host.
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `def.domain is not reported by any host in your infrastructure. It is defined in the policy once in 1 policy file, on ${hosts.length} hosts.`,
+  );
+  await expect(page.getByTestId("values-heading")).toHaveCount(0);
+  await expect(page.getByTestId("references-heading")).toHaveAttribute("aria-selected", "true");
+  await page.goto(`/entry/variable/${encodeURIComponent("def.domain")}?htab=list`);
+  await expect(page.getByTestId("hosts-description")).toHaveText(
+    "Hosts with the variable def.domain, reported or defined in their policy:",
+  );
+  // A reported variable has no References tab and reads as before.
+  await page.goto("/entry/variable/sys.arch");
+  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("values-heading")).toHaveAttribute("aria-selected", "true");
+  await page.goto(`/entry/variable/${encodeURIComponent("def.domain")}`);
   await expect(page.getByTestId("see-also").getByRole("link", { name: "bundle common def (bundle)" })).toHaveAttribute(
     "href",
     bundleHref("bundle common def"),
@@ -3904,30 +3926,46 @@ test("variables and classes defined in policy refer to their bundle", async ({ p
   await expect(ref.getByTestId("reference-block")).toHaveText("In bundle common def");
   await expect(ref.getByTestId("reference-detail")).toHaveText("string");
 
-  // A class promised in a classes: section.
-  const cls = Object.entries(policyFiles).flatMap(([checksum, f]) => f.classes.map((c) => ({ ...c, checksum })))[0]!;
-  const defs = Object.values(policyFiles).flatMap((f) => f.classes.filter((c) => c.name === cls.name));
-  await page.goto(`/entry/policy-class/${encodeURIComponent(cls.name)}`);
-  await expect(page.getByTestId("entry-type-link")).toHaveText("policy-class");
+  // A class promised in a classes: section that no host reports and
+  // info.json does not describe: described by where it is defined.
+  const reported = new Set(hosts.flatMap((h) => h.classes));
+  const described = new Set(Object.keys((info as unknown as { classes: Record<string, unknown> }).classes));
+  const cls = Object.entries(policyFiles)
+    .flatMap(([checksum, f]) => f.classes.map((c) => ({ ...c, checksum })))
+    .find((c) => !reported.has(c.name) && !described.has(c.name))!;
+  const defs = Object.entries(policyFiles).flatMap(([checksum, f]) =>
+    f.classes.filter((c) => c.name === cls.name).map((c) => ({ ...c, checksum })),
+  );
+  const onHosts = typedHosts.filter((h) => defs.some((d) => Object.values(h.files).includes(d.checksum)));
+  await page.goto(`/entry/class/${encodeURIComponent(cls.name)}`);
+  await expect(page.getByTestId("entry-type-link")).toHaveText("class");
   await expect(page.getByTestId("entry-description")).toContainText(`The class ${cls.name}, defined by bundle `);
   await expect(page.getByTestId("entry-description")).toContainText(cls.block.name);
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `This class is not set on any host in your infrastructure. It is defined in the policy ${defs.length === 1 ? "once" : `${defs.length} times`} in ${new Set(defs.map((d) => d.checksum)).size} policy file${new Set(defs.map((d) => d.checksum)).size === 1 ? "" : "s"}, on ${onHosts.length} hosts.`,
+  );
   await expect(page.getByTestId("references-heading")).toHaveText(`References (${defs.length})`);
   await expect(page.getByTestId("reference-item").first().getByTestId("reference-block")).toContainText("In bundle ");
   await expect(page.getByTestId("see-also").getByRole("link", { name: `${cls.block.name} (bundle)` })).toBeVisible();
-  // A class both promised in policy and reported by hosts links both ways.
-  const reported = new Set(hosts.flatMap((h) => h.classes));
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${onHosts.length})`);
+  // A class both promised in policy and reported by hosts: set on the
+  // reporting hosts, and with References.
   const shared = Object.values(policyFiles)
     .flatMap((f) => f.classes.map((c) => c.name))
     .find((n) => reported.has(n));
   if (shared) {
-    await page.goto(`/entry/policy-class/${encodeURIComponent(shared)}`);
-    await expect(page.getByTestId("see-also").getByRole("link", { name: `${shared} (class)` })).toHaveAttribute(
-      "href",
-      `/entry/class/${encodeURIComponent(shared)}`,
+    const set = hosts.filter((h) => h.classes.includes(shared)).length;
+    await page.goto(`/entry/class/${encodeURIComponent(shared)}?htab=list`);
+    await expect(page.getByTestId("entry-summary")).toContainText(`This class is set on ${set} hosts in your infrastructure`);
+    await expect(page.getByTestId("entry-summary")).toContainText(" It is defined in the policy ");
+    await expect(page.getByTestId("references-heading")).toContainText("References (");
+    await expect(page.getByTestId("hosts-description")).toHaveText(
+      `Hosts with the class ${shared} set, or defining it in their policy:`,
     );
-    await page.goto(`/entry/class/${encodeURIComponent(shared)}`);
-    await expect(page.getByTestId("see-also").getByRole("link", { name: `${shared} (policy-class)` })).toBeVisible();
   }
+  // A class only reported by hosts has no References tab and reads as before.
+  await page.goto("/entry/class/any");
+  await expect(page.getByTestId("references-heading")).toHaveCount(0);
 });
 
 test("the git promise type is defined with a promise agent block", async ({ page }) => {
@@ -3971,8 +4009,6 @@ test("a policy file lists what it defines, and the policy types have buttons and
   await expect(page.getByTestId("type-button-bundle")).toHaveText(`Bundles (${bundles.size})`);
   await expect(page.getByTestId("type-button-body")).toHaveText(`Bodies (${bodies.size})`);
   await expect(page.getByTestId("type-button-call")).toContainText("Calls (");
-  await expect(page.getByTestId("type-button-policy-var")).toContainText("Policy variables (");
-  await expect(page.getByTestId("type-button-policy-class")).toContainText("Policy classes (");
   // Search filters: the hosts whose policy has it.
   await page.goto(`/search?q=${encodeURIComponent('call:ifelse bundle:"bundle common def"')}`);
   await expect(page.getByTestId("search-summary")).toHaveText(

@@ -10,6 +10,7 @@ import {
   Entry,
   entryHref,
   getHost,
+  getPolicyRefs,
   Host,
   parseValueEntryName,
   parseVersionEntryName,
@@ -37,13 +38,17 @@ function describeLinkedHosts(entry: Entry): string {
     case "group":
       return `Hosts in the group ${entry.name}:`;
     case "class":
-      return `Hosts with the class ${entry.name} set:`;
+      return getPolicyRefs(entry).length > 0
+        ? `Hosts with the class ${entry.name} set, or defining it in their policy:`
+        : `Hosts with the class ${entry.name} set:`;
     case "cloud":
       return `Hosts running in ${entry.name}:`;
     case "role":
       return `Hosts with the CFEngine role ${entry.name}:`;
     case "variable":
-      return `Hosts defining the variable ${entry.name}:`;
+      return getPolicyRefs(entry).length > 0
+        ? `Hosts with the variable ${entry.name}, reported or defined in their policy:`
+        : `Hosts defining the variable ${entry.name}:`;
     case "value": {
       const { variable, value } = parseValueEntryName(entry.name);
       return `Hosts where ${variable} is ${value}:`;
@@ -66,10 +71,6 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts whose policy defines the promise type ${entry.name}:`;
     case "call":
       return `Hosts whose policy calls ${entry.name}:`;
-    case "policy-var":
-      return `Hosts whose policy defines the variable ${entry.name}:`;
-    case "policy-class":
-      return `Hosts whose policy defines the class ${entry.name}:`;
     default:
       return `Hosts linked to ${entry.name}:`;
   }

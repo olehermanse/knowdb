@@ -250,17 +250,16 @@ export type EntryType =
   | "filename"
   // Things defined in CFEngine policy files (data/policy.json): a bundle
   // or body named "<keyword> <type> <name>" ("bundle agent main"), a custom promise type
-  // defined with a `promise agent` block, something called from the
-  // policy (a function, bundle or body), a variable named
-  // "<bundle>.<name>" and a class promised in a classes: section.
+  // defined with a `promise agent` block, and something called from the
+  // policy (a function, bundle or body). Variables promised in a vars:
+  // section ("def.domain") and classes promised in a classes: section are
+  // "variable" and "class" entries, like the ones hosts report.
   | "bundle"
   | "body"
   | "promise-type"
-  | "call"
-  | "policy-var"
-  | "policy-class";
+  | "call";
 
-export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "call", "policy-var", "policy-class"];
+export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "call"];
 
 export function isPolicyType(type: EntryType): boolean {
   return POLICY_TYPES.includes(type);
@@ -347,7 +346,7 @@ export function normalizeName(name: string): string {
 }
 
 // Entry types whose names are worth matching against each other.
-const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service", "role", "policy-class"];
+const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service", "role"];
 
 // Index the policy files: the entries each file gives rise to (to link
 // them to the hosts having the file), where each entry is defined or
@@ -403,12 +402,12 @@ function indexPolicy() {
     }
     for (const v of file.vars) {
       const bundle = v.block.name.split(" ").pop() ?? v.block.name;
-      const ref: EntryRef = { type: "policy-var", name: `${bundle}.${v.name}` };
+      const ref: EntryRef = { type: "variable", name: `${bundle}.${v.name}` };
       add(ref, v.line, { block: v.block, detail: v.type });
       contain(v.block, ref, v.line);
     }
     for (const c of file.classes) {
-      const ref: EntryRef = { type: "policy-class", name: c.name };
+      const ref: EntryRef = { type: "class", name: c.name };
       add(ref, c.line, { block: c.block });
       contain(c.block, ref, c.line);
     }
@@ -877,8 +876,6 @@ export const ENTRY_TYPES: EntryType[] = [
   "body",
   "promise-type",
   "call",
-  "policy-var",
-  "policy-class",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -906,8 +903,6 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   body: "Bodies",
   "promise-type": "Promise types",
   call: "Calls",
-  "policy-var": "Policy variables",
-  "policy-class": "Policy classes",
 };
 
 // What to show for an entry in lists and links: its name, except for files
@@ -1271,8 +1266,8 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
   } else if (entry.type === "call") {
     // The bundle(s) or body(ies) the name refers to.
     related.push(...calledBlocks(entry.name));
-  } else if (entry.type === "policy-var" || entry.type === "policy-class") {
-    // The bundle(s) defining the variable or class.
+  } else if (entry.type === "variable" || entry.type === "class") {
+    // The bundle(s) defining the variable or class in the policy, if any.
     for (const ref of getPolicyRefs(entry)) {
       if (ref.block && !related.some((r) => r.type === ref.block!.type && r.name === ref.block!.name)) {
         related.push({ type: ref.block.type, name: ref.block.name });
@@ -1366,8 +1361,6 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   body: "A body defined in the CFEngine policy.",
   "promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
   call: "A function, bundle or body called from the CFEngine policy.",
-  "policy-var": "A variable defined in a bundle of the CFEngine policy.",
-  "policy-class": "A class defined in a bundle of the CFEngine policy.",
 };
 
 // "promises.cf and update.cf": the distinct names of the files an entry
@@ -1390,13 +1383,13 @@ function describePolicyEntry(entry: EntryRef): string {
       return `The ${entry.name}, defined${where}.`;
     case "promise-type":
       return `The custom promise type ${entry.name}, defined with a promise agent block${where}.`;
-    case "policy-var": {
+    case "variable": {
       const refs = getPolicyRefs(entry);
       const type = refs.find((r) => r.detail)?.detail;
       const bundle = refs[0]?.block?.name;
       return `The ${type ? `${type} ` : ""}variable ${entry.name}${bundle ? ` of ${bundle}` : ""}, defined${where}.`;
     }
-    case "policy-class": {
+    case "class": {
       const bundles = [...new Set(getPolicyRefs(entry).map((r) => r.block?.name).filter(Boolean))].sort();
       const inBundles = bundles.length > 0 ? ` by ${bundles.join(" and ")}` : "";
       return `The class ${entry.name}, defined${inBundles}${where}.`;
@@ -1443,7 +1436,10 @@ export function describeEntry(entry: EntryRef): string {
     if (known) return known.description;
   }
   if (entry.type === "class") {
-    return getClassInfo(entry.name)?.description ?? NO_CLASS_INFO;
+    // Described in info.json, or by where the policy defines it.
+    const known = getClassInfo(entry.name)?.description;
+    if (known) return known;
+    return getPolicyRefs(entry).length > 0 ? describePolicyEntry(entry) : NO_CLASS_INFO;
   }
   if (entry.type === "cloud") {
     return getCloudProviderInfo(entry.name)?.description ?? NO_CLOUD_INFO;
@@ -1455,7 +1451,9 @@ export function describeEntry(entry: EntryRef): string {
     return getRoleInfo(entry.name)?.description ?? NO_ROLE_INFO;
   }
   if (entry.type === "variable") {
-    return getVariableInfo(entry.name)?.description ?? NO_VARIABLE_INFO;
+    const known = getVariableInfo(entry.name)?.description;
+    if (known) return known;
+    return getPolicyRefs(entry).length > 0 ? describePolicyEntry(entry) : NO_VARIABLE_INFO;
   }
   if (entry.type === "value") {
     const { variable, value } = parseValueEntryName(entry.name);
@@ -1542,6 +1540,19 @@ function plural(n: number, singular: string, pluralForm = `${singular}s`): strin
   return `${n} ${n === 1 ? singular : pluralForm}`;
 }
 
+// " It is defined in the policy 3 times in 2 policy files, on 100 hosts."
+// for a variable or class the policy defines; "" otherwise.
+function policySummary(entry: EntryRef): string {
+  const refs = getPolicyRefs(entry);
+  if (refs.length === 0) return "";
+  const files = new Set(refs.map((r) => r.checksum));
+  const onHosts = new Set<string>();
+  for (const checksum of files) {
+    for (const k of entries.get(entryKey("file", checksum))?.hosts ?? []) onHosts.add(k);
+  }
+  return ` It is defined in the policy ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files.size, "policy file")}, on ${plural(onHosts.size, "host")}.`;
+}
+
 // One sentence with numbers from your infrastructure, shown below the
 // description of an entry, e.g. "cron is installed on 87 hosts in your
 // infrastructure, across 10 operating systems."
@@ -1560,8 +1571,14 @@ export function summarizeEntry(entry: Entry): string {
       // Version pages are kept short: the software page has the numbers.
       return "";
     case "variable": {
+      // The hosts reporting the variable; the rest have it in their policy.
+      const reporting = entry.hosts.filter((k) => hostsByKey.get(k)?.variables?.[entry.name] !== undefined);
       const values = aggregateValues(entry.name, entry.hosts).length;
-      return `${entry.name} is defined on ${hosts} in your infrastructure, with ${plural(values, "different value")}.`;
+      const reported =
+        reporting.length > 0
+          ? `${entry.name} is defined on ${plural(reporting.length, "host")} in your infrastructure, with ${plural(values, "different value")}.`
+          : `${entry.name} is not reported by any host in your infrastructure.`;
+      return reported + policySummary(entry);
     }
     case "value":
       return `${hosts} in your infrastructure ${n === 1 ? "has" : "have"} this value.`;
@@ -1575,8 +1592,15 @@ export function summarizeEntry(entry: Entry): string {
       return `The user ${entry.name} exists on ${hosts} in your infrastructure, across ${oses()}.`;
     case "group":
       return `This group has ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
-    case "class":
-      return `This class is set on ${hosts} in your infrastructure, running ${oses()} and listening to ${ports()}.`;
+    case "class": {
+      // The hosts with the class set; the rest define it in their policy.
+      const set = entry.hosts.filter((k) => hostsByKey.get(k)?.classes.includes(entry.name));
+      const reported =
+        set.length > 0
+          ? `This class is set on ${plural(set.length, "host")} in your infrastructure, running ${plural(aggregateOs(set).length, "operating system")} and listening to ${plural(aggregatePorts(set).length, "different port")}.`
+          : "This class is not set on any host in your infrastructure.";
+      return reported + policySummary(entry);
+    }
     case "cloud":
       return `${hosts} in your infrastructure ${n === 1 ? "runs" : "run"} in ${entry.name}, across ${oses()}.`;
     case "role": {
@@ -1597,9 +1621,7 @@ export function summarizeEntry(entry: Entry): string {
       return `Files named ${entry.name} exist on ${hosts} in your infrastructure, at ${plural(aggregatePathsOfFilename(entry.name, entry.hosts).length, "different path")}, with ${plural(aggregateFilesOfFilename(entry.name, entry.hosts).length, "different checksum")}.`;
     case "bundle":
     case "body":
-    case "promise-type":
-    case "policy-var":
-    case "policy-class": {
+    case "promise-type": {
       const refs = getPolicyRefs(entry);
       const files = new Set(refs.map((r) => r.checksum)).size;
       return `Defined ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
