@@ -952,3 +952,9 @@ a.type-badge:hover {
 .hl-punctuation-delimiter {
   color: var(--hl-punctuation);
 }
+
+/* The parameters of a built-in function, one per line. */
+.function-parameters {
+  margin: 0;
+  padding-left: 1.25rem;
+}

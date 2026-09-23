@@ -4,6 +4,7 @@ import info from "../data/info.json";
 import groupsJson from "../data/groups.json";
 import filesJson from "../data/files.json";
 import policyJson from "../data/policy.json";
+import functionsJson from "../data/functions.json";
 
 type Host = (typeof hosts)[number];
 const fileContents = (filesJson as unknown as {
@@ -142,6 +143,7 @@ test("front page always shows at least one entry of each type", async ({
     "body",
     "promise-type",
     "call",
+    "function",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
@@ -2319,7 +2321,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(23);
+  await expect(buttons).toHaveCount(24);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -3307,6 +3309,9 @@ interface PolicyFile {
   errors: boolean;
 }
 const policyFiles = (policyJson as unknown as { files: Record<string, PolicyFile> }).files;
+const builtinFunctions = (functionsJson as unknown as {
+  functions: Record<string, { category: string; returnType: string; status: string; variadic: boolean; minArgs?: number; parameters: { type: string }[] }>;
+}).functions;
 const typedHosts = hosts as unknown as FileHost[];
 const linuxHosts = typedHosts.filter((h) => !h.os.startsWith("Windows"));
 const windowsHosts = typedHosts.filter((h) => h.os.startsWith("Windows"));
@@ -3831,7 +3836,10 @@ test("a call page lists the calls with the bundle or body they are in", async ({
     .filter((n) => callsOf(n).every((c) => c.attribute !== "usebundle"))
     .sort()[0]!;
   await page.goto(`/entry/call/${encodeURIComponent(other)}?tab=resources`);
-  await expect(page.getByTestId("entry-description")).toHaveText("Calls of a function from the CFEngine policy.");
+  // A built-in function is described from the syntax description.
+  await expect(page.getByTestId("entry-description")).toContainText(
+    `A built-in CFEngine function in the ${builtinFunctions[other]!.category} category that returns `,
+  );
   await expect(page.getByTestId("resource-item").getByRole("link").first()).toHaveAttribute(
     "href",
     `https://docs.cfengine.com/docs/master/reference-functions-${other}.html`,
@@ -4018,4 +4026,78 @@ test("a policy file lists what it defines, and the policy types have buttons and
   );
   await page.goto(`/search?q=${encodeURIComponent("promise-type:git")}`);
   await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching promise-type git.`);
+});
+
+test("every built-in function is an entry, called or not", async ({ page }) => {
+  const names = Object.keys(builtinFunctions);
+  expect(names.length).toBeGreaterThan(150);
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-function")).toHaveText(`Functions (${names.length})`);
+  await page.getByTestId("type-button-function").click();
+  await expect(page.getByTestId("search-summary")).toHaveText(`${names.length} functions in your infrastructure.`);
+  const items = page.getByTestId("search-results").locator("li");
+  await expect(items).toHaveCount(PAGE_SIZE);
+  await expect(items.first().getByRole("link")).toHaveText(names.sort()[0]!);
+
+  // ifelse: described in info.json, called from the policy, with its
+  // signature from the syntax description.
+  const fn = builtinFunctions.ifelse!;
+  const calls = callsOf("ifelse").filter((c) => c.attribute !== "usebundle");
+  await page.goto("/entry/function/ifelse");
+  await expect(page.getByTestId("entry-type-link")).toHaveText("function");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    "Returns the value after the first true class expression among its arguments, or the last argument as the default.",
+  );
+  await expect(page.getByTestId("entry-summary")).toContainText(`ifelse is called ${calls.length} times from `);
+  await expect(page.getByTestId("function-signature")).toHaveText("ifelse(string, [string], ...)");
+  await expect(page.getByTestId("function-parameters").locator("li")).toHaveCount(fn.parameters.length);
+  await expect(page.getByTestId("function-parameters").locator("li").first()).toContainText("Class expression");
+  await expect(page.getByTestId("function-variadic")).toHaveText("Variadic: at least 1 arguments.");
+  await expect(page.getByTestId("function-returns")).toHaveText(fn.returnType);
+  await expect(page.getByTestId("function-category")).toHaveText(fn.category);
+  await expect(page.getByTestId("function-status")).toHaveCount(0);
+  // References are its calls, and the call entry is in See also.
+  await expect(page.getByTestId("references-heading")).toHaveText(`References (${calls.length})`);
+  await expect(page.getByTestId("references-description")).toHaveText("Where ifelse is called in the policy:");
+  await expect(page.getByTestId("reference-item").first().getByTestId("reference-block")).toContainText("In ");
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (call)" })).toHaveAttribute(
+    "href",
+    "/entry/call/ifelse",
+  );
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hosts.length})`);
+  // And the call entry links back to the function.
+  await page.goto("/entry/call/ifelse");
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (function)" })).toHaveAttribute(
+    "href",
+    "/entry/function/ifelse",
+  );
+
+  // A function the policy never calls: described from the syntax
+  // description, with documentation but no hosts or references.
+  const called = new Set(Object.values(policyFiles).flatMap((f) => f.calls.map((c) => c.name)));
+  const unused = names.find((n) => !called.has(n) && builtinFunctions[n]!.status === "normal")!;
+  const spec = builtinFunctions[unused]!;
+  await page.goto(`/entry/function/${encodeURIComponent(unused)}`);
+  await expect(page.getByTestId("entry-description")).toContainText(
+    `A built-in CFEngine function in the ${spec.category} category that returns `,
+  );
+  await expect(page.getByTestId("entry-summary")).toHaveText(`${unused} is not called from the policy on your hosts.`);
+  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("no-hosts")).toHaveText("The policy on your hosts does not call this function.");
+  await expect(page.getByTestId("resources-heading")).toHaveText("Resources (1)");
+  await page.getByTestId("resources-heading").click();
+  await expect(page.getByTestId("resource-item").getByRole("link").first()).toHaveAttribute(
+    "href",
+    `https://docs.cfengine.com/docs/master/reference-functions-${unused}.html`,
+  );
+  // A deprecated function says so.
+  const deprecated = names.find((n) => builtinFunctions[n]!.status === "deprecated");
+  if (deprecated) {
+    await page.goto(`/entry/function/${encodeURIComponent(deprecated)}`);
+    await expect(page.getByTestId("entry-description")).toContainText(" It is deprecated.");
+    await expect(page.getByTestId("function-status")).toHaveText("deprecated");
+  }
+  // function:<name> filters the hosts whose policy calls it.
+  await page.goto(`/search?q=${encodeURIComponent("function:ifelse")}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching function ifelse.`);
 });

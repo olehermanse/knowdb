@@ -62,6 +62,8 @@ The frontend reads its data at build time from the `data/` directory:
   and hostname.
 - `data/classes.json` lists the CFEngine hard classes per operating system,
   used by the generator.
+- `data/functions.json` lists every built-in CFEngine function, copied from
+  the CFEngine CLI's syntax description by `scripts/import_functions.py`.
 - `data/comments.json` holds example comments.
 
 Every entry has a page with its description, external resources, similar
@@ -102,6 +104,9 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **IP and MAC addresses**: an address belonging to a single host shows
   that host; well-known addresses and ranges (`127.0.0.1`, `10.0.0.0/8`)
   are described in `data/info.json`.
+- **Functions**: every built-in CFEngine function, with its signature,
+  parameters and return type from the CFEngine CLI's syntax description,
+  and where the policy calls it.
 - **Bundles, bodies, custom promise types and calls**: what the CFEngine policy
   files define, indexed from their syntax trees. Each shows where in which
   file (with line links) it is defined or called. Variables and classes

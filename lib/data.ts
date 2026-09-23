@@ -4,6 +4,7 @@ import groupsJson from "@/data/groups.json";
 import commentsJson from "@/data/comments.json";
 import filesJson from "@/data/files.json";
 import policyJson from "@/data/policy.json";
+import functionsJson from "@/data/functions.json";
 
 export interface Host {
   os: string;
@@ -73,6 +74,56 @@ export function formatBytes(n: number): string {
 export function abbreviateChecksum(checksum: string): string {
   return checksum.length > 16 ? checksum.slice(0, 16) : checksum;
 }
+
+// The built-in CFEngine functions, from data/functions.json (the functions
+// section of the CFEngine CLI's syntax-description.json, copied by
+// scripts/import_functions.py).
+export interface FunctionParameter {
+  description: string;
+  // The allowed values: a regular expression or a "min,max" range.
+  range: string;
+  type: string;
+}
+export interface FunctionSyntax {
+  category: string;
+  parameters: FunctionParameter[];
+  returnType: string;
+  // "normal" or "deprecated".
+  status: string;
+  variadic: boolean;
+  minArgs?: number;
+  maxArgs?: number;
+  cached: boolean;
+  collecting: boolean;
+}
+const builtinFunctions = (functionsJson as unknown as { functions: Record<string, FunctionSyntax> }).functions;
+
+export function getFunctionSyntax(name: string): FunctionSyntax | undefined {
+  return builtinFunctions[name];
+}
+
+// "ifelse(string[, string], ...)": the parameter types, the optional ones
+// in brackets, and "..." for a variadic function.
+export function functionSignature(name: string, fn: FunctionSyntax): string {
+  const required = fn.minArgs ?? fn.parameters.length;
+  const parts = fn.parameters.map((p, i) => (i < required ? p.type : `[${p.type}]`));
+  if (fn.variadic) parts.push("...");
+  return `${name}(${parts.join(", ")})`;
+}
+
+// "a string", "a class", "a list of strings", ... for a return type.
+const RETURN_WORDS: Record<string, string> = {
+  context: "a class",
+  string: "a string",
+  int: "an integer",
+  real: "a real number",
+  slist: "a list of strings",
+  ilist: "a list of integers",
+  rlist: "a list of real numbers",
+  irange: "an integer range",
+  rrange: "a real number range",
+  data: "a data container",
+};
 
 // What the CFEngine policy files define, from data/policy.json (written by
 // scripts/index_policy.mjs), keyed by the file's checksum.
@@ -257,9 +308,12 @@ export type EntryType =
   | "bundle"
   | "body"
   | "promise-type"
-  | "call";
+  | "call"
+  // A built-in CFEngine function (data/functions.json), whether the
+  // policy calls it or not.
+  | "function";
 
-export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "call"];
+export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "call", "function"];
 
 export function isPolicyType(type: EntryType): boolean {
   return POLICY_TYPES.includes(type);
@@ -364,7 +418,7 @@ function indexPolicy() {
     for (const b of file.bundles) bundleNames.add(b.name);
   }
   const kindOf = (call: PolicyCall): CallKind =>
-    call.attribute === "usebundle" || (!call.attribute && bundleNames.has(call.name) && !info.functions[call.name])
+    call.attribute === "usebundle" || (!call.attribute && bundleNames.has(call.name) && !builtinFunctions[call.name])
       ? "bundle"
       : call.attribute && bodyNames.has(`${call.attribute} ${call.name}`)
         ? "body"
@@ -413,12 +467,14 @@ function indexPolicy() {
     }
     for (const call of file.calls) {
       const ref: EntryRef = { type: "call", name: call.name };
-      add(ref, call.line, {
-        block: call.block,
-        kind: kindOf(call),
-        detail: call.attribute && `${call.attribute} =>`,
-      });
+      const kind = kindOf(call);
+      const extra = { block: call.block, kind, detail: call.attribute && `${call.attribute} =>` };
+      add(ref, call.line, extra);
       contain(call.block, ref, call.line);
+      // A call of a built-in function is also a reference of the function.
+      if (kind === "function" && builtinFunctions[call.name]) {
+        add({ type: "function", name: call.name }, call.line, extra);
+      }
     }
     entriesByFile.set(checksum, own);
   }
@@ -487,8 +543,10 @@ function buildIndex() {
     ensure(type, name).hosts.add(hostkey);
   };
 
-  // Groups exist as entries even if no host currently matches them.
+  // Groups exist as entries even if no host currently matches them, and
+  // every built-in function whether the policy calls it or not.
   for (const group of groups) ensure("group", group.name);
+  for (const name of Object.keys(builtinFunctions)) ensure("function", name);
 
   for (const host of hosts) {
     hostsByKey.set(host.id, host);
@@ -876,6 +934,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "body",
   "promise-type",
   "call",
+  "function",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -903,6 +962,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   body: "Bodies",
   "promise-type": "Custom promise types",
   call: "Calls",
+  function: "Functions",
 };
 
 // What to show for an entry in lists and links: its name, except for files
@@ -1179,11 +1239,14 @@ export function getOsColor(os: string): string {
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
   if (entry.type === "version" || entry.type === "value") return [];
+  if (entry.type === "function") return getFunctionInfo(entry.name)?.links ?? [functionDocsLink(entry.name)];
   if (entry.type === "call") {
-    // Bundles and bodies have no reference page; functions do.
+    // Bundles and bodies have no reference page; built-in functions do.
     const known = getFunctionInfo(entry.name)?.links;
     if (known) return known;
-    return callKinds(entry.name).includes("function") ? [functionDocsLink(entry.name)] : [];
+    return callKinds(entry.name).includes("function") && builtinFunctions[entry.name]
+      ? [functionDocsLink(entry.name)]
+      : [];
   }
   return infoFor(entry)?.links ?? [];
 }
@@ -1224,6 +1287,7 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
     case "file":
       return fileNames(entry.name).map(getFilenameInfo).find((i) => i !== undefined);
     case "call":
+    case "function":
       return getFunctionInfo(entry.name);
     default:
       return undefined;
@@ -1264,8 +1328,12 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
   } else if (entry.type === "file") {
     for (const name of fileNames(entry.name)) related.push({ type: "filename", name });
   } else if (entry.type === "call") {
-    // The bundle(s) or body(ies) the name refers to.
+    // The function, bundle(s) or body(ies) the name refers to.
+    if (builtinFunctions[entry.name]) related.push({ type: "function", name: entry.name });
     related.push(...calledBlocks(entry.name));
+  } else if (entry.type === "function") {
+    // The calls of the function, if the policy calls it.
+    related.push({ type: "call", name: entry.name });
   } else if (entry.type === "variable" || entry.type === "class") {
     // The bundle(s) defining the variable or class in the policy, if any.
     for (const ref of getPolicyRefs(entry)) {
@@ -1318,11 +1386,22 @@ export const NO_VARIABLE_INFO = "No information available about this variable.";
 export const NO_FILENAME_INFO = "No information available about files with this name.";
 export const NO_FUNCTION_INFO = "A function called from the CFEngine policy.";
 
+// "A built-in CFEngine function in the data category that returns a
+// string." from data/functions.json; deprecated functions say so.
+function describeFunction(name: string): string {
+  const fn = builtinFunctions[name];
+  if (!fn) return TYPE_DESCRIPTIONS.function;
+  const returns = RETURN_WORDS[fn.returnType] ?? fn.returnType;
+  const deprecated = fn.status === "deprecated" ? " It is deprecated." : "";
+  return `A built-in CFEngine function in the ${fn.category} category that returns ${returns}.${deprecated}`;
+}
+
 // What a call refers to: a described function, a bundle, a body, or an
 // unknown function.
 function describeCall(name: string): string {
   const known = getFunctionInfo(name)?.description;
   if (known) return known;
+  if (builtinFunctions[name] && callKinds(name).includes("function")) return describeFunction(name);
   const blocks = calledBlocks(name);
   const kinds = callKinds(name);
   const bundles = blocks.filter((b) => b.type === "bundle").map((b) => b.name);
@@ -1361,6 +1440,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   body: "A body defined in the CFEngine policy.",
   "promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
   call: "A function, bundle or body called from the CFEngine policy.",
+  function: "A built-in CFEngine function.",
 };
 
 // "promises.cf and update.cf": the distinct names of the files an entry
@@ -1475,6 +1555,9 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "call") {
     return describeCall(entry.name);
+  }
+  if (entry.type === "function") {
+    return getFunctionInfo(entry.name)?.description ?? describeFunction(entry.name);
   }
   if (isPolicyType(entry.type)) {
     return describePolicyEntry(entry);
@@ -1626,8 +1709,10 @@ export function summarizeEntry(entry: Entry): string {
       const files = new Set(refs.map((r) => r.checksum)).size;
       return `Defined ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
     }
-    case "call": {
+    case "call":
+    case "function": {
       const refs = getPolicyRefs(entry);
+      if (refs.length === 0) return `${entry.name} is not called from the policy on your hosts.`;
       const files = new Set(refs.map((r) => r.checksum)).size;
       const blocks = new Set(refs.map((r) => r.block?.name)).size;
       return `${entry.name} is called ${plural(refs.length, "time")} from ${plural(blocks, "bundle or body", "bundles and bodies")} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;

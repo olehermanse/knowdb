@@ -1,0 +1,4327 @@
+{
+ "_comment": "The built-in CFEngine functions, from the functions section of the CFEngine CLI's syntax-description.json (https://github.com/cfengine/cfengine-cli, generated from cf-agent): category, parameters (type, description, range), returnType, whether the function is variadic (with minArgs/maxArgs), cached or collecting, and status (normal or deprecated). Written by scripts/import_functions.py; the frontend reads this file at build time and shows every function as an entry.",
+ "functions": {
+  "accessedbefore": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Newer filename",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Older filename",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "accumulated": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Years",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Months",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Days",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Hours",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Minutes",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Seconds",
+     "range": "0,40000",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "ago": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Years",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Months",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Days",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Hours",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Minutes",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Seconds",
+     "range": "0,40000",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "and": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "Class expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "basename": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "File path",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Optional suffix",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "bundlesmatching": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "bundlestate": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Bundle name",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "callstack_callers": {
+   "cached": false,
+   "category": "internal",
+   "collecting": false,
+   "parameters": [],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "callstack_promisers": {
+   "cached": false,
+   "category": "internal",
+   "collecting": false,
+   "parameters": [],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "canonify": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "String containing non-identifier characters",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "canonifyuniquely": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "String containing non-identifier characters",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "cf_version_after": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "cf_version_at": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "cf_version_before": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "cf_version_between": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Lower CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Upper CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "cf_version_maximum": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "cf_version_minimum": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "CFEngine version number to compare against",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "changedbefore": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Newer filename",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Older filename",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "classesmatching": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Tag regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "classfiltercsv": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "maxArgs": 4,
+   "minArgs": 3,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "CSV file has heading",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    },
+    {
+     "description": "Column index to filter by, contains classes",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Column index to sort by",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "classfilterdata": {
+   "cached": false,
+   "category": "io",
+   "collecting": true,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Specify type of data structure",
+     "range": "array_of_arrays,array_of_objects,object_of_arrays,object_of_objects,auto",
+     "type": "option"
+    },
+    {
+     "description": "Key or index of class expressions",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "classify": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "classmatch": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Tag regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "concat": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "String to concatenate",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "countclassesmatching": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Tag regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": true
+  },
+  "countlinesmatching": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filename",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "data_expand": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "data_readstringarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "data_readstringarrayidx": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "data_regextract": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Match string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "data_sysctlvalues": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "datastate": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "difference": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine base variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine filter variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "dirname": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File path",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "diskfree": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File system directory",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "escape": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "IP address or string to escape",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "eval": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Evaluation type",
+     "range": "math,class",
+     "type": "option"
+    },
+    {
+     "description": "Evaluation options",
+     "range": "infix",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "every": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Regular expression or string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "execresult": {
+   "cached": true,
+   "category": "utils",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "Fully qualified command path",
+     "range": ".+",
+     "type": "string"
+    },
+    {
+     "description": "Shell encapsulation option",
+     "range": "noshell,useshell,powershell",
+     "type": "option"
+    },
+    {
+     "description": "Which output to return; stdout or stderr",
+     "range": "both,stdout,stderr",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "execresult_as_data": {
+   "cached": true,
+   "category": "utils",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "Fully qualified command path",
+     "range": ".+",
+     "type": "string"
+    },
+    {
+     "description": "Shell encapsulation option",
+     "range": "noshell,useshell,powershell",
+     "type": "option"
+    },
+    {
+     "description": "Which output to return; stdout or stderr",
+     "range": "both,stdout,stderr",
+     "type": "option"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "expandrange": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "String containing numerical range e.g. string[13-47]",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Step size of numerical increments",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "file_hash": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Hash or digest algorithm",
+     "range": "md5,sha1,sha256,sha384,sha512",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "fileexists": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "filesexist": {
+   "cached": false,
+   "category": "files",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "filesize": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "filestat": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "stat() field to get",
+     "range": "size,gid,uid,ino,nlink,ctime,atime,mtime,xattr,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "filter": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Regular expression or string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Match as regular expression if true, as exact string otherwise",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    },
+    {
+     "description": "Invert matches",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    },
+    {
+     "description": "Maximum number of matches to return",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "findfiles": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Glob pattern to match files",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "findfiles_up": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "Path to search from",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Glob pattern to match files",
+     "range": ".+",
+     "type": "string"
+    },
+    {
+     "description": "Number of levels to search",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "findlocalgroups": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Filter list",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "findlocalusers": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Filter list",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "findprocesses": {
+   "cached": true,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression to match process name",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "format": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "CFEngine format string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "getacls": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Path to file or directory",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Whether to get default or access ACL",
+     "range": "default,access",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "getbundlemetatags": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "getclassmetatags": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Class identifier",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "getenv": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Name of environment variable",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of characters to read ",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "getfields": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression to match line",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filename to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression to split fields",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Return array name",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "getgid": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Group name in text",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "getgroupinfo": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "maxArgs": 1,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "Group name or group ID as string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "getgroups": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "Comma separated list of Group names",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Comma separated list of GroupID numbers",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "getindices": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "getuid": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "User name in text",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "getuserinfo": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "maxArgs": 1,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "User name in text",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "getusers": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "Comma separated list of User names",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Comma separated list of UserID numbers",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "getvalues": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "getvariablemetatags": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "grep": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "groupexists": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Group name or identifier",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "hash": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input text",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Hash or digest algorithm",
+     "range": "md5,sha1,sha256,sha384,sha512",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "hash_to_int": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Lower inclusive bound",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Upper exclusive bound",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Input string to hash",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "hashmatch": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Filename to hash",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Hash or digest algorithm",
+     "range": "md5,sha1,sha256,sha384,sha512",
+     "type": "option"
+    },
+    {
+     "description": "ASCII representation of hash for comparison",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "host2ip": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Host name in ascii",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "hostinnetgroup": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Netgroup name",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "hostrange": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Hostname prefix",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Enumerated range",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "hostsseen": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Horizon since last seen in hours",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Complements for selection policy",
+     "range": "lastseen,notseen",
+     "type": "option"
+    },
+    {
+     "description": "Type of return value desired",
+     "range": "name,address,hostkey",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "hostswithclass": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Class name to look for",
+     "range": "[a-zA-Z0-9_]+",
+     "type": "string"
+    },
+    {
+     "description": "Type of return value desired",
+     "range": "name,address,hostkey",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "hostswithgroup": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Group name to look for",
+     "range": "[a-zA-Z0-9_]+",
+     "type": "string"
+    },
+    {
+     "description": "Type of return value desired",
+     "range": "name,address,hostkey",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "hubknowledge": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "ifelse": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Class expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Value if the preceding class expression is true",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "int": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Numeric string to convert to integer",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "intersection": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine base variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine filter variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "ip2host": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "IP address (IPv4 or IPv6)",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "iprange": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "IP address range syntax",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "irange": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Integer start of range",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Integer end of range",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "irange",
+   "status": "normal",
+   "variadic": false
+  },
+  "is_type": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Type",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "isconnectable": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "Host name, domain name or IP address",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Port number",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Connection timeout (in seconds)",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "isdir": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isexecutable": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isgreaterthan": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Larger string or value",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Smaller string or value",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isipinsubnet": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "IP address range syntax",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "islessthan": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Smaller string or value",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Larger string or value",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "islink": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isnewerthan": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Newer file name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Older file name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isnewerthantime": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Time as a Unix epoch offset",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isplain": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File object name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "isreadable": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Path to file",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Timeout interval",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "isvariable": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "join": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Join glue-string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "lastnode": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Link separator, e.g. /,:",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "laterthan": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Years",
+     "range": "0,10000",
+     "type": "int"
+    },
+    {
+     "description": "Months",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Days",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Hours",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Minutes",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Seconds",
+     "range": "0,40000",
+     "type": "int"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "ldaparray": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "URI",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Distinguished name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filter",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Search scope policy",
+     "range": "subtree,onelevel,base",
+     "type": "option"
+    },
+    {
+     "description": "Security level",
+     "range": "none,ssl,sasl",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "ldaplist": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "URI",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Distinguished name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filter",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Record name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Search scope policy",
+     "range": "subtree,onelevel,base",
+     "type": "option"
+    },
+    {
+     "description": "Security level",
+     "range": "none,ssl,sasl",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "ldapvalue": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "URI",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Distinguished name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filter",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Record name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Search scope policy",
+     "range": "subtree,onelevel,base",
+     "type": "option"
+    },
+    {
+     "description": "Security level",
+     "range": "none,ssl,sasl",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "length": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "lsdir": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Path to base directory",
+     "range": ".+",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression to match files or blank",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Include the base path in the list",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "makerule": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Target filename",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Source filename or CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "maparray": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Pattern based on $(this.k) and $(this.v) as original text",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON, the array variable to map",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "mapdata": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Conversion to apply to the mapped string",
+     "range": "none,canonify,json,json_pipe",
+     "type": "option"
+    },
+    {
+     "description": "Pattern based on $(this.k) and $(this.v) as original text",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "maplist": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Pattern based on $(this) as original text",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "max": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Sorting method: lex or int or real (floating point) or IPv4/IPv6 or MAC address",
+     "range": "lex,int,real,IP,ip,MAC,mac",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "mean": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "real",
+   "status": "normal",
+   "variadic": false
+  },
+  "mergedata": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "min": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Sorting method: lex or int or real (floating point) or IPv4/IPv6 or MAC address",
+     "range": "lex,int,real,IP,ip,MAC,mac",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "network_connections": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "none": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Regular expression or string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "not": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Class value",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "now": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "nth": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Offset or key of element to return",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "on": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Year",
+     "range": "1970,3000",
+     "type": "int"
+    },
+    {
+     "description": "Month (January = 0)",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Day (First day of month = 0)",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Hour",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Minute",
+     "range": "0,1000",
+     "type": "int"
+    },
+    {
+     "description": "Second",
+     "range": "0,1000",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "or": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 0,
+   "parameters": [
+    {
+     "description": "Class expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "packagesmatching": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression (unanchored) to match package name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression (unanchored) to match package version",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression (unanchored) to match package architecture",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression (unanchored) to match package method",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "packageupdatesmatching": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression (unanchored) to match package name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression (unanchored) to match package version",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression (unanchored) to match package architecture",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression (unanchored) to match package method",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "parseintarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "A string to parse for input data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "parsejson": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "JSON string to parse",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "parserealarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "A string to parse for input data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "parsestringarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "A string to parse for input data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "parsestringarrayidx": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "A string to parse for input data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "parseyaml": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "JSON string to parse",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "peerleader": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name of host list",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Comment regex pattern",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Peer group size",
+     "range": "2,64",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "peerleaders": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name of host list",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Comment regex pattern",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Peer group size",
+     "range": "2,64",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "peers": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name of host list",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Comment regex pattern",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Peer group size",
+     "range": "2,64",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "processexists": {
+   "cached": true,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression to match process name",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "product": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "real",
+   "status": "normal",
+   "variadic": false
+  },
+  "randomint": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Lower inclusive bound",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Upper exclusive bound",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "read_module_protocol": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read and parse from",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "readcsv": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "readdata": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Type of data to read",
+     "range": "CSV,YAML,JSON,ENV,auto",
+     "type": "option"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "readenvfile": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "readfile": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "readintarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "readintlist": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "ilist",
+   "status": "normal",
+   "variadic": false
+  },
+  "readjson": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "readrealarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "readreallist": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "rlist",
+   "status": "normal",
+   "variadic": false
+  },
+  "readstringarray": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "readstringarrayidx": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Array identifier to populate",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "readstringlist": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Regex matching comments",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split data",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of entries to read",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Maximum bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "readtcp": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Host name or IP address of server socket",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Port number or service name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Protocol query string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "readyaml": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "File name",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "regarray": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "regcmp": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Match string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "regex_replace": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Source string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression pattern",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Replacement string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "sed/Perl-style options: gmsixUT",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "regextract": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Match string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Identifier for back-references",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "registryvalue": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Windows registry key",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Windows registry value-id",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "regldap": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "URI",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Distinguished name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filter",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Record name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Search scope policy",
+     "range": "subtree,onelevel,base",
+     "type": "option"
+    },
+    {
+     "description": "Regex to match results",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Security level",
+     "range": "none,ssl,sasl",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "regline": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Filename to search",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "reglist": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "remoteclassesmatching": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Server name or address",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Use encryption",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    },
+    {
+     "description": "Return class prefix",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "remotescalar": {
+   "cached": true,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    },
+    {
+     "description": "Hostname or IP address of server",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Use encryption",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "returnszero": {
+   "cached": true,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Command path",
+     "range": ".+",
+     "type": "string"
+    },
+    {
+     "description": "Shell encapsulation option",
+     "range": "noshell,useshell,powershell",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "reverse": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "rrange": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Real number, start of range",
+     "range": "-9.99999E100,9.99999E100",
+     "type": "real"
+    },
+    {
+     "description": "Real number, end of range",
+     "range": "-9.99999E100,9.99999E100",
+     "type": "real"
+    }
+   ],
+   "returnType": "rrange",
+   "status": "normal",
+   "variadic": false
+  },
+  "search_up": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "Path to search from",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Glob pattern to match files",
+     "range": ".+",
+     "type": "string"
+    },
+    {
+     "description": "Number of levels to search",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "selectservers": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "CFEngine list identifier, the list of hosts or addresses to contact",
+     "range": "@[(][a-zA-Z0-9_$(){}\\[\\].:]+[)]",
+     "type": "string"
+    },
+    {
+     "description": "Port number or service name.",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "A query string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "A regular expression to match success",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of bytes to read from server",
+     "range": "0,99999999999",
+     "type": "int"
+    },
+    {
+     "description": "Name for array of results",
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "shuffle": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Any seed string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "some": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "Regular expression or string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "sort": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Sorting method: lex or int or real (floating point) or IPv4/IPv6 or MAC address",
+     "range": "lex,int,real,IP,ip,MAC,mac",
+     "type": "option"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "splayclass": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string for classification",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Splay time policy",
+     "range": "daily,hourly",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "splitstring": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "A data string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split on",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of pieces",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "deprecated",
+   "variadic": false
+  },
+  "storejson": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "strcmp": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "String",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "String",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "strftime": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Use GMT or local time",
+     "range": "gmtime,localtime",
+     "type": "option"
+    },
+    {
+     "description": "A format string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "The time as a Unix epoch offset",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Convert argument to string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_downcase": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_head": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of characters to return",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_length": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_mustache": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Mustache template string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON, can be blank",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "string_replace": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "maxArgs": 4,
+   "minArgs": 3,
+   "parameters": [
+    {
+     "description": "Source string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "String or list of strings to replace",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Replacement string or list of strings",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Whether to expect strings or list of strings",
+     "range": "strings,lists",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "string_reverse": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_split": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "A data string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Regex to split on",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of pieces",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_tail": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Maximum number of characters to return",
+     "range": "-99999999999,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_trim": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "string_upcase": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Input string",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "strtotime": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "String to parse",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "int",
+   "status": "normal",
+   "variadic": false
+  },
+  "sublist": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Whether to return elements from the head or from the tail of the list",
+     "range": "head,tail",
+     "type": "option"
+    },
+    {
+     "description": "Maximum number of elements to return",
+     "range": "0,99999999999",
+     "type": "int"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "sum": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "real",
+   "status": "normal",
+   "variadic": false
+  },
+  "sysctlvalue": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "sysctl key",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "translatepath": {
+   "cached": false,
+   "category": "files",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Unix style path",
+     "range": "\"?(/.*)",
+     "type": "string"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": false
+  },
+  "type": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Variable identifier",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Enable detailed type decription",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    }
+   ],
+   "returnType": "string",
+   "status": "normal",
+   "variadic": true
+  },
+  "unique": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": false
+  },
+  "url_get": {
+   "cached": false,
+   "category": "communication",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "URL to retrieve",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "CFEngine variable identifier or inline JSON, can be blank",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": false
+  },
+  "usemodule": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "Name of module command",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Argument string for the module",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "userexists": {
+   "cached": false,
+   "category": "system",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "User name or identifier",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "useringroup": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "User name",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Group name",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "validdata": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "maxArgs": 3,
+   "minArgs": 2,
+   "parameters": [
+    {
+     "description": "String to validate as JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Type of data to validate",
+     "range": "JSON",
+     "type": "option"
+    },
+    {
+     "description": "Enable more strict validation, requiring the result to be a valid data container, matching the requirements of parsejson().",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "validfiledata": {
+   "cached": false,
+   "category": "io",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "File name to read",
+     "range": "\"?(/.*)",
+     "type": "string"
+    },
+    {
+     "description": "Type of data to read",
+     "range": "CSV,YAML,JSON,ENV,auto",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  },
+  "validjson": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "maxArgs": 2,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "String to validate as JSON",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Enable more strict validation, requiring the result to be a valid data container, matching the requirements of parsejson().",
+     "range": "true,false,yes,no,on,off",
+     "type": "option"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": true
+  },
+  "variablesmatching": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Tag regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "slist",
+   "status": "normal",
+   "variadic": true
+  },
+  "variablesmatching_as_data": {
+   "cached": false,
+   "category": "data",
+   "collecting": false,
+   "minArgs": 1,
+   "parameters": [
+    {
+     "description": "Regular expression",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Tag regular expression",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "data",
+   "status": "normal",
+   "variadic": true
+  },
+  "variance": {
+   "cached": false,
+   "category": "data",
+   "collecting": true,
+   "parameters": [
+    {
+     "description": "CFEngine variable identifier or inline JSON",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "real",
+   "status": "normal",
+   "variadic": false
+  },
+  "version_compare": {
+   "cached": false,
+   "category": "utils",
+   "collecting": false,
+   "parameters": [
+    {
+     "description": "First version to compare",
+     "range": ".*",
+     "type": "string"
+    },
+    {
+     "description": "Operator to use in comparison",
+     "range": "=,==,!=,>,<,>=,<=",
+     "type": "option"
+    },
+    {
+     "description": "Second version to compare",
+     "range": ".*",
+     "type": "string"
+    }
+   ],
+   "returnType": "context",
+   "status": "normal",
+   "variadic": false
+  }
+ }
+}

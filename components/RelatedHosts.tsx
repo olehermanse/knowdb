@@ -276,7 +276,7 @@ function FileLineLink({ checksum, line }: { checksum: string; line: number }) {
 function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
   const refs = getPolicyRefs(entry);
   const paged = paginate(refs, page);
-  const verb = entry.type === "call" ? "called" : "defined";
+  const verb = entry.type === "call" || entry.type === "function" ? "called" : "defined";
   return (
     <>
       <p className="muted" data-testid="references-description">

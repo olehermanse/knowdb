@@ -241,6 +241,31 @@ checkout of https://github.com/cfengine/modules next to this repository
 when present), since the Masterfiles Policy Framework defines no custom
 promise types.
 
+## Built-in functions
+
+`data/functions.json` is the `functions` section of the CFEngine CLI's
+`syntax-description.json` (generated from cf-agent; the CLI uses it for
+linting), copied by `scripts/import_functions.py` from a checkout of
+cfengine-cli next to this repository, the installed `cfengine` package, or
+a path given as argument. Every function is a `function` entry whether the
+policy calls it or not (like groups, they are created before the hosts are
+indexed). The page shows the signature (`ifelse(string, [string], ...)`:
+parameter types, optional ones in brackets, `...` when variadic), the
+parameters with their allowed range, the return type, the category and,
+when not normal, the status, in a `host-details` list. The description is
+the hand-written one from `info.json` under `functions` when there is
+one, else "A built-in CFEngine function in the data category that returns
+a string." (return types are worded: context is "a class", slist "a list
+of strings", ...), plus " It is deprecated." for deprecated functions.
+Calls of a built-in function are also references of the function, so a
+function page has the same References tab as its call entry, the two link
+to each other in "See also", and hosts are linked to the functions their
+policy calls; a function nobody calls has no hosts ("The policy on your
+hosts does not call this function.") and the summary "x is not called
+from the policy on your hosts." Only built-in functions get the
+documentation link, and a bare call of a name that is both a bundle and a
+built-in function counts as a function call.
+
 ## Syntax highlighting of CFEngine policy
 
 `lib/highlight.ts` highlights `.cf` files with the tree-sitter grammar for

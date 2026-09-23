@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
 import UserDetailsSection from "@/components/UserDetails";
+import FunctionDetails from "@/components/FunctionDetails";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import { cookies } from "next/headers";
@@ -164,6 +165,7 @@ export default async function EntryPage({
           </p>
           {group && <GroupRules group={group} />}
           {type === "user" && <UserDetailsSection entry={entry} />}
+          {type === "function" && <FunctionDetails entry={entry} />}
           <RelatedHosts
             entry={entry}
             tabs={entryTabs(entry)}
@@ -185,7 +187,9 @@ export default async function EntryPage({
             />
           ) : (
             <p className="muted" data-testid="no-hosts">
-              No hosts in your infrastructure have this {entry.type}.
+              {type === "function"
+                ? "The policy on your hosts does not call this function."
+                : `No hosts in your infrastructure have this ${entry.type}.`}
             </p>
           )}
         </aside>
