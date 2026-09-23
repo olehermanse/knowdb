@@ -270,12 +270,12 @@ function FileLineLink({ checksum, line }: { checksum: string; line: number }) {
 }
 
 // Where a bundle, body, promise type, variable or class is defined, or a
-// function called: one card per place, with the file and line and, for
+// name called: one card per place, with the file and line and, for
 // things inside a block, the bundle or body they are in.
 function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
   const refs = getPolicyRefs(entry);
   const paged = paginate(refs, page);
-  const verb = entry.type === "function" ? "called" : "defined";
+  const verb = entry.type === "call" ? "called" : "defined";
   return (
     <>
       <p className="muted" data-testid="references-description">
@@ -297,6 +297,9 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
                     In {ref.block.type === "promise-type" ? "promise type" : ref.block.type}{" "}
                     <EntryLink type={ref.block.type} name={ref.block.name} />
                   </span>
+                )}
+                {ref.kind && ref.kind !== "function" && (
+                  <span data-testid="reference-kind">{ref.kind === "bundle" ? "Bundle call" : "Body call"}</span>
                 )}
                 {ref.detail && <span data-testid="reference-detail">{ref.detail}</span>}
               </div>
@@ -322,7 +325,7 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
 }
 
 // What a policy file or block contains: the bundles, bodies and promise
-// types of a file; the variables, classes and function calls of a block.
+// types of a file; the variables, classes and calls of a block.
 function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
   const contents = getPolicyContents(entry);
   const paged = paginate(contents, page);

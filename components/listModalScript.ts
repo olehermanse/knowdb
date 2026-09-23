@@ -309,17 +309,31 @@ export const LIST_MODAL_SCRIPT = `
       unpinAnimated(pins, pin);
     }
   });
+  // The line of a file the URL's #L<n> points at gets the line-target
+  // class: :target alone does not follow client-side navigation.
+  function markLine() {
+    var marked = document.querySelectorAll(".line-target");
+    for (var i = 0; i < marked.length; i++) marked[i].classList.remove("line-target");
+    var id = location.hash.slice(1);
+    if (!/^L[0-9]+$/.test(id)) return;
+    var el = document.getElementById(id);
+    if (el && el.classList.contains("line")) el.classList.add("line-target");
+  }
+  window.addEventListener("hashchange", markLine);
+  window.addEventListener("popstate", markLine);
   function init() {
     initComments();
     renderPins();
+    markLine();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
   // Following a link swaps the page content without reloading, so the
-  // new page's pinned list and comments arrive after init ran. Run it
-  // again whenever such a container is added. Our own rendering only adds
-  // rows inside the containers, so it does not trigger this.
-  var NEW_CONTENT = "[data-pinned], [data-comments], [data-list-modal-row]";
+  // new page's pinned list, comments and file content arrive after init
+  // ran. Run it again whenever such a container is added. Our own
+  // rendering only adds rows inside the containers, so it does not
+  // trigger this.
+  var NEW_CONTENT = "[data-pinned], [data-comments], [data-list-modal-row], .file-content";
   var scheduled = false;
   function needsInit(node) {
     return node.nodeType === 1 && (node.matches(NEW_CONTENT) || !!node.querySelector(NEW_CONTENT));

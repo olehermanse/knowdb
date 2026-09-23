@@ -77,9 +77,16 @@ export function captureClass(name: string): string {
   return `hl-${name.replace(/\./g, "-")}`;
 }
 
+// The start of a line: the span with the line's id, and an empty anchor
+// drawing the line number (from its data-line attribute, via CSS, so the
+// number is not part of the text when copying) and linking to the line.
+function openLine(n: number): string {
+  return `<span class="line" id="L${n}"><a class="line-number" href="#L${n}" data-line="${n}" aria-label="Line ${n}"></a>`;
+}
+
 // Turn the captures into nested <span> elements over the escaped source,
 // with every line wrapped in <span class="line" id="L<n>"> so links can
-// point at a line. Captures are sorted by start (outer before inner when
+// point at a line, preceded by its line number. Captures are sorted by start (outer before inner when
 // they start at the same place); a second capture of exactly the same
 // range is dropped, and one that only partly overlaps the span it is
 // inside is skipped. A capture spanning several lines is closed at the end
@@ -89,7 +96,7 @@ function render(source: string, captures: QueryCapture[]): string {
     .map((c) => ({ name: c.name, start: c.node.startIndex, end: c.node.endIndex }))
     .filter((r) => r.end > r.start)
     .sort((a, b) => a.start - b.start || b.end - a.end);
-  let html = `<span class="line" id="L1">`;
+  let html = openLine(1);
   let lineNo = 1;
   let pos = 0;
   const open: { end: number; cls: string }[] = [];
@@ -104,7 +111,7 @@ function render(source: string, captures: QueryCapture[]): string {
       for (let k = 0; k < open.length; k++) html += "</span>";
       html += "</span>\n";
       lineNo++;
-      html += `<span class="line" id="L${lineNo}">`;
+      html += openLine(lineNo);
       for (const o of open) html += `<span class="${o.cls}">`;
     });
   };

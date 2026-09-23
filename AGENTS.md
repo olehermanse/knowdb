@@ -178,31 +178,40 @@ search bar always shows the query exactly as it is in the URL. The "N hosts" lin
 next to aggregated ports on group, software and OS pages use this to show
 exactly those hosts.
 
-## Bundles, bodies, promise types, functions, policy variables and classes
+## Bundles, bodies, promise types, calls, policy variables and classes
 
 Six entry types come from the CFEngine policy files themselves, indexed
 into `data/policy.json` by `scripts/index_policy.mjs` (run it after
 regenerating the hosts): `bundle` and `body`, named `<type> <name>`
 (`agent main`, `common control`); `promise-type`, a custom promise type
-defined with a `promise agent <name>` block; `function`, a function called
-from the policy; `policy-var`, a variable promised in a `vars:` section,
-named `<bundle>.<name>` (`def.domain`); and `policy-class`, a class
-promised in a `classes:` section. Calls of bodies (`perms => mog(...)`
-where a body `perms mog` exists) and of bundles (`usebundle => ...`) are
-not functions. Hosts are linked to everything their policy files define,
-so the right pane works as for any entry, and `function:ifelse` or
-`bundle:"common def"` work as search filters.
+defined with a `promise agent <name>` block; `call`, a name called from
+the policy, named by the callee (`ifelse`, `mog`); `policy-var`, a
+variable promised in a `vars:` section, named `<bundle>.<name>`
+(`def.domain`); and `policy-class`, a class promised in a `classes:`
+section. Each call is of a bundle (the value of `usebundle`, or a bare
+call of a defined bundle's name), of a body (`perms => mog(...)` where a
+body `perms mog` exists) or of a function otherwise; the reference says
+"Bundle call" or "Body call", the description says what the name refers
+to ("Calls of the body perms mog"), and "See also" links the bundle or
+body. Only functions get a documentation link. Hosts are linked to
+everything their policy files define, so the right pane works as for any
+entry, and `call:ifelse` or `bundle:"common def"` work as search filters.
 
 Every entry has a References tab (first) listing each place it is defined
 or called: `def.cf:12` linking to the file page with a `#L12` anchor, the
-line, the bundle or body it is in (variables, classes and function calls),
-and a detail (a variable's type, a bundle's parameters, the attribute a
+line, the bundle or body it is in (variables, classes and calls), and a
+detail (a variable's type, a bundle's parameters, the attribute a
 call is the value of, like `if =>`). Bundles, bodies, promise types and
 policy files have a Contents tab listing what they define or call, each
 row linking to its line. Variables and classes have their bundle in "See
 also", and a `policy-class` links to the `class` of the same name when
 hosts report it. Every line of a file's content is a `<span class="line"
-id="L<n>">`, plain files too, and the targeted line is marked.
+id="L<n>">`, plain files too, starting with an empty `<a class="line-number"
+href="#L<n>" data-line="<n>">` whose number is drawn by CSS (so it is not
+copied with the text) and links to the line. The line the URL's `#L<n>`
+points at gets the `line-target` class from the inline script on load,
+navigation and `hashchange` (`:target` alone does not follow client-side
+navigation) and is marked with a background.
 
 The indexer parses with the tree-sitter grammar in
 `public/tree-sitter-cfengine.wasm`, the same grammar `cfengine dev
@@ -210,8 +219,9 @@ syntax-tree` uses. That command prints only the shape of the tree (node
 types, no names or positions), so it cannot drive the extraction; instead
 the indexer runs it for every policy file when the CFEngine CLI is
 installed and warns if any tree differs from its own (`--skip-cli` skips
-this; it takes about 12 seconds). Functions have a short description and
-a link in `data/info.json` under `functions`; any other function links to
+this; it takes about 12 seconds). Common functions have a short
+description and a link in `data/info.json` under `functions`; any other
+function links to
 `https://docs.cfengine.com/docs/master/reference-functions-<name>.html`.
 The generated policy set also contains the git promise type module
 (`services/cfbs/modules/promise-type-git/enable.cf`, with `git.py` from a

@@ -102,13 +102,17 @@ interface PolicyCall {
   // The attribute the call is the value of, e.g. "if" or "usebundle".
   attribute?: string;
 }
+
+// What a call refers to: a built-in function, a bundle (`usebundle =>
+// name(...)`) or a body (`perms => mog(...)` with a body "perms mog").
+export type CallKind = "function" | "bundle" | "body";
 export interface PolicyFile {
   bundles: PolicyDefinition[];
   bodies: PolicyDefinition[];
   "promise-types": { name: string; line: number }[];
   vars: PolicyItem[];
   classes: PolicyItem[];
-  "function-calls": PolicyCall[];
+  calls: PolicyCall[];
   errors: boolean;
 }
 const policyFiles = (policyJson as unknown as { files: Record<string, PolicyFile> }).files;
@@ -122,8 +126,10 @@ export interface PolicyRef {
   checksum: string;
   line: number;
   // The bundle or body the definition or call is in, for variables,
-  // classes and function calls.
+  // classes and calls.
   block?: PolicyBlockRef;
+  // For calls: what is called.
+  kind?: CallKind;
   // Extra words: a variable's type, a bundle's parameters, the attribute
   // a function call is the value of.
   detail?: string;
@@ -243,17 +249,17 @@ export type EntryType =
   | "filename"
   // Things defined in CFEngine policy files (data/policy.json): a bundle
   // or body named "<type> <name>" ("agent main"), a custom promise type
-  // defined with a `promise agent` block, a function called from the
-  // policy, a variable named "<bundle>.<name>" and a class promised in a
-  // classes: section.
+  // defined with a `promise agent` block, something called from the
+  // policy (a function, bundle or body), a variable named
+  // "<bundle>.<name>" and a class promised in a classes: section.
   | "bundle"
   | "body"
   | "promise-type"
-  | "function"
+  | "call"
   | "policy-var"
   | "policy-class";
 
-export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "function", "policy-var", "policy-class"];
+export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "call", "policy-var", "policy-class"];
 
 export function isPolicyType(type: EntryType): boolean {
   return POLICY_TYPES.includes(type);
@@ -344,17 +350,25 @@ const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class
 
 // Index the policy files: the entries each file gives rise to (to link
 // them to the hosts having the file), where each entry is defined or
-// called, and what each block and file contains. Calls of bodies
-// (`perms => mog(...)` with a body "perms mog") and of bundles
-// (`usebundle => name(...)`) are not functions.
+// called, and what each block and file contains. A call is of a bundle
+// when it is the value of usebundle, of a body when a body of the
+// attribute's type with that name exists, and of a function otherwise.
 function indexPolicy() {
   const entriesByFile = new Map<string, EntryRef[]>();
   const refs = new Map<string, PolicyRef[]>();
   const contents = new Map<string, PolicyContent[]>();
   const bodyNames = new Set<string>();
+  const bundleNames = new Set<string>();
   for (const file of Object.values(policyFiles)) {
     for (const b of file.bodies) bodyNames.add(`${b.type} ${b.name}`);
+    for (const b of file.bundles) bundleNames.add(b.name);
   }
+  const kindOf = (call: PolicyCall): CallKind =>
+    call.attribute === "usebundle" || (!call.attribute && bundleNames.has(call.name) && !info.functions[call.name])
+      ? "bundle"
+      : call.attribute && bodyNames.has(`${call.attribute} ${call.name}`)
+        ? "body"
+        : "function";
   for (const [checksum, file] of Object.entries(policyFiles)) {
     const own: EntryRef[] = [];
     const seen = new Set<string>();
@@ -397,19 +411,43 @@ function indexPolicy() {
       add(ref, c.line, { block: c.block });
       contain(c.block, ref, c.line);
     }
-    for (const call of file["function-calls"]) {
-      if (call.attribute === "usebundle") continue;
-      if (call.attribute && bodyNames.has(`${call.attribute} ${call.name}`)) continue;
-      const ref: EntryRef = { type: "function", name: call.name };
-      add(ref, call.line, { block: call.block, detail: call.attribute && `${call.attribute} =>` });
+    for (const call of file.calls) {
+      const ref: EntryRef = { type: "call", name: call.name };
+      add(ref, call.line, {
+        block: call.block,
+        kind: kindOf(call),
+        detail: call.attribute && `${call.attribute} =>`,
+      });
       contain(call.block, ref, call.line);
     }
     entriesByFile.set(checksum, own);
   }
-  return { entriesByFile, refs, contents };
+  return { entriesByFile, refs, contents, bodyNames, bundleNames };
 }
 
 const policy = indexPolicy();
+
+// What the calls of a name refer to: the kinds seen across its calls, most
+// common first (`mog` is only ever a body; a name used both as a function
+// and as a bundle lists both).
+export function callKinds(name: string): CallKind[] {
+  const counts = new Map<CallKind, number>();
+  for (const ref of policy.refs.get(entryKey("call", name)) ?? []) {
+    if (ref.kind) counts.set(ref.kind, (counts.get(ref.kind) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([kind]) => kind);
+}
+
+// The bundles and bodies a call may refer to, as entries.
+export function calledBlocks(name: string): EntryRef[] {
+  const found: EntryRef[] = [];
+  for (const { type, name: entryName } of entries.values()) {
+    if ((type === "bundle" || type === "body") && entryName.split(" ").pop() === name) {
+      found.push({ type, name: entryName });
+    }
+  }
+  return found.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+}
 
 // Where an entry is defined (bundles, bodies, promise types, variables,
 // classes) or called (functions): by file, then line.
@@ -837,7 +875,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "bundle",
   "body",
   "promise-type",
-  "function",
+  "call",
   "policy-var",
   "policy-class",
 ];
@@ -866,7 +904,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   bundle: "Bundles",
   body: "Bodies",
   "promise-type": "Promise types",
-  function: "Functions",
+  call: "Calls",
   "policy-var": "Policy variables",
   "policy-class": "Policy classes",
 };
@@ -1145,7 +1183,12 @@ export function getOsColor(os: string): string {
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
   if (entry.type === "version" || entry.type === "value") return [];
-  if (entry.type === "function") return getFunctionInfo(entry.name)?.links ?? [functionDocsLink(entry.name)];
+  if (entry.type === "call") {
+    // Bundles and bodies have no reference page; functions do.
+    const known = getFunctionInfo(entry.name)?.links;
+    if (known) return known;
+    return callKinds(entry.name).includes("function") ? [functionDocsLink(entry.name)] : [];
+  }
   return infoFor(entry)?.links ?? [];
 }
 
@@ -1184,7 +1227,7 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getFilenameInfo(fileNameOf(entry.name));
     case "file":
       return fileNames(entry.name).map(getFilenameInfo).find((i) => i !== undefined);
-    case "function":
+    case "call":
       return getFunctionInfo(entry.name);
     default:
       return undefined;
@@ -1224,6 +1267,9 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
     related.push({ type: "filename", name: fileNameOf(entry.name) });
   } else if (entry.type === "file") {
     for (const name of fileNames(entry.name)) related.push({ type: "filename", name });
+  } else if (entry.type === "call") {
+    // The bundle(s) or body(ies) the name refers to.
+    related.push(...calledBlocks(entry.name));
   } else if (entry.type === "policy-var" || entry.type === "policy-class") {
     // The bundle(s) defining the variable or class.
     for (const ref of getPolicyRefs(entry)) {
@@ -1276,6 +1322,25 @@ export const NO_VARIABLE_INFO = "No information available about this variable.";
 export const NO_FILENAME_INFO = "No information available about files with this name.";
 export const NO_FUNCTION_INFO = "A function called from the CFEngine policy.";
 
+// What a call refers to: a described function, a bundle, a body, or an
+// unknown function.
+function describeCall(name: string): string {
+  const known = getFunctionInfo(name)?.description;
+  if (known) return known;
+  const blocks = calledBlocks(name);
+  const kinds = callKinds(name);
+  const bundles = blocks.filter((b) => b.type === "bundle").map((b) => b.name);
+  const bodies = blocks.filter((b) => b.type === "body").map((b) => b.name);
+  const parts: string[] = [];
+  // A bundle or body not defined in the policy (a dynamic name like
+  // `$(handlers)`, or one from elsewhere) is still a bundle or body call.
+  if (kinds.includes("bundle")) parts.push(bundles.length > 0 ? `the bundle ${bundles.join(" or ")}` : "a bundle");
+  if (kinds.includes("body")) parts.push(bodies.length > 0 ? `the body ${bodies.join(" or ")}` : "a body");
+  if (kinds.includes("function") || parts.length === 0) parts.push("a function");
+  const what = parts.length === 1 ? parts[0]! : `${parts.slice(0, -1).join(", ")} or ${parts[parts.length - 1]}`;
+  return `Calls of ${what} from the CFEngine policy.`;
+}
+
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
   hostname: "The configured name of a host.",
@@ -1299,7 +1364,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   bundle: "A bundle defined in the CFEngine policy.",
   body: "A body defined in the CFEngine policy.",
   "promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
-  function: "A function called from the CFEngine policy.",
+  call: "A function, bundle or body called from the CFEngine policy.",
   "policy-var": "A variable defined in a bundle of the CFEngine policy.",
   "policy-class": "A class defined in a bundle of the CFEngine policy.",
 };
@@ -1409,8 +1474,8 @@ export function describeEntry(entry: EntryRef): string {
     const known = getFilenameInfo(fileNameOf(entry.name));
     if (known) return known.description;
   }
-  if (entry.type === "function") {
-    return getFunctionInfo(entry.name)?.description ?? NO_FUNCTION_INFO;
+  if (entry.type === "call") {
+    return describeCall(entry.name);
   }
   if (isPolicyType(entry.type)) {
     return describePolicyEntry(entry);
@@ -1538,7 +1603,7 @@ export function summarizeEntry(entry: Entry): string {
       const files = new Set(refs.map((r) => r.checksum)).size;
       return `Defined ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
     }
-    case "function": {
+    case "call": {
       const refs = getPolicyRefs(entry);
       const files = new Set(refs.map((r) => r.checksum)).size;
       const blocks = new Set(refs.map((r) => r.block?.name)).size;

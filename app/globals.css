@@ -864,11 +864,32 @@ a.type-badge:hover {
 }
 
 /* Every line of a file is a span with an id (L1, L2, ...), so a link can
-   point at it; the targeted line is marked. */
-.file-content .line:target {
+   point at it, and starts with its number (drawn by CSS from a data
+   attribute so it is not copied with the text; clicking it links to the
+   line). The targeted line is marked; the class is set by the inline
+   script, since :target does not follow client-side navigation. */
+.file-content .line {
+  scroll-margin-top: 1rem;
+}
+.file-content .line-number {
+  display: inline-block;
+  width: 3.5em;
+  margin-right: 1.25em;
+  text-align: right;
+  color: var(--muted);
+  text-decoration: none;
+  user-select: none;
+}
+.file-content .line-number::before {
+  content: attr(data-line);
+}
+.file-content .line-number:hover {
+  color: var(--link);
+}
+.file-content .line:target,
+.file-content .line-target {
   background: var(--badge-bg);
   box-shadow: 0 0 0 0.25rem var(--badge-bg);
-  scroll-margin-top: 1rem;
 }
 
 /* Syntax highlighting of CFEngine policy (lib/highlight.ts): one class per

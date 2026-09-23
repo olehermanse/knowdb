@@ -141,7 +141,7 @@ test("front page always shows at least one entry of each type", async ({
     "bundle",
     "body",
     "promise-type",
-    "function",
+    "call",
     "policy-var",
     "policy-class",
   ];
@@ -3300,7 +3300,7 @@ interface PolicyFile {
   "promise-types": { name: string; line: number }[];
   vars: { name: string; line: number; block: PolicyBlock; type?: string }[];
   classes: { name: string; line: number; block: PolicyBlock }[];
-  "function-calls": { name: string; line: number; block: PolicyBlock; attribute?: string }[];
+  calls: { name: string; line: number; block: PolicyBlock; attribute?: string }[];
   errors: boolean;
 }
 const policyFiles = (policyJson as unknown as { files: Record<string, PolicyFile> }).files;
@@ -3671,17 +3671,14 @@ test("CFEngine policy files are syntax highlighted with tree-sitter", async ({ p
 // The CFEngine policy index (data/policy.json, from scripts/index_policy.mjs):
 // what each .cf file defines, with line numbers.
 const bundleHref = (name: string) => `/entry/bundle/${encodeURIComponent(name)}`;
-// Body calls (`perms => mog(...)`) and bundle calls (`usebundle => ...`)
-// are not function calls; mirrors lib/data.ts.
+// Calls of a name: of a function, a bundle (`usebundle => ...`) or a body
+// (`perms => mog(...)`).
 const bodyNames = new Set(
   Object.values(policyFiles).flatMap((f) => f.bodies.map((b) => `${b.type} ${b.name}`)),
 );
-function functionCalls(name: string) {
+function callsOf(name: string) {
   return Object.entries(policyFiles).flatMap(([checksum, f]) =>
-    f["function-calls"]
-      .filter((c) => c.name === name)
-      .filter((c) => c.attribute !== "usebundle" && !(c.attribute && bodyNames.has(`${c.attribute} ${c.name}`)))
-      .map((c) => ({ ...c, checksum })),
+    f.calls.filter((c) => c.name === name).map((c) => ({ ...c, checksum })),
   );
 }
 const hostsWithFile = (checksum: string) =>
@@ -3723,7 +3720,7 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   const contents = Object.values(policyFiles).flatMap((f) => [
     ...f.vars.filter((v) => v.block.name === "common def"),
     ...f.classes.filter((c) => c.block.name === "common def"),
-    ...f["function-calls"].filter((c) => c.block.name === "common def" && c.attribute !== "usebundle" && !(c.attribute && bodyNames.has(`${c.attribute} ${c.name}`))),
+    ...f.calls.filter((c) => c.block.name === "common def"),
   ]);
   await page.goto(bundleHref("common def"));
   await expect(page.getByTestId("entry-name")).toHaveText("common def");
@@ -3751,7 +3748,7 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   const first = [...contents].sort((a, b) => a.line - b.line)[0]!;
   await expect(items.first().getByTestId("content-line-link")).toHaveText(`Line ${first.line}`);
   await expect(items.first().locator(".host-facts")).toContainText("def.cf");
-  await expect(items.first().locator(".type-badge")).toHaveText(/^(policy-var|policy-class|function)$/);
+  await expect(items.first().locator(".type-badge")).toHaveText(/^(policy-var|policy-class|call)$/);
   // The variables are named bundle.name.
   const someVar = items.filter({ has: page.locator(".type-badge", { hasText: "policy-var" }) }).first();
   await expect(someVar.getByRole("link").first()).toHaveText(/^def\./);
@@ -3762,22 +3759,25 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   const line = page.locator(`#L${def.line}`);
   await expect(line).toBeVisible();
   await expect(line).toContainText("bundle common def");
-  // The targeted line is marked.
+  // The targeted line is marked (by class, since :target does not follow
+  // client-side navigation) and scrolled into view.
+  await expect(line).toHaveClass(/line-target/);
   const pre = page.getByTestId("file-content");
   expect(await line.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(
     await pre.evaluate((el) => getComputedStyle(el).backgroundColor),
   );
+  expect(await line.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(0);
   // All hosts have the policy.
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hostsWithFile(def.checksum).length})`);
 });
 
-test("a function page lists its calls with the bundle or body they are in", async ({ page }) => {
-  const calls = functionCalls("ifelse");
+test("a call page lists the calls with the bundle or body they are in", async ({ page }) => {
+  const calls = callsOf("ifelse");
   expect(calls.length).toBeGreaterThan(PAGE_SIZE);
   const blocks = new Set(calls.map((c) => c.block.name)).size;
   const files = new Set(calls.map((c) => c.checksum)).size;
-  await page.goto("/entry/function/ifelse");
-  await expect(page.getByTestId("entry-type-link")).toHaveText("function");
+  await page.goto("/entry/call/ifelse");
+  await expect(page.getByTestId("entry-type-link")).toHaveText("call");
   await expect(page.getByTestId("entry-description")).toHaveText(
     "Returns the value after the first true class expression among its arguments, or the last argument as the default.",
   );
@@ -3815,18 +3815,71 @@ test("a function page lists its calls with the bundle or body they are in", asyn
   // A function without hard coded information still links to its
   // documentation page.
   const known = new Set(Object.keys((info as unknown as { functions: Record<string, unknown> }).functions));
-  const other = [...new Set(Object.values(policyFiles).flatMap((f) => f["function-calls"].map((c) => c.name)))]
-    .filter((n) => !known.has(n) && !bodyNames.has(n) && functionCalls(n).length > 0)
+  const bundleNames = new Set(Object.values(policyFiles).flatMap((f) => f.bundles.map((b) => b.name)));
+  const bodyShortNames = new Set([...bodyNames].map((b) => b.split(" ").pop()!));
+  // A plain name that is only ever called as a function (mirrors the
+  // classification in lib/data.ts).
+  const other = [...new Set(Object.values(policyFiles).flatMap((f) => f.calls.map((c) => c.name)))]
+    .filter((n) => /^[a-z_]+$/.test(n) && !known.has(n) && !bodyShortNames.has(n) && !bundleNames.has(n))
+    .filter((n) => callsOf(n).every((c) => c.attribute !== "usebundle"))
     .sort()[0]!;
-  await page.goto(`/entry/function/${encodeURIComponent(other)}?tab=resources`);
-  await expect(page.getByTestId("entry-description")).toHaveText("A function called from the CFEngine policy.");
+  await page.goto(`/entry/call/${encodeURIComponent(other)}?tab=resources`);
+  await expect(page.getByTestId("entry-description")).toHaveText("Calls of a function from the CFEngine policy.");
   await expect(page.getByTestId("resource-item").getByRole("link").first()).toHaveAttribute(
     "href",
     `https://docs.cfengine.com/docs/master/reference-functions-${other}.html`,
   );
-  // Body and bundle calls are not functions.
-  await page.goto("/entry/function/mog");
-  await expect(page.getByText("404")).toBeVisible();
+  // Calls of a body: mog is body perms mog. Each call says so and the
+  // body is in See also; there is no function documentation to link to.
+  const mog = callsOf("mog");
+  expect(mog.length).toBeGreaterThan(0);
+  await page.goto("/entry/call/mog");
+  await expect(page.getByTestId("entry-description")).toHaveText("Calls of the body perms mog from the CFEngine policy.");
+  await expect(page.getByTestId("reference-item").first().getByTestId("reference-kind")).toHaveText("Body call");
+  await expect(page.getByTestId("reference-item").first().getByTestId("reference-detail")).toHaveText("perms =>");
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "perms mog (body)" })).toHaveAttribute(
+    "href",
+    "/entry/body/perms%20mog",
+  );
+  await expect(page.getByTestId("resources-heading")).toHaveText("Resources (0)");
+  // Calls of a bundle through usebundle.
+  const bundleCall = Object.values(policyFiles)
+    .flatMap((f) => f.calls)
+    .find((c) => c.attribute === "usebundle")!;
+  await page.goto(`/entry/call/${encodeURIComponent(bundleCall.name)}`);
+  await expect(page.getByTestId("entry-description")).toContainText(`Calls of the bundle `);
+  await expect(page.getByTestId("entry-description")).toContainText(` ${bundleCall.name} `);
+  await expect(page.getByTestId("reference-item").filter({ hasText: "Bundle call" }).first()).toBeVisible();
+  await expect(page.getByTestId("see-also").getByRole("link", { name: /\(bundle\)$/ }).first()).toBeVisible();
+});
+
+test("file content has clickable line numbers that are not part of the text", async ({ page }) => {
+  const hub = hubHosts[0]!;
+  const checksum = hub.files[INPUTS_PROMISES]!;
+  const content = fileContents[checksum]!.content!;
+  const lines = content.split("\n").length - 1;
+  await page.goto(fileHref(checksum));
+  const pre = page.getByTestId("file-content");
+  const numbers = pre.locator(".line-number");
+  await expect(numbers).toHaveCount(lines);
+  await expect(numbers.first()).toHaveAttribute("data-line", "1");
+  await expect(numbers.first()).toHaveAttribute("href", "#L1");
+  await expect(numbers.last()).toHaveAttribute("data-line", String(lines));
+  // The numbers are drawn by CSS: the text of the file is unchanged.
+  await expect(pre).toHaveText(content);
+  expect(await numbers.first().evaluate((el) => getComputedStyle(el, "::before").content)).toBe('"1"');
+  expect(await numbers.first().evaluate((el) => getComputedStyle(el).userSelect)).toBe("none");
+  // Clicking a number jumps to and marks the line.
+  await pre.locator(`#L39 .line-number`).click();
+  await expect(page).toHaveURL(`${fileHref(checksum)}#L39`);
+  await expect(page.locator("#L39")).toHaveClass(/line-target/);
+  await expect(page.locator(".line-target")).toHaveCount(1);
+  await pre.locator(`#L40 .line-number`).click();
+  await expect(page.locator("#L40")).toHaveClass(/line-target/);
+  await expect(page.locator("#L39")).not.toHaveClass(/line-target/);
+  // Plain files have them too.
+  await page.goto(fileHref(hub.files["/etc/motd"]!));
+  await expect(page.getByTestId("file-content").locator(".line-number")).toHaveCount(3);
 });
 
 test("variables and classes defined in policy refer to their bundle", async ({ page }) => {
@@ -3913,13 +3966,13 @@ test("a policy file lists what it defines, and the policy types have buttons and
   await page.goto("/");
   await expect(page.getByTestId("type-button-bundle")).toHaveText(`Bundles (${bundles.size})`);
   await expect(page.getByTestId("type-button-body")).toHaveText(`Bodies (${bodies.size})`);
-  await expect(page.getByTestId("type-button-function")).toContainText("Functions (");
+  await expect(page.getByTestId("type-button-call")).toContainText("Calls (");
   await expect(page.getByTestId("type-button-policy-var")).toContainText("Policy variables (");
   await expect(page.getByTestId("type-button-policy-class")).toContainText("Policy classes (");
   // Search filters: the hosts whose policy has it.
-  await page.goto(`/search?q=${encodeURIComponent('function:ifelse bundle:"common def"')}`);
+  await page.goto(`/search?q=${encodeURIComponent('call:ifelse bundle:"common def"')}`);
   await expect(page.getByTestId("search-summary")).toHaveText(
-    `${hosts.length} hosts matching function ifelse, bundle common def.`,
+    `${hosts.length} hosts matching call ifelse, bundle common def.`,
   );
   await page.goto(`/search?q=${encodeURIComponent("promise-type:git")}`);
   await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching promise-type git.`);

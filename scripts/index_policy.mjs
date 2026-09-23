@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Index the CFEngine policy found on the hosts: the bundles, bodies and
 // promise types each .cf file defines, and the variables, classes and
-// function calls inside them, with line numbers. Reads data/hosts.json and
+// calls (of functions, bundles and bodies) inside them, with line numbers. Reads data/hosts.json and
 // data/files.json and writes data/policy.json.
 //
 // The files are parsed with the tree-sitter grammar for CFEngine
@@ -47,7 +47,7 @@ const line = (node) => node.startPosition.row + 1;
 const child = (node, type) => node.namedChildren.find((c) => c.type === type);
 
 // Walk a block body: promises under promise guards (vars:, classes:) and
-// every function call, with the block they are in.
+// every call (of a function, bundle or body), with the block they are in.
 function indexBlock(block, blockRef, out) {
   const walk = (node, guard) => {
     if (node.type === "promise_guard") return;
@@ -75,7 +75,7 @@ function indexBlock(block, blockRef, out) {
       if (callee) {
         const call = { name: callee, line: line(node), block: blockRef };
         if (attribute) call.attribute = attribute;
-        out["function-calls"].push(call);
+        out.calls.push(call);
       }
     }
     for (const c of node.namedChildren) walk(c, guard);
@@ -91,7 +91,7 @@ function indexFile(source) {
     "promise-types": [],
     vars: [],
     classes: [],
-    "function-calls": [],
+    "calls": [],
     errors: tree.rootNode.hasError,
   };
   for (const block of tree.rootNode.namedChildren) {
@@ -156,14 +156,14 @@ const output = {
   _comment:
     "What the CFEngine policy files on the hosts define, keyed by the file's SHA-256 checksum " +
     "(see files.json): bundles, bodies and promise types with their line numbers, and the " +
-    "variables, classes and function calls inside them with the block they are in. Generated " +
+    "variables, classes and calls (of functions, bundles and bodies) inside them with the block they are in. Generated " +
     "by scripts/index_policy.mjs from hosts.json and files.json with the tree-sitter grammar " +
     "for CFEngine; the frontend reads this file at build time.",
   files: indexed,
 };
 writeFileSync(path.join(root, "data/policy.json"), JSON.stringify(output, null, 1) + "\n");
 
-const totals = { bundles: 0, bodies: 0, "promise-types": 0, vars: 0, classes: 0, "function-calls": 0 };
+const totals = { bundles: 0, bodies: 0, "promise-types": 0, vars: 0, classes: 0, "calls": 0 };
 for (const f of Object.values(indexed)) for (const k of Object.keys(totals)) totals[k] += f[k].length;
 console.log(`Indexed ${policyFiles.size} policy files (${withErrors} with parse errors) into data/policy.json:`, totals);
 if (checked > 0) console.log(`Checked ${checked} syntax trees against \`cfengine dev syntax-tree\`, ${differing} differ.`);

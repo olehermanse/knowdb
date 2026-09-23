@@ -100,11 +100,11 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **IP and MAC addresses**: an address belonging to a single host shows
   that host; well-known addresses and ranges (`127.0.0.1`, `10.0.0.0/8`)
   are described in `data/info.json`.
-- **Bundles, bodies, promise types, functions, policy variables and policy
+- **Bundles, bodies, promise types, calls, policy variables and policy
   classes**: what the CFEngine policy files define, indexed from their
   syntax trees. Each shows where in which file (with line links) it is
-  defined or called, and variables, classes and function calls name the
-  bundle they are in.
+  defined or called, and variables, classes and calls (of functions,
+  bundles and bodies) name the bundle they are in.
 - **Files, paths and filenames**: the notable files on each host, such as
   the CFEngine policy, `sshd_config`, `authorized_keys` and the cf-agent
   binary. A file is identified by the SHA-256 checksum of its content and

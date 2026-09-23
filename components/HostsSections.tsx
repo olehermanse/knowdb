@@ -64,7 +64,7 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts whose policy defines the body ${entry.name}:`;
     case "promise-type":
       return `Hosts whose policy defines the promise type ${entry.name}:`;
-    case "function":
+    case "call":
       return `Hosts whose policy calls ${entry.name}:`;
     case "policy-var":
       return `Hosts whose policy defines the variable ${entry.name}:`;
