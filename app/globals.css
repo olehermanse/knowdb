@@ -922,9 +922,3 @@ a.type-badge:hover {
 .hl-punctuation-delimiter {
   color: var(--hl-punctuation);
 }
-
-/* A checksum as a title: monospace, so its digits line up when it wraps. */
-.entry-name-checksum {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 1.1rem;
-}

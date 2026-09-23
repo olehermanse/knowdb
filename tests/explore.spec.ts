@@ -3375,8 +3375,9 @@ test("a file page shows its full content, the paths it is found at and its names
   const content = fileContents[checksum]!.content!;
   const withFile = typedHosts.filter((h) => Object.values(h.files).includes(checksum));
   await page.goto(fileHref(checksum));
-  // The title is the checksum, with the filename after it.
-  await expect(page.getByTestId("entry-name")).toHaveText(`${checksum} (promises.cf)`);
+  // The title is the filename, with the checksum after it like a host's key.
+  await expect(page.getByTestId("entry-name")).toHaveText(`promises.cf (${checksum})`);
+  await expect(page.getByTestId("entry-name").locator(".host-id")).toHaveText(`(${checksum})`);
   await expect(page.getByTestId("entry-type-link")).toHaveText("file");
   await expect(page.getByTestId("entry-description")).toHaveText(
     `The file promises.cf (${(fileContents[checksum]!.size / 1000).toFixed(1)} kB), identified by its SHA-256 checksum.`,
@@ -3429,7 +3430,7 @@ test("a binary file has a checksum and size but no content", async ({ page }) =>
   const checksum = hubHosts[0]!.files["/var/cfengine/bin/cf-agent"]!;
   const mb = (fileContents[checksum]!.size / 1_000_000).toFixed(1);
   await page.goto(fileHref(checksum));
-  await expect(page.getByTestId("entry-name")).toHaveText(`${checksum} (cf-agent)`);
+  await expect(page.getByTestId("entry-name")).toHaveText(`cf-agent (${checksum})`);
   await expect(page.getByTestId("entry-description")).toHaveText(
     `The binary file cf-agent (${mb} MB). Its content is not available, only its checksum.`,
   );

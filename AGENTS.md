@@ -62,8 +62,8 @@ each other, and files and paths to their filename.
 Each host reports its notable files in `files`, a map from absolute path
 to the SHA-256 checksum of the content. Files, paths and filenames are
 three entry types. A file is named by its checksum; its page has the
-checksum as the title (monospace, with the filename(s) it goes by in
-parentheses), a Content tab first showing the whole file in a `<pre>` (or,
+filename(s) it goes by as the title with the checksum in parentheses
+(like a host's hostname and key), a Content tab first showing the whole file in a `<pre>` (or,
 for binaries, that only the checksum and size are known; the tab shows the
 size instead of a count), a Paths tab listing where it is found with host
 counts, and no similar entries (checksums have nothing in common). A path
