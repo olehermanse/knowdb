@@ -100,7 +100,8 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
   the CFEngine policy, `sshd_config`, `authorized_keys` and the cf-agent
   binary. A file is identified by the SHA-256 checksum of its content and
   its page shows the full content (binaries have only a checksum and
-  size). A path (`/var/cfengine/inputs/promises.cf`) lists the files found
+  size), with syntax highlighting for CFEngine policy via
+  [tree-sitter-cfengine](https://github.com/olehermanse/tree-sitter-cfengine). A path (`/var/cfengine/inputs/promises.cf`) lists the files found
   at it, and a filename (`promises.cf`) its paths and files.
 
 Details of the UI, the host data format and the guidelines for generating

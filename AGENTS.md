@@ -69,7 +69,8 @@ size instead of a count), a Paths tab listing where it is found with host
 counts, and no similar entries (checksums have nothing in common). A path
 (`/var/cfengine/inputs/promises.cf`) has a Files tab listing the checksums
 found at it, most hosts first: more than one means the file differs
-between hosts. A filename (`promises.cf`) has Paths and Files tabs. In
+between hosts. A filename (`promises.cf`) has Paths and Files tabs. CFEngine policy
+files (named `*.cf`) are syntax highlighted on the Content tab, see below. In
 lists, files show the first 16 digits of their checksum with the full one
 as a tooltip, and the description names the file ("The file promises.cf
 (17.1 kB), identified by its SHA-256 checksum."). The host counts in the
@@ -176,6 +177,33 @@ everything of one type, and combined with filters (`type:cloud os:"Ubuntu
 search bar always shows the query exactly as it is in the URL. The "N hosts" links
 next to aggregated ports on group, software and OS pages use this to show
 exactly those hosts.
+
+## Syntax highlighting of CFEngine policy
+
+`lib/highlight.ts` highlights `.cf` files with the tree-sitter grammar for
+CFEngine, https://github.com/olehermanse/tree-sitter-cfengine, running as
+WebAssembly on the server through the `web-tree-sitter` package (kept out
+of the server bundle with `serverExternalPackages` in `next.config.ts`,
+because it loads its own `.wasm` next to its module at runtime). The
+grammar is `public/tree-sitter-cfengine.wasm`, built from the npm package
+`tree-sitter-cfengine` with the tree-sitter CLI; to update it:
+
+```bash
+npm pack tree-sitter-cfengine && tar xzf tree-sitter-cfengine-*.tgz
+cd package && tree-sitter build --wasm -o ../public/tree-sitter-cfengine.wasm .
+```
+
+(the package has no `tree-sitter.json`; copy one from the grammar's
+repository if the CLI asks for it). The highlight query is the
+`highlights.scm` of the Zed extension for CFEngine,
+https://github.com/olehermanse/zed-cfengine, inlined in `lib/highlight.ts`.
+Each capture becomes a `<span>` with the class `hl-<capture>` (dots
+replaced by dashes, `hl-punctuation-bracket`), nested when captures nest
+(`@(def.x)` is an operator containing a property); the colours are CSS
+variables in `app/globals.css` for light and dark mode. The `<pre>` has
+`data-language="cfengine"` and the content description ends in ", CFEngine
+policy:". Other files are plain text. Parsing all 81 policy files takes
+about 25 ms in total, so nothing is cached beyond the loaded parser.
 
 # Data files
 

@@ -863,6 +863,66 @@ a.type-badge:hover {
   tab-size: 4;
 }
 
+/* Syntax highlighting of CFEngine policy (lib/highlight.ts): one class per
+   tree-sitter capture name, with a palette for light and dark mode. */
+:root {
+  --hl-comment: #6b7280;
+  --hl-keyword: #7c3aed;
+  --hl-variable: #1d4ed8;
+  --hl-string: #15803d;
+  --hl-property: #0e7490;
+  --hl-attribute: #b45309;
+  --hl-type: #be123c;
+  --hl-operator: #4b5563;
+  --hl-punctuation: #9ca3af;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --hl-comment: #8b949e;
+    --hl-keyword: #c4b5fd;
+    --hl-variable: #93c5fd;
+    --hl-string: #86efac;
+    --hl-property: #67e8f9;
+    --hl-attribute: #fcd34d;
+    --hl-type: #fda4af;
+    --hl-operator: #d1d5db;
+    --hl-punctuation: #6b7280;
+  }
+}
+
+.hl-comment {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+.hl-keyword {
+  color: var(--hl-keyword);
+  font-weight: 600;
+}
+.hl-variable {
+  color: var(--hl-variable);
+}
+.hl-string {
+  color: var(--hl-string);
+}
+.hl-property {
+  color: var(--hl-property);
+}
+.hl-attribute {
+  color: var(--hl-attribute);
+}
+.hl-type {
+  color: var(--hl-type);
+  font-weight: 600;
+}
+.hl-operator {
+  color: var(--hl-operator);
+}
+.hl-punctuation-bracket,
+.hl-punctuation-delimiter {
+  color: var(--hl-punctuation);
+}
+
 /* A checksum as a title: monospace, so its digits line up when it wraps. */
 .entry-name-checksum {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;

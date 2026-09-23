@@ -3386,7 +3386,7 @@ test("a file page shows its full content, the paths it is found at and its names
   await expect(page.getByTestId("content-heading")).toContainText("kB");
   const lines = content.split("\n").length - 1;
   await expect(page.getByTestId("content-description")).toHaveText(
-    `${(fileContents[checksum]!.size / 1000).toFixed(1)} kB, ${lines} lines:`,
+    `${(fileContents[checksum]!.size / 1000).toFixed(1)} kB, ${lines} lines, CFEngine policy:`,
   );
   const pre = page.getByTestId("file-content");
   await expect(pre).toHaveText(content);
@@ -3606,4 +3606,40 @@ test("a path can be pinned to show the checksum of its file on every host", asyn
   // Unpin from the host view.
   await page.getByTestId("pinned-list").getByTestId("pin-button").click();
   await expect(pinned.getByTestId("pinned-item")).toHaveCount(0);
+});
+
+test("CFEngine policy files are syntax highlighted with tree-sitter", async ({ page }) => {
+  const hub = hubHosts[0]!;
+  const checksum = hub.files[INPUTS_PROMISES]!;
+  const content = fileContents[checksum]!.content!;
+  await page.goto(fileHref(checksum));
+  await expect(page.getByTestId("content-description")).toContainText(", CFEngine policy:");
+  const pre = page.getByTestId("file-content");
+  await expect(pre).toHaveAttribute("data-language", "cfengine");
+  // The text is the file, unchanged; the markup adds colour only.
+  await expect(pre).toHaveText(content);
+  // Comments, keywords, strings and punctuation are captured by the
+  // grammar's highlight query and get one class each.
+  await expect(pre.locator(".hl-comment").first()).toHaveText(
+    "# All software in this repository except where explicitly marked otherwise is",
+  );
+  await expect(pre.locator(".hl-keyword", { hasText: /^body$/ }).first()).toBeVisible();
+  await expect(pre.locator(".hl-keyword", { hasText: /^bundle$/ }).first()).toBeVisible();
+  await expect(pre.locator(".hl-string").first()).toBeVisible();
+  await expect(pre.locator(".hl-punctuation-bracket").first()).toHaveText(/^[{}()]$/);
+  // Nested: a variable expansion contains its reference.
+  await expect(pre.locator(".hl-operator .hl-property").first()).toBeVisible();
+  // The classes are styled: a comment is gray and italic.
+  const comment = pre.locator(".hl-comment").first();
+  expect(await comment.evaluate((el) => getComputedStyle(el).fontStyle)).toBe("italic");
+  expect(await comment.evaluate((el) => getComputedStyle(el).color)).not.toBe(
+    await pre.evaluate((el) => getComputedStyle(el).color),
+  );
+  // Other files are shown as plain text.
+  const motd = hub.files["/etc/motd"]!;
+  await page.goto(fileHref(motd));
+  await expect(page.getByTestId("content-description")).not.toContainText("CFEngine policy");
+  await expect(page.getByTestId("file-content")).not.toHaveAttribute("data-language", /.*/);
+  await expect(page.getByTestId("file-content").locator("span")).toHaveCount(0);
+  await expect(page.getByTestId("file-content")).toHaveText(fileContents[motd]!.content!);
 });

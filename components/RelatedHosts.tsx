@@ -3,8 +3,10 @@ import EntryLink from "@/components/EntryLink";
 import Comments from "@/components/Comments";
 import Pagination, { paginate } from "@/components/Pagination";
 import { hostsLabel } from "@/components/PortsSection";
+import { highlightCfengine, isCfengineFile } from "@/lib/highlight";
 import {
   describeEntry,
+  fileNames,
   similarEntries,
   TYPE_LABELS,
   aggregateFilesAtPath,
@@ -229,7 +231,9 @@ function ValuesPanel({ entry, tabs, page, keep }: PanelProps) {
 }
 
 // The full content of a file, or a note that only its checksum is known.
-function ContentPanel({ entry }: { entry: Entry }) {
+// CFEngine policy (files named *.cf) is syntax highlighted with
+// tree-sitter-cfengine (see lib/highlight.ts).
+async function ContentPanel({ entry }: { entry: Entry }) {
   const file = getFileContent(entry.name);
   if (!file || file.content === null) {
     return (
@@ -241,11 +245,29 @@ function ContentPanel({ entry }: { entry: Entry }) {
     );
   }
   const lines = file.content.split("\n").length - (file.content.endsWith("\n") ? 1 : 0);
+  const cfengine = fileNames(entry.name).some(isCfengineFile);
+  const description = (
+    <p className="muted" data-testid="content-description">
+      {`${formatBytes(file.size)}, ${lines} ${lines === 1 ? "line" : "lines"}${cfengine ? ", CFEngine policy" : ""}:`}
+    </p>
+  );
+  if (cfengine) {
+    const html = await highlightCfengine(file.content);
+    return (
+      <>
+        {description}
+        <pre
+          className="file-content"
+          data-testid="file-content"
+          data-language="cfengine"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </>
+    );
+  }
   return (
     <>
-      <p className="muted" data-testid="content-description">
-        {`${formatBytes(file.size)}, ${lines} ${lines === 1 ? "line" : "lines"}:`}
-      </p>
+      {description}
       <pre className="file-content" data-testid="file-content">
         {file.content}
       </pre>
