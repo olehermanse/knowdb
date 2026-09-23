@@ -197,6 +197,15 @@ a,
   flex-shrink: 0;
 }
 
+/* On an entry page the badge links to the listing of everything of that type. */
+a.type-badge {
+  text-decoration: none;
+}
+
+a.type-badge:hover {
+  outline: 1px solid var(--badge-fg);
+}
+
 .host-details {
   display: grid;
   grid-template-columns: max-content 1fr;

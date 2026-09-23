@@ -3106,3 +3106,34 @@ test("unknown entry type returns 404", async ({ page }) => {
   const response = await page.goto("/entry/banana/22");
   expect(response!.status()).toBe(404);
 });
+
+test("the type badge on an entry links to the listing of that type", async ({ page }) => {
+  // The badge in the top left of an entry page goes to the same listing as
+  // the matching button on the front page.
+  const osName = someHost.os;
+  await page.goto(`/entry/os/${encodeURIComponent(osName)}`);
+  const badge = page.getByTestId("entry-header").getByTestId("entry-type-link");
+  await expect(badge).toHaveText("os");
+  await expect(badge).toHaveAttribute("href", "/search?type=os");
+  await badge.click();
+  await expect(page).toHaveURL("/search?type=os");
+  const allOs = new Set(hosts.map((h) => h.os));
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${allOs.size} operating systems in your infrastructure.`,
+  );
+  await expect(page.getByTestId("search-results").getByRole("link", { name: osName })).toBeVisible();
+
+  // Same for ports and groups.
+  await page.goto("/entry/port/22");
+  await expect(page.getByTestId("entry-type-link")).toHaveAttribute("href", "/search?type=port");
+  await page.goto(groupHref(groups[0].name));
+  await expect(page.getByTestId("entry-type-link")).toHaveAttribute("href", "/search?type=group");
+
+  // Host pages have their own layout, but the badge links too.
+  await page.goto(`/entry/host/${someHost.id}`);
+  const hostBadge = page.getByTestId("entry-type-link");
+  await expect(hostBadge).toHaveText("host");
+  await hostBadge.click();
+  await expect(page).toHaveURL("/search?type=host");
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, hosts.length));
+});

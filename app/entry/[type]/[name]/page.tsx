@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
@@ -23,6 +24,7 @@ import {
   isEntryType,
   seeAlsoLabel,
   summarizeEntry,
+  TYPE_LABELS,
 } from "@/lib/data";
 
 // The matching rules of a group, so a user can see why hosts are in it.
@@ -106,7 +108,14 @@ export default async function EntryPage({
     <>
       <header className="entry-header" data-testid="entry-header">
         <div className="entry-topline">
-          <span className="type-badge">{entry.type}</span>
+          <Link
+            href={`/search?type=${entry.type}`}
+            className="type-badge"
+            title={`All ${TYPE_LABELS[entry.type].toLowerCase()}`}
+            data-testid="entry-type-link"
+          >
+            {entry.type}
+          </Link>
           {seen && <SeenLine seen={seen} testId="entry" />}
         </div>
         <div className="entry-title">

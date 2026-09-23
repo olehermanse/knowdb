@@ -313,7 +313,14 @@ export default function HostView({ host, embedded = false }: { host: Host; embed
   return (
     <div className="host-view" data-testid={tid("host-view")}>
       <div className="entry-topline">
-        <span className="type-badge">host</span>
+        <Link
+          href="/search?type=host"
+          className="type-badge"
+          title="All hosts"
+          data-testid="entry-type-link"
+        >
+          host
+        </Link>
         <SeenLine seen={{ first: host["first-seen"], last: host["last-seen"] }} testId={tid("host")} />
       </div>
       <div className="entry-title">
