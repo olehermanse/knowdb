@@ -54,18 +54,42 @@ latest last-seen. The type badge links to the listing of that type.
 case and punctuation: the group `Linux` and the class `linux`, the class
 `ubuntu_24` and the OS `Ubuntu 24`, the class `cfengine` and the software
 `cfengine`. It also links software and the ports it typically listens on,
-services and the software they belong to, and the Hub and Client roles to
-each other.
+services and the software they belong to, the Hub and Client roles to
+each other, and files and paths to their filename.
+
+## Files, paths and filenames
+
+Each host reports its notable files in `files`, a map from absolute path
+to the SHA-256 checksum of the content. Files, paths and filenames are
+three entry types. A file is named by its checksum; its page has the
+checksum as the title (monospace, with the filename(s) it goes by in
+parentheses), a Content tab first showing the whole file in a `<pre>` (or,
+for binaries, that only the checksum and size are known; the tab shows the
+size instead of a count), a Paths tab listing where it is found with host
+counts, and no similar entries (checksums have nothing in common). A path
+(`/var/cfengine/inputs/promises.cf`) has a Files tab listing the checksums
+found at it, most hosts first: more than one means the file differs
+between hosts. A filename (`promises.cf`) has Paths and Files tabs. In
+lists, files show the first 16 digits of their checksum with the full one
+as a tooltip, and the description names the file ("The file promises.cf
+(17.1 kB), identified by its SHA-256 checksum."). The host counts in the
+Paths and Files tabs link to searches combining the two filters, like
+`file:<checksum> path:/var/cfengine/inputs/promises.cf`. Paths and files
+share the description, links and logo of their filename from `data/info.json`
+under `filenames`. Windows paths (`C:\Program Files\Cfengine\inputs\promises.cf`)
+work like any other and need quotes in search filters.
 
 ## Host pages
 
-A host page shows its software, services, classes and variables as counts
-with a "Show all" button that opens a scrollable list which filters live
-as you type. The popup uses the native HTML popover attribute and a few
+A host page shows its software, services, classes, variables and files as
+counts with a "Show all" button that opens a scrollable list which filters
+live as you type. The popup uses the native HTML popover attribute and a few
 lines of plain JavaScript, so it needs no framework code in the browser.
 Variables are listed as `sys.arch=x86_64 (87 hosts)`: the variable and the
 value link to their entries, and the count of hosts sharing that value
-links to a search for them.
+links to a search for them. Files are listed as the path followed by the
+first 16 digits of the checksum of the file there, linking to the path and
+file entries.
 
 Every host has a GitHub-style pixel avatar derived from its host key, so
 it stays the same everywhere the host appears. The avatar's colour comes
@@ -93,19 +117,20 @@ The host preview on the right of other entries shows only the basic
 fields: no pinned items, no Comments section and no Software, Services,
 Classes or Variables buttons.
 
-## Pinned software, services, classes and variables
+## Pinned software, services, classes, variables and files
 
-Every row in the Software, Services, Classes and Variables modals on a
-host page has a pin icon (from the lucide icon library). Pinning a row
-shows it on every host page as a name/value pair, styled like the host's
-basic fields and laid out in four columns, below those fields and above
-the modal buttons: the name is a plain label (not a link, to keep the
-section quiet) and the value is the software's version, `defined` for a
-class, `running` for a service, or the variable's value, linking to the
-version, class, service or value entry. When the host does not have the
-pinned item, the value reads `(not installed)` for software, `(not
-running)` for services and `(not defined)` for classes and variables, in
-gray italics. Which items are pinned is stored in the browser's local
+Every row in the Software, Services, Classes, Variables and Files modals
+on a host page has a pin icon (from the lucide icon library). Pinning a
+row shows it on every host page as a name/value pair, styled like the
+host's basic fields and laid out in four columns, below those fields and
+above the modal buttons: the name is a plain label (not a link, to keep
+the section quiet) and the value is the software's version, `defined` for
+a class, `running` for a service, the variable's value, or the checksum of
+the file at a path, linking to the version, class, service, value or file
+entry. When the host does not have the pinned item, the value reads `(not
+installed)` for software, `(not running)` for services, `(not defined)`
+for classes and variables and `(not present)` for paths, in gray
+italics. Which items are pinned is stored in the browser's local
 storage, shared across all hosts. The pin next to a value is the same
 toggle as in the modal, shown in its pressed state (softly coloured);
 clicking either unpins: the item fades out and the remaining items slide
@@ -189,6 +214,16 @@ Commons, and CFEngine's is the official logo.
 
 Operating systems have a `color` used for the pixel avatars of their hosts.
 
+## File contents
+
+`data/files.json` holds the content of every file referenced from
+`hosts.json`, keyed by checksum: `{"size": <bytes>, "content": <text or
+null>}`. The frontend reads it at build time. The generator writes it to
+`tmp/files.json` together with `tmp/hosts.json`; copy both into `data/`.
+The policy files come from a real cfbs build of the Masterfiles Policy
+Framework in `tmp/proj/out/masterfiles` (gitignored); if it is missing the
+generator warns and the hosts get no policy files.
+
 ## Groups of hosts
 
 `data/groups.json` defines groups of hosts, such as `Linux`, `Windows`,
@@ -264,7 +299,15 @@ The relevant information from a host looks like this:
   "online": true,
   "cloud-provider": "AWS",
   "first-seen": "2024-03-02T09:14:55Z",
-  "last-seen": "2026-09-14T17:02:11Z"
+  "last-seen": "2026-09-14T17:02:11Z",
+  "files": {
+    "/etc/motd": "5f2a7c...",
+    "/etc/ssh/sshd_config": "1f1d7d...",
+    "/root/.ssh/authorized_keys": "9b0c31...",
+    "/var/cfengine/bin/cf-agent": "e3a1f0...",
+    "/var/cfengine/inputs/promises.cf": "468fb4...",
+    "/var/cfengine/masterfiles/promises.cf": "468fb4..."
+  }
 }
 ```
 
@@ -289,11 +332,12 @@ Some guidelines for generating random hosts:
 - `software-versions` should be believable, based on common and recent releases of each software, chosen from a short weighted list so many hosts share the same versions. `cfengine` is on every host.
 - `disk` and `memory` sizes should follow the role (database and backup servers have bigger disks, databases and hubs more memory), with a random share free.
 - `user-details` should give each local user a believable home directory, shell and groups (`/root`, `/bin/bash` and `root` for root; `/var/www`, a nologin shell and `www-data` for www-data; Windows accounts have no shell). Only accounts people log in as (root, Administrator) get login times: most were used within the last month, and about a third have a more recent failed login.
-- `role` is `Hub` for exactly 5 hosts (hosts named "hub" first) and `Client` for the rest. `hub` is the IP address of the host's hub: for a hub one of its own public IPv4 addresses (never `127.0.0.1`, added if it has none), for a client the address of one of the hubs, spread evenly. Hubs get the `policy_server` and `am_policy_hub` classes.
+- `role` is `Hub` for exactly 5 Linux hosts (hosts named "hub" first; never Windows) and `Client` for the rest. `hub` is the IP address of the host's hub: for a hub one of its own public IPv4 addresses (never `127.0.0.1`, added if it has none), for a client the address of one of the hubs, spread evenly. Hubs get the `policy_server` and `am_policy_hub` classes.
 - `variables` should be the same set of `sys.*` variables on every host, with values that follow from the rest of the host: `sys.flavor` and `sys.release` from the OS, `sys.uqhost`, `sys.fqhost` and `sys.domain` from the hostname and environment, `sys.ipv4` from the addresses, `sys.policy_hub` from the hub, `sys.cf_version` from the cfengine version, `sys.cpus` from the memory size, `sys.workdir` and `sys.inputdir` per platform, and a random `sys.uptime` in minutes.
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.
 - `online` is whether the host has reported in recently. Around 70% of hosts should be online.
+- `files` maps absolute paths to SHA-256 checksums (64 hex digits) of the content in `files.json`. Every host has the whole policy set under `/var/cfengine/inputs` (`C:\Program Files\Cfengine\inputs` on Windows) and the cf-agent binary (one checksum per CFEngine version and platform, content unavailable); hubs also have the policy under `/var/cfengine/masterfiles`. Hosts that are offline still have the previous policy release, so `promises.cf`, `update.cf` and `standalone_self_upgrade.cf` differ from the hubs' copies. Linux hosts also have `/etc/ssh/sshd_config` (Debian-like or RHEL-like defaults, stricter in production and staging), `/root/.ssh/authorized_keys` (the whole team on dev and testing hosts, two admins elsewhere) and `/etc/motd` (per environment), all as CFEngine edits them. Checksums must be the real SHA-256 of the content; the same content on many hosts gives the same checksum.
 - `local-users` should include root on all Linux machines, and Administrator on Windows.
   Make sure to include some common system / application users for things like email software, printing, etc.
 

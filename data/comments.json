@@ -54,11 +54,25 @@
       "text": "Most of the AWS fleet is in eu-north-1. The metadata service is reachable on 169.254.169.254 as usual."
     }
   ],
-  "host:SHA=94752d811cf4205f4876804a6c5b7271a2b67c37f74712122c60e41b486cd4b1": [
+  "host:SHA=5941d26486bee5dcd8dcf0acf702dd3b551005b03da89094554d0dba5ffbe382": [
     {
       "author": "Craig",
       "time": "2026-09-14T06:40:00Z",
       "text": "staging8-dns-alice was rebuilt last week; the old hardware went to the lab."
+    }
+  ],
+  "path:/etc/ssh/sshd_config": [
+    {
+      "author": "Ole",
+      "time": "2026-09-12T10:05:00Z",
+      "text": "Two checksums here: production and staging have PasswordAuthentication no, the rest still allow passwords. Let us turn it off everywhere once the last keys are distributed."
+    }
+  ],
+  "filename:promises.cf": [
+    {
+      "author": "Nick",
+      "time": "2026-09-15T13:20:00Z",
+      "text": "The hosts still on the 3.27.0 policy are the ones that have not reported in for a while; they will pick up 3.27.1 as soon as they are back online."
     }
   ]
 }

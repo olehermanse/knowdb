@@ -117,10 +117,11 @@ export const LIST_MODAL_SCRIPT = `
   // Pins: "type:name" strings in local storage, shared by all hosts. Each
   // pinned item is a name/value pair in the host view: the version of the
   // software, "defined" for a class, "running" for a service, the value of
-  // a variable, taken from its row in the list modal when the host has it,
-  // or otherwise "(not installed)" / "(not defined)" / "(not running)".
-  var PRESENT = { software: "installed", class: "defined", service: "running", variable: "defined" };
-  var MISSING = { software: "(not installed)", class: "(not defined)", service: "(not running)", variable: "(not defined)" };
+  // a variable, the checksum of the file at a path, taken from its row in
+  // the list modal when the host has it, or otherwise "(not installed)" /
+  // "(not defined)" / "(not running)" / "(not present)".
+  var PRESENT = { software: "installed", class: "defined", service: "running", variable: "defined", path: "present" };
+  var MISSING = { software: "(not installed)", class: "(not defined)", service: "(not running)", variable: "(not defined)", path: "(not present)" };
   var PIN_KEY = "knowdb-pins";
   var PINNED_EMPTY = "Nothing pinned. Use the pin icon in the lists below to keep software, classes or variables here.";
   function loadPins() {

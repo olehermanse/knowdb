@@ -7,37 +7,71 @@ import {
   describeEntry,
   similarEntries,
   TYPE_LABELS,
+  aggregateFilesAtPath,
+  aggregateFilesOfFilename,
+  aggregatePathsOfFile,
+  aggregatePathsOfFilename,
   aggregateValues,
   aggregateVersions,
   Entry,
   entryHref,
   externalLinkLabel,
+  FileCount,
+  formatBytes,
   getComments,
   getEntryLinks,
+  getFileContent,
   filterSearchHref,
   parseValueEntryName,
+  PathCount,
   valueEntryName,
   versionEntryName,
 } from "@/lib/data";
 
 // The entry's own tabs, shown on the left of an entry page: versions (for
-// software), values (for variables), similar entries, resources and
-// comments. The hosts' ports are a tab on the right, with the hosts.
-export type Tab = "versions" | "values" | "similar" | "resources" | "comments";
-const TAB_ORDER: Tab[] = ["versions", "values", "similar", "resources", "comments"];
+// software), values (for variables), content and paths (for files), files
+// (for paths), paths and files (for filenames), similar entries, resources
+// and comments. The hosts' ports are a tab on the right, with the hosts.
+export type Tab =
+  | "content"
+  | "versions"
+  | "values"
+  | "paths"
+  | "files"
+  | "similar"
+  | "resources"
+  | "comments";
+const TAB_ORDER: Tab[] = ["content", "versions", "values", "paths", "files", "similar", "resources", "comments"];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
   return (TAB_ORDER as string[]).includes(value ?? "") ? (value as Tab) : undefined;
 }
 
-// Versions only for software and values only for variables.
+// Versions only for software, values only for variables, and the file
+// tabs for files, paths and filenames.
 export function entryTabs(entry: Entry): Tab[] {
   const tabs: Tab[] = [];
   if (entry.type === "software") tabs.push("versions");
   if (entry.type === "variable") tabs.push("values");
+  if (entry.type === "file") tabs.push("content", "paths");
+  if (entry.type === "path") tabs.push("files");
+  if (entry.type === "filename") tabs.push("paths", "files");
   tabs.push("similar", "resources", "comments");
   return tabs;
+}
+
+// The paths of a file or filename, and the files at a path or with a
+// filename, across the entry's hosts.
+function pathsOf(entry: Entry): PathCount[] {
+  if (entry.type === "file") return aggregatePathsOfFile(entry.name, entry.hosts);
+  if (entry.type === "filename") return aggregatePathsOfFilename(entry.name, entry.hosts);
+  return [];
+}
+function filesOf(entry: Entry): FileCount[] {
+  if (entry.type === "path") return aggregateFilesAtPath(entry.name, entry.hosts);
+  if (entry.type === "filename") return aggregateFilesOfFilename(entry.name, entry.hosts);
+  return [];
 }
 
 // Query parameters belonging to the other side of the page (e.g. the
@@ -194,6 +228,136 @@ function ValuesPanel({ entry, tabs, page, keep }: PanelProps) {
   );
 }
 
+// The full content of a file, or a note that only its checksum is known.
+function ContentPanel({ entry }: { entry: Entry }) {
+  const file = getFileContent(entry.name);
+  if (!file || file.content === null) {
+    return (
+      <p className="muted" data-testid="content-unavailable">
+        {file
+          ? `The content of this ${formatBytes(file.size)} binary file is not available, only its checksum.`
+          : "The content of this file is not available, only its checksum."}
+      </p>
+    );
+  }
+  const lines = file.content.split("\n").length - (file.content.endsWith("\n") ? 1 : 0);
+  return (
+    <>
+      <p className="muted" data-testid="content-description">
+        {`${formatBytes(file.size)}, ${lines} ${lines === 1 ? "line" : "lines"}:`}
+      </p>
+      <pre className="file-content" data-testid="file-content">
+        {file.content}
+      </pre>
+    </>
+  );
+}
+
+// The paths where a file or filename is found, one card per path, most
+// hosts first; the count links to a search for those hosts.
+function PathsPanel({ entry, tabs, page, keep }: PanelProps) {
+  const paths = pathsOf(entry);
+  const paged = paginate(paths, page);
+  return (
+    <>
+      <p className="muted" data-testid="paths-description">
+        {entry.type === "file"
+          ? "Paths where this file is found:"
+          : `Paths of files named ${entry.name}:`}
+      </p>
+      {paths.length === 0 && <p className="muted">None</p>}
+      <ul className="entry-list" data-testid="paths">
+        {paged.shown.map(({ path, hosts }) => (
+          <li key={path} className="host-item" data-testid="path-item">
+            <span className="type-badge">path</span>
+            <div className="host-summary">
+              <div>
+                <EntryLink type="path" name={path} />
+              </div>
+              <div className="muted host-facts">
+                <Link
+                  href={filterSearchHref([{ type: "path", name: path }, { type: entry.type, name: entry.name }])}
+                  className="entry-link"
+                  data-testid="path-hosts-link"
+                >
+                  {hostsLabel(hosts)}
+                </Link>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        keep={keep}
+        tab="paths"
+        page={page}
+        total={paths.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="paths"
+      />
+    </>
+  );
+}
+
+// The files (checksums) found at a path or under a filename, one card per
+// file, most hosts first: more than one means the file differs between hosts.
+function FilesPanel({ entry, tabs, page, keep }: PanelProps) {
+  const files = filesOf(entry);
+  const paged = paginate(files, page);
+  return (
+    <>
+      <p className="muted" data-testid="files-description">
+        {entry.type === "path"
+          ? files.length > 1
+            ? "The file at this path differs between hosts; its checksums:"
+            : "The file at this path, by checksum:"
+          : `Files named ${entry.name}, by checksum:`}
+      </p>
+      {files.length === 0 && <p className="muted">None</p>}
+      <ul className="entry-list" data-testid="files">
+        {paged.shown.map(({ checksum, hosts }) => (
+          <li key={checksum} className="host-item" data-testid="file-item">
+            <span className="type-badge">file</span>
+            <div className="host-summary">
+              <div>
+                <EntryLink type="file" name={checksum} />
+              </div>
+              <div className="muted host-facts">
+                <Link
+                  href={filterSearchHref([{ type: "file", name: checksum }, { type: entry.type, name: entry.name }])}
+                  className="entry-link"
+                  data-testid="file-hosts-link"
+                >
+                  {hostsLabel(hosts)}
+                </Link>
+                <span>{describeEntry({ type: "file", name: checksum })}</span>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        keep={keep}
+        tab="files"
+        page={page}
+        total={files.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="files"
+      />
+    </>
+  );
+}
+
 // Entries of the same type with similar names, longest shared prefix first.
 function SimilarPanel({ entry, tabs, page, keep }: PanelProps) {
   const similar = similarEntries(entry);
@@ -291,22 +455,35 @@ export default function RelatedHosts({
   const enabled = tabs.filter((t) => !disabled.has(t));
   const current = tab && enabled.includes(tab) ? tab : enabled[0];
   const counts: Record<Tab, number> = {
+    content: 0,
     similar: similarCount,
     resources: resourceCount,
     comments: getComments(entry).length,
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     values: entry.type === "variable" ? aggregateValues(entry.name, entry.hosts).length : 0,
+    paths: pathsOf(entry).length,
+    files: filesOf(entry).length,
   };
+  // The Content tab shows the file's size instead of a count.
+  const file = entry.type === "file" ? getFileContent(entry.name) : undefined;
+  const countLabel = (t: Tab) =>
+    t === "content" ? (file ? formatBytes(file.size) : "unavailable") : String(counts[t]);
   const labels: Record<Tab, string> = {
+    content: "Content",
     versions: "Versions",
     values: "Values",
+    paths: "Paths",
+    files: "Files",
     similar: "Similar",
     resources: "Resources",
     comments: "Comments",
   };
   const testIds: Record<Tab, string> = {
+    content: "content-heading",
     versions: "versions-heading",
     values: "values-heading",
+    paths: "paths-heading",
+    files: "files-heading",
     similar: "similar-heading",
     resources: "resources-heading",
     comments: "comments-heading",
@@ -324,7 +501,7 @@ export default function RelatedHosts({
               className="tab tab-disabled"
               data-testid={testIds[t]}
             >
-              {labels[t]} <span className="muted">({counts[t]})</span>
+              {labels[t]} <span className="muted">({countLabel(t)})</span>
             </span>
           ) : (
             <Link
@@ -344,7 +521,7 @@ export default function RelatedHosts({
                   dangerouslySetInnerHTML={{ __html: `(${counts[t]})` }}
                 />
               ) : (
-                <span className="muted">({counts[t]})</span>
+                <span className="muted">({countLabel(t)})</span>
               )}
             </Link>
           ),
@@ -352,9 +529,12 @@ export default function RelatedHosts({
       </nav>
       {current && (
         <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
+          {current === "content" && <ContentPanel entry={entry} />}
           {current === "versions" && (
             <VersionsPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}
+          {current === "paths" && <PathsPanel entry={entry} tabs={tabs} page={page} keep={keep} />}
+          {current === "files" && <FilesPanel entry={entry} tabs={tabs} page={page} keep={keep} />}
           {current === "values" && (
             <ValuesPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}

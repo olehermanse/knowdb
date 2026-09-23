@@ -6,6 +6,7 @@ import HostAvatar from "@/components/HostAvatar";
 import ListModal from "@/components/ListModal";
 import SeenLine from "@/components/SeenLine";
 import {
+  abbreviateChecksum,
   clientsSearchHref,
   conditionHref,
   describeHost,
@@ -183,9 +184,9 @@ function HostDetails({ host, embedded = false }: { host: Host; embedded?: boolea
   );
 }
 
-// The pinned items and the Software, Services, Classes and Variables
-// modals, below the basic fields on the host's own page. All four lists
-// can be pinned from.
+// The pinned items and the Software, Services, Classes, Variables and
+// Files modals, below the basic fields on the host's own page. All five
+// lists can be pinned from.
 function HostLists({ host }: { host: Host }) {
   return (
     <>
@@ -296,6 +297,26 @@ function HostLists({ host }: { host: Host }) {
                 },
               };
             })}
+          />
+        </dd>
+        <dt>Files</dt>
+        <dd data-testid="host-files">
+          <ListModal
+            title={`Files on ${host.hostname}`}
+            singular="file"
+            plural="files"
+            verb="present"
+            testId="files-modal"
+            pinnable
+            rows={Object.entries(host.files ?? {}).map(([path, checksum]) => ({
+              // "/etc/motd 5f2a…": the path and the checksum of the file
+              // there, each linking to its entry.
+              key: path,
+              type: "path",
+              label: path,
+              href: entryHref({ type: "path", name: path }),
+              extra: { label: abbreviateChecksum(checksum), href: entryHref({ type: "file", name: checksum }) },
+            }))}
           />
         </dd>
       </dl>

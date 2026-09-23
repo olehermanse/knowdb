@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Generate random hosts based on the description in README.md.
+"""Generate random hosts based on the description in AGENTS.md.
 
-Writes 100 hosts to tmp/hosts.json.
+Writes 100 hosts to tmp/hosts.json and the contents of the files found on
+them to tmp/files.json.
 """
 
+import base64
+import hashlib
 import json
 import random
 import secrets
@@ -15,8 +18,14 @@ NUM_HOSTS = 100
 NUM_HUBS = 5
 ROLE_HUB = "Hub"
 ROLE_CLIENT = "Client"
-OUTPUT_PATH = Path(__file__).parent.parent / "tmp" / "hosts.json"
-CLASSES_PATH = Path(__file__).parent.parent / "data" / "classes.json"
+ROOT = Path(__file__).parent.parent
+OUTPUT_PATH = ROOT / "tmp" / "hosts.json"
+FILES_OUTPUT_PATH = ROOT / "tmp" / "files.json"
+CLASSES_PATH = ROOT / "data" / "classes.json"
+# A real CFEngine policy set (the Masterfiles Policy Framework as built by
+# cfbs). Every file in it ends up in /var/cfengine/masterfiles on the hubs
+# and in /var/cfengine/inputs on every host.
+MASTERFILES_PATH = ROOT / "tmp" / "proj" / "out" / "masterfiles"
 
 # CFEngine hard classes per operating system, from data/classes.json.
 with open(CLASSES_PATH) as _f:
@@ -523,12 +532,14 @@ def assign_roles(hosts):
     """Make NUM_HUBS hosts CFEngine hubs and point every host at its hub.
 
     Hosts named "hub" are hubs first; more are picked at random if needed.
-    Every host gets a "hub" field with the IP address of its hub, a public
-    IPv4 address; a hub's own hub is itself. Hubs also get the policy
-    server classes, and clients are spread over the hubs.
+    Hubs run Linux: a CFEngine hub is never a Windows host. Every host gets
+    a "hub" field with the IP address of its hub, a public IPv4 address; a
+    hub's own hub is itself. Hubs also get the policy server classes, and
+    clients are spread over the hubs.
     """
-    named = [h for h in hosts if role_of(h["hostname"]) == "hub"]
-    others = [h for h in hosts if h not in named]
+    linux = [h for h in hosts if not h["os"].startswith("Windows")]
+    named = [h for h in linux if role_of(h["hostname"]) == "hub"]
+    others = [h for h in linux if h not in named]
     random.shuffle(others)
     hubs = (named + others)[:NUM_HUBS]
     for hub in hubs:
@@ -544,6 +555,145 @@ def assign_roles(hosts):
         if host.get("role") != ROLE_HUB:
             host["role"] = ROLE_CLIENT
             host["hub"] = random.choice(hubs)["hub"]
+
+
+# Files worth paying attention to on each host: the CFEngine policy, a few
+# files CFEngine edits, and the cf-agent binary. A file is identified by
+# the SHA-256 checksum of its content; hosts.json maps each host's absolute
+# paths to checksums and files.json holds the content of each checksum (or
+# null for binaries, where only the checksum and size are known).
+FILE_CONTENTS = {}  # checksum -> {"size": bytes, "content": text or None}
+
+
+def add_file(content):
+    """Register text content and return its SHA-256 checksum."""
+    data = content.encode("utf-8")
+    checksum = hashlib.sha256(data).hexdigest()
+    FILE_CONTENTS.setdefault(checksum, {"size": len(data), "content": content})
+    return checksum
+
+
+def add_binary(size):
+    """Register a binary file by a random checksum: its content is not kept."""
+    checksum = secrets.token_hex(32)
+    FILE_CONTENTS[checksum] = {"size": size, "content": None}
+    return checksum
+
+
+def load_masterfiles():
+    """The policy set as {relative path: checksum}, empty if it is missing."""
+    if not MASTERFILES_PATH.is_dir():
+        print(f"Warning: {MASTERFILES_PATH} not found, generating hosts without policy files")
+        return {}
+    policy = {}
+    for path in sorted(MASTERFILES_PATH.rglob("*")):
+        if path.is_file():
+            policy[path.relative_to(MASTERFILES_PATH).as_posix()] = add_file(path.read_text())
+    return policy
+
+
+# The hubs hold the current policy; a host that has not reported in for a
+# while still runs the previous release, in which the files naming the
+# version differ.
+CURRENT_POLICY = load_masterfiles()
+PREVIOUS_POLICY = dict(CURRENT_POLICY)
+for _rel in ("promises.cf", "update.cf", "standalone_self_upgrade.cf"):
+    if _rel in CURRENT_POLICY:
+        _text = FILE_CONTENTS[CURRENT_POLICY[_rel]]["content"]
+        PREVIOUS_POLICY[_rel] = add_file(_text.replace("3.27.1", "3.27.0"))
+
+# The cf-agent binary per CFEngine version: one checksum per version and
+# platform, a few megabytes, content not available.
+AGENT_BINARIES = {}
+
+
+def agent_binary(version, windows):
+    key = (version, windows)
+    if key not in AGENT_BINARIES:
+        AGENT_BINARIES[key] = add_binary(random.randint(6_000_000, 12_000_000))
+    return AGENT_BINARIES[key]
+
+
+# SSH public keys of the people who log in as root. Keys are made up, but
+# have the shape of real ed25519 keys.
+ADMINS = ["ole", "nick", "craig", "lars"]
+
+
+def fake_ed25519_key(comment):
+    blob = b"\x00\x00\x00\x0bssh-ed25519\x00\x00\x00\x20" + secrets.token_bytes(32)
+    return f"ssh-ed25519 {base64.b64encode(blob).decode()} {comment}"
+
+
+ADMIN_KEYS = {name: fake_ed25519_key(f"{name}@laptop") for name in ADMINS}
+
+
+def authorized_keys(environment):
+    """root's authorized_keys: the whole team on dev and testing hosts, only
+    the two on-call admins in production and staging."""
+    admins = ADMINS if environment in ("dev", "testing") else ADMINS[:2]
+    lines = ["# Managed by CFEngine, do not edit by hand"] + [ADMIN_KEYS[a] for a in admins]
+    return "\n".join(lines) + "\n"
+
+
+def sshd_config(os_name, environment):
+    """sshd_config as CFEngine edits it: the distribution's defaults plus a
+    hardened section, stricter in production."""
+    debian_like = os_name.startswith(("Ubuntu", "Debian"))
+    lines = [
+        "# This file is managed by CFEngine. Local changes will be reverted.",
+        "Include /etc/ssh/sshd_config.d/*.conf",
+        "Port 22",
+        "AddressFamily any",
+        "ListenAddress 0.0.0.0",
+        "PermitRootLogin prohibit-password",
+        "PubkeyAuthentication yes",
+        "PasswordAuthentication " + ("no" if environment in ("production", "staging") else "yes"),
+        "KbdInteractiveAuthentication no",
+        "UsePAM yes",
+        "X11Forwarding " + ("no" if environment == "production" else "yes"),
+        "PrintMotd no",
+        "AcceptEnv LANG LC_*",
+    ]
+    if debian_like:
+        lines.append("Subsystem sftp /usr/lib/openssh/sftp-server")
+    else:
+        lines.append("SyslogFacility AUTHPRIV")
+        lines.append("Subsystem sftp /usr/libexec/openssh/sftp-server")
+    return "\n".join(lines) + "\n"
+
+
+def motd(environment):
+    return (
+        "This host is managed by CFEngine.\n"
+        f"Environment: {environment}\n"
+        "Changes made by hand will be reverted at the next agent run.\n"
+    )
+
+
+def policy_paths(base, sep, policy):
+    return {f"{base}{sep}{rel.replace('/', sep)}": checksum for rel, checksum in policy.items()}
+
+
+def generate_files(host):
+    """The notable files on a host: {absolute path: SHA-256 checksum}."""
+    os_name = host["os"]
+    windows = os_name.startswith("Windows")
+    environment = host["hostname"].split("-")[0].rstrip("0123456789")
+    policy = CURRENT_POLICY if host["online"] or host["role"] == ROLE_HUB else PREVIOUS_POLICY
+    files = {}
+    if windows:
+        workdir = "C:\\Program Files\\Cfengine"
+        files.update(policy_paths(f"{workdir}\\inputs", "\\", policy))
+        files[f"{workdir}\\bin\\cf-agent.exe"] = agent_binary(host["software-versions"]["cfengine"], True)
+    else:
+        files.update(policy_paths("/var/cfengine/inputs", "/", policy))
+        if host["role"] == ROLE_HUB:
+            files.update(policy_paths("/var/cfengine/masterfiles", "/", CURRENT_POLICY))
+        files["/var/cfengine/bin/cf-agent"] = agent_binary(host["software-versions"]["cfengine"], False)
+        files["/etc/ssh/sshd_config"] = add_file(sshd_config(os_name, environment))
+        files["/root/.ssh/authorized_keys"] = add_file(authorized_keys(environment))
+        files["/etc/motd"] = add_file(motd(environment))
+    return dict(sorted(files.items()))
 
 
 NOW = datetime.now(timezone.utc).replace(microsecond=0)
@@ -604,6 +754,8 @@ def generate_host(used_hostnames, used_macs):
         "hub": None,
         # variables are filled in afterwards too: some depend on the hub.
         "variables": None,
+        # files too: hubs have the masterfiles and stale hosts old policy.
+        "files": None,
         "cloud-provider": generate_cloud_provider(),
         "online": online,
         "first-seen": first_seen,
@@ -618,11 +770,26 @@ def main():
     assign_roles(hosts)
     for host in hosts:
         host["variables"] = generate_variables(host)
+        host["files"] = generate_files(host)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(hosts, f, indent=2)
         f.write("\n")
     print(f"Wrote {len(hosts)} hosts to {OUTPUT_PATH}")
+    with open(FILES_OUTPUT_PATH, "w") as f:
+        json.dump(
+            {
+                "_comment": "Content of the files found on hosts, keyed by SHA-256 checksum, "
+                "as referenced by the files field of each host in hosts.json. content is null "
+                "for binaries, where only the checksum and size are known. Generated by "
+                "scripts/generate_hosts.py; the frontend reads this file at build time.",
+                "files": dict(sorted(FILE_CONTENTS.items())),
+            },
+            f,
+            indent=1,
+        )
+        f.write("\n")
+    print(f"Wrote {len(FILE_CONTENTS)} files to {FILES_OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

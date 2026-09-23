@@ -2,6 +2,7 @@ import hostsJson from "@/data/hosts.json";
 import infoJson from "@/data/info.json";
 import groupsJson from "@/data/groups.json";
 import commentsJson from "@/data/comments.json";
+import filesJson from "@/data/files.json";
 
 export interface Host {
   os: string;
@@ -37,6 +38,39 @@ export interface Host {
   // When the host first and most recently reported in (ISO 8601, UTC).
   "first-seen": string;
   "last-seen": string;
+  // Notable files on the host (the CFEngine policy, files CFEngine edits,
+  // the cf-agent binary): absolute path -> SHA-256 checksum of the content.
+  files: Record<string, string>;
+}
+
+// The content of a file, from data/files.json, keyed by checksum. Binaries
+// have no content, only a size.
+export interface FileContent {
+  size: number;
+  content: string | null;
+}
+const fileContents = (filesJson as unknown as { files: Record<string, FileContent> }).files;
+
+export function getFileContent(checksum: string): FileContent | undefined {
+  return fileContents[checksum];
+}
+
+// The last component of an absolute path, Unix or Windows.
+export function fileNameOf(path: string): string {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1] || path;
+}
+
+// "3.2 kB", "9.8 MB", "512 B".
+export function formatBytes(n: number): string {
+  if (n >= 1_000_000) return `${Number((n / 1_000_000).toFixed(1))} MB`;
+  if (n >= 1000) return `${Number((n / 1000).toFixed(1))} kB`;
+  return `${n} B`;
+}
+
+// The first 16 hex digits of a checksum, for lists and links.
+export function abbreviateChecksum(checksum: string): string {
+  return checksum.length > 16 ? checksum.slice(0, 16) : checksum;
 }
 
 export type Role = "Hub" | "Client";
@@ -132,7 +166,13 @@ export type EntryType =
   // A CFEngine variable, e.g. "sys.arch", defined on every host.
   | "variable"
   // One value of a variable, named "<variable>=<value>", e.g. "sys.arch=x86_64".
-  | "value";
+  | "value"
+  // A file, identified by the SHA-256 checksum of its content (the name).
+  | "file"
+  // An absolute path a file is found at, e.g. "/var/cfengine/inputs/promises.cf".
+  | "path"
+  // The last component of a path, e.g. "promises.cf".
+  | "filename";
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -221,6 +261,9 @@ function buildIndex() {
   const hostsByKey = new Map<string, Host>();
   const entries = new Map<string, { type: EntryType; name: string; hosts: Set<string> }>();
   const groupsByHost = new Map<string, string[]>();
+  // Files: the paths each filename is found at, and the names of each file.
+  const pathsByFilename = new Map<string, Set<string>>();
+  const namesByFile = new Map<string, Set<string>>();
 
   const ensure = (type: EntryType, name: string) => {
     const key = entryKey(type, name);
@@ -261,6 +304,14 @@ function buildIndex() {
       link("variable", variable, host.id);
       link("value", valueEntryName(variable, value), host.id);
     }
+    for (const [path, checksum] of Object.entries(host.files ?? {})) {
+      const filename = fileNameOf(path);
+      link("path", path, host.id);
+      link("file", checksum, host.id);
+      link("filename", filename, host.id);
+      pathsByFilename.set(filename, (pathsByFilename.get(filename) ?? new Set()).add(path));
+      namesByFile.set(checksum, (namesByFile.get(checksum) ?? new Set()).add(filename));
+    }
     const hostGroups = groups.filter((g) => hostInGroup(host, g)).map((g) => g.name);
     for (const name of hostGroups) link("group", name, host.id);
     groupsByHost.set(host.id, hostGroups);
@@ -285,10 +336,78 @@ function buildIndex() {
     }
   }
 
-  return { hostsByKey, entries, groupsByHost, byNormalizedName };
+  return { hostsByKey, entries, groupsByHost, byNormalizedName, pathsByFilename, namesByFile };
 }
 
-const { hostsByKey, entries, groupsByHost, byNormalizedName } = buildIndex();
+const { hostsByKey, entries, groupsByHost, byNormalizedName, pathsByFilename, namesByFile } =
+  buildIndex();
+
+// The distinct filenames a file (checksum) is found under, sorted.
+export function fileNames(checksum: string): string[] {
+  return [...(namesByFile.get(checksum) ?? [])].sort();
+}
+
+export interface PathCount {
+  path: string;
+  // Number of the given hosts having a file at this path.
+  hosts: number;
+}
+
+export interface FileCount {
+  checksum: string;
+  // Number of the given hosts having this file.
+  hosts: number;
+}
+
+function countPaths(hostkeys: string[], wanted: (path: string, checksum: string) => boolean): PathCount[] {
+  const counts = new Map<string, number>();
+  for (const hostkey of hostkeys) {
+    for (const [path, checksum] of Object.entries(hostsByKey.get(hostkey)?.files ?? {})) {
+      if (wanted(path, checksum)) counts.set(path, (counts.get(path) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([path, hosts]) => ({ path, hosts }))
+    .sort((a, b) => b.hosts - a.hosts || a.path.localeCompare(b.path));
+}
+
+function countFiles(hostkeys: string[], wanted: (path: string, checksum: string) => boolean): FileCount[] {
+  const counts = new Map<string, number>();
+  for (const hostkey of hostkeys) {
+    for (const [path, checksum] of Object.entries(hostsByKey.get(hostkey)?.files ?? {})) {
+      if (wanted(path, checksum)) counts.set(checksum, (counts.get(checksum) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([checksum, hosts]) => ({ checksum, hosts }))
+    .sort((a, b) => b.hosts - a.hosts || a.checksum.localeCompare(b.checksum));
+}
+
+// The paths a file (checksum) is found at across the given hosts, most
+// hosts first.
+export function aggregatePathsOfFile(checksum: string, hostkeys: string[]): PathCount[] {
+  return countPaths(hostkeys, (_, c) => c === checksum);
+}
+
+// The paths with a given filename across the given hosts, most hosts first.
+export function aggregatePathsOfFilename(filename: string, hostkeys: string[]): PathCount[] {
+  const candidates = pathsByFilename.get(filename);
+  if (!candidates) return [];
+  return countPaths(hostkeys, (p) => candidates.has(p));
+}
+
+// The files (checksums) found at a path across the given hosts, most hosts
+// first: more than one means the file differs between hosts.
+export function aggregateFilesAtPath(path: string, hostkeys: string[]): FileCount[] {
+  return countFiles(hostkeys, (p) => p === path);
+}
+
+// The files (checksums) with a given filename across the given hosts.
+export function aggregateFilesOfFilename(filename: string, hostkeys: string[]): FileCount[] {
+  const candidates = pathsByFilename.get(filename);
+  if (!candidates) return [];
+  return countFiles(hostkeys, (p) => candidates.has(p));
+}
 
 export function getEntry(type: EntryType, name: string): Entry | undefined {
   const entry = entries.get(entryKey(type, name));
@@ -540,6 +659,9 @@ export const ENTRY_TYPES: EntryType[] = [
   "role",
   "variable",
   "value",
+  "file",
+  "path",
+  "filename",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -560,7 +682,16 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   role: "Roles",
   variable: "Variables",
   value: "Values",
+  file: "Files",
+  path: "Paths",
+  filename: "Filenames",
 };
+
+// What to show for an entry in lists and links: its name, except for files
+// whose checksum is abbreviated (the full checksum is the page title).
+export function entryLabel(ref: EntryRef): string {
+  return ref.type === "file" ? abbreviateChecksum(ref.name) : ref.name;
+}
 
 // All entries of one type, sorted by name (numerically where names are
 // numbers, e.g. ports; hosts by hostname).
@@ -597,6 +728,8 @@ export interface SimilarEntry {
 // of the same variable: the whole variable name and the "=" have to match,
 // and then the first 3 characters of the value.
 function similarity(type: EntryType, a: string, b: string): number {
+  // Checksums sharing a prefix have nothing in common.
+  if (type === "file") return -1;
   if (type === "value") {
     const x = parseValueEntryName(a);
     const y = parseValueEntryName(b);
@@ -697,6 +830,8 @@ interface Info {
   roles: Record<string, DescribedInfo>;
   // CFEngine special variables such as "sys.arch".
   variables: Record<string, DescribedInfo>;
+  // Well-known filenames such as "promises.cf" or "sshd_config".
+  filenames: Record<string, DescribedInfo>;
 }
 
 export interface ServiceInfo extends DescribedInfo {
@@ -780,6 +915,10 @@ export function getClassInfo(name: string): DescribedInfo | undefined {
   return info.classes[name];
 }
 
+export function getFilenameInfo(name: string): DescribedInfo | undefined {
+  return info.filenames[name];
+}
+
 export function getUserInfo(name: string): DescribedInfo | undefined {
   return info.users[name];
 }
@@ -838,6 +977,13 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
     case "version":
       // Versions share the software's description, links and logo.
       return getSoftwareInfo(parseVersionEntryName(entry.name).software);
+    case "filename":
+      return getFilenameInfo(entry.name);
+    case "path":
+      // Paths and files share the information about their filename.
+      return getFilenameInfo(fileNameOf(entry.name));
+    case "file":
+      return fileNames(entry.name).map(getFilenameInfo).find((i) => i !== undefined);
     default:
       return undefined;
   }
@@ -872,6 +1018,10 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
     for (const [name, sw] of Object.entries(info.software)) {
       if (sw.ports?.includes(port)) related.push({ type: "software", name });
     }
+  } else if (entry.type === "path") {
+    related.push({ type: "filename", name: fileNameOf(entry.name) });
+  } else if (entry.type === "file") {
+    for (const name of fileNames(entry.name)) related.push({ type: "filename", name });
   } else if (entry.type === "role") {
     // The two roles point at each other; both run CFEngine, and hubs are
     // also marked by the policy server classes.
@@ -914,6 +1064,7 @@ export const NO_CLOUD_INFO = "No information available about this cloud provider
 export const NO_SERVICE_INFO = "No information available about this service.";
 export const NO_ROLE_INFO = "No information available about this role.";
 export const NO_VARIABLE_INFO = "No information available about this variable.";
+export const NO_FILENAME_INFO = "No information available about files with this name.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -932,7 +1083,23 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   role: "A host's CFEngine role: a hub the clients report to, or a client.",
   variable: "A CFEngine variable defined on hosts.",
   value: "The value a CFEngine variable has on some hosts.",
+  file: "A file, identified by the SHA-256 checksum of its content.",
+  path: "The absolute path of a file on a host.",
+  filename: "The name of a file, without its directory.",
 };
+
+// "The file promises.cf (3.2 kB), identified by its SHA-256 checksum." or,
+// for a binary, that only the checksum is known.
+function describeFile(checksum: string): string {
+  const names = fileNames(checksum);
+  const content = getFileContent(checksum);
+  const named = names.length > 0 ? ` ${names.join(" or ")}` : "";
+  const size = content ? ` (${formatBytes(content.size)})` : "";
+  if (content && content.content === null) {
+    return `The binary file${named}${size}. Its content is not available, only its checksum.`;
+  }
+  return `The file${named}${size}, identified by its SHA-256 checksum.`;
+}
 
 export function describeEntry(entry: EntryRef): string {
   if (entry.type === "port") {
@@ -979,6 +1146,16 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "version") {
     const { software, version } = parseVersionEntryName(entry.name);
     return `Version ${version} of ${software}.`;
+  }
+  if (entry.type === "file") {
+    return describeFile(entry.name);
+  }
+  if (entry.type === "filename") {
+    return getFilenameInfo(entry.name)?.description ?? NO_FILENAME_INFO;
+  }
+  if (entry.type === "path") {
+    const known = getFilenameInfo(fileNameOf(entry.name));
+    if (known) return known.description;
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
@@ -1088,6 +1265,12 @@ export function summarizeEntry(entry: Entry): string {
       return `This MAC address belongs to ${hosts} in your infrastructure.`;
     case "hostname":
       return `${hosts} in your infrastructure ${n === 1 ? "has" : "share"} this hostname.`;
+    case "file":
+      return `This file is found on ${hosts} in your infrastructure, at ${plural(aggregatePathsOfFile(entry.name, entry.hosts).length, "different path")}.`;
+    case "path":
+      return `This path exists on ${hosts} in your infrastructure, with ${plural(aggregateFilesAtPath(entry.name, entry.hosts).length, "different file")} (${n === 1 || aggregateFilesAtPath(entry.name, entry.hosts).length === 1 ? "checksum" : "checksums"}).`;
+    case "filename":
+      return `Files named ${entry.name} exist on ${hosts} in your infrastructure, at ${plural(aggregatePathsOfFilename(entry.name, entry.hosts).length, "different path")}, with ${plural(aggregateFilesOfFilename(entry.name, entry.hosts).length, "different checksum")}.`;
     case "host": {
       const host = hostsByKey.get(entry.name);
       return host ? describeHost(host) : "";

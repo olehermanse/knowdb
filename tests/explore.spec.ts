@@ -2,8 +2,12 @@ import { test, expect } from "@playwright/test";
 import hosts from "../data/hosts.json";
 import info from "../data/info.json";
 import groupsJson from "../data/groups.json";
+import filesJson from "../data/files.json";
 
 type Host = (typeof hosts)[number];
+const fileContents = (filesJson as unknown as {
+  files: Record<string, { size: number; content: string | null }>;
+}).files;
 type Group = (typeof groupsJson.groups)[number] & {
   match: { os?: string[]; hostname?: string[] };
 };
@@ -102,12 +106,12 @@ async function expectAggregatedPorts(
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
 
-test("front page shows 16 random entries", async ({ page }) => {
+test("front page shows 20 random entries", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Or pick one of the randomly selected entries below:")).toBeVisible();
   const items = page.getByTestId("entry-list").locator("li");
-  await expect(items).toHaveCount(16);
-  await expect(items.locator("a.entry-link")).toHaveCount(16);
+  await expect(items).toHaveCount(20);
+  await expect(items.locator("a.entry-link")).toHaveCount(20);
 });
 
 test("front page always shows at least one entry of each type", async ({
@@ -130,12 +134,15 @@ test("front page always shows at least one entry of each type", async ({
     "role",
     "variable",
     "value",
+    "file",
+    "path",
+    "filename",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
     const badges = page.getByTestId("entry-list").locator(".type-badge");
-    await expect(badges).toHaveCount(16);
+    await expect(badges).toHaveCount(20);
     const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
     for (const type of allTypes) {
       expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
@@ -1289,8 +1296,11 @@ test("host lists are paginated 10 at a time", async ({ page }) => {
     String(lastPage),
   );
 
-  // Short lists have no pagination.
-  await page.goto(`${groupHref("Windows")}?htab=list`);
+  // Short lists have no pagination: an operating system on a page of hosts or fewer.
+  const osCounts = new Map<string, number>();
+  for (const h of hosts) osCounts.set(h.os, (osCounts.get(h.os) ?? 0) + 1);
+  const smallOs = [...osCounts.entries()].find(([, n]) => n <= PAGE_SIZE)![0];
+  await page.goto(`/entry/os/${encodeURIComponent(smallOs)}?htab=list`);
   await expect(page.getByTestId("pagination")).toHaveCount(0);
 });
 
@@ -2299,7 +2309,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(16);
+  await expect(buttons).toHaveCount(19);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -2501,7 +2511,7 @@ test("host page has two columns with software, classes and variables spread belo
     "Memory",
     "Listening ports",
   ]);
-  await expect(wide.locator("dt")).toHaveText(["Software", "Services", "Classes", "Variables"]);
+  await expect(wide.locator("dt")).toHaveText(["Software", "Services", "Classes", "Variables", "Files"]);
 
   const l = (await left.boundingBox())!;
   const r = (await right.boundingBox())!;
@@ -3121,6 +3131,10 @@ test("the type badge on an entry links to the listing of that type", async ({ pa
   await expect(page.getByTestId("search-summary")).toHaveText(
     `${allOs.size} operating systems in your infrastructure.`,
   );
+  // The listing is sorted by name and paginated; go to the page with this OS.
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+  const osPage = Math.floor([...allOs].sort(collator.compare).indexOf(osName) / PAGE_SIZE) + 1;
+  if (osPage > 1) await page.goto(`/search?type=os&page=${osPage}`);
   await expect(page.getByTestId("search-results").getByRole("link", { name: osName })).toBeVisible();
 
   // Same for ports and groups.
@@ -3218,10 +3232,13 @@ test("filters appended to a type listing stay in the search bar and narrow the l
   page,
 }) => {
   const allClouds = new Set(hosts.map((h) => h["cloud-provider"]).filter(Boolean));
-  const u24Clouds = new Set(
-    hosts.filter((h) => h.os === "Ubuntu 24").map((h) => h["cloud-provider"]).filter(Boolean),
-  );
-  expect(u24Clouds.size).toBeLessThan(allClouds.size);
+  // An operating system whose hosts run in only some of the clouds.
+  const cloudsOf = (os: string) =>
+    new Set(hosts.filter((h) => h.os === os).map((h) => h["cloud-provider"]).filter(Boolean));
+  const osName = [...new Set(hosts.map((h) => h.os))].find(
+    (os) => cloudsOf(os).size > 0 && cloudsOf(os).size < allClouds.size,
+  )!;
+  const u24Clouds = cloudsOf(osName);
 
   await page.goto(`/search?q=${encodeURIComponent("type:cloud")}`);
   const input = page.getByTestId("search-input").nth(1);
@@ -3232,12 +3249,15 @@ test("filters appended to a type listing stay in the search bar and narrow the l
 
   // Appending a filter and pressing Enter: the URL and the search bar agree,
   // and only the clouds with matching hosts are listed.
-  await input.fill('type:cloud os:"Ubuntu 24"');
+  const query = `type:cloud os:"${osName}"`;
+  await input.fill(query);
   await input.press("Enter");
-  await expect(page).toHaveURL(/\/search\?q=type(%3A|:)cloud(\+|%20)os(%3A|:)%22Ubuntu(\+|%20)24%22$/);
-  await expect(input).toHaveValue('type:cloud os:"Ubuntu 24"');
+  await expect(page).toHaveURL(
+    new RegExp(`/search\\?q=${encodeURIComponent(query).replace(/%20/g, "(\\+|%20)")}$`),
+  );
+  await expect(input).toHaveValue(query);
   await expect(page.getByTestId("search-summary")).toHaveText(
-    `${u24Clouds.size} clouds with hosts matching os Ubuntu 24.`,
+    `${u24Clouds.size} clouds with hosts matching os ${osName}.`,
   );
   const items = page.getByTestId("search-results").locator("li");
   await expect(items).toHaveCount(u24Clouds.size);
@@ -3246,15 +3266,344 @@ test("filters appended to a type listing stay in the search bar and narrow the l
   }
 
   // The same with hosts: type:host plus a filter lists just those hosts.
-  const u24 = hosts.filter((h) => h.os === "Ubuntu 24");
-  await page.goto(`/search?q=${encodeURIComponent('type:host os:"Ubuntu 24"')}`);
-  await expect(page.getByTestId("search-input").nth(1)).toHaveValue('type:host os:"Ubuntu 24"');
+  const u24 = hosts.filter((h) => h.os === osName);
+  await page.goto(`/search?q=${encodeURIComponent(`type:host os:"${osName}"`)}`);
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue(`type:host os:"${osName}"`);
   await expect(page.getByTestId("search-summary")).toHaveText(
-    `${u24.length} hosts matching os Ubuntu 24.`,
+    `${u24.length} hosts matching os ${osName}.`,
   );
   await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, u24.length));
 
   // A listing from the front page still shows type:<type>.
   await page.goto("/search?type=cloud");
   await expect(page.getByTestId("search-input").nth(1)).toHaveValue("type:cloud");
+});
+
+// Files: every host maps the absolute paths of its notable files to the
+// SHA-256 checksums of their content (data/hosts.json), and the content of
+// each checksum is in data/files.json.
+type FileHost = Omit<Host, "files"> & { files: Record<string, string> };
+const typedHosts = hosts as unknown as FileHost[];
+const linuxHosts = typedHosts.filter((h) => !h.os.startsWith("Windows"));
+const windowsHosts = typedHosts.filter((h) => h.os.startsWith("Windows"));
+const hubHosts = typedHosts.filter((h) => h.role === "Hub");
+const INPUTS_PROMISES = "/var/cfengine/inputs/promises.cf";
+const MASTERFILES_PROMISES = "/var/cfengine/masterfiles/promises.cf";
+const WINDOWS_PROMISES = "C:\\Program Files\\Cfengine\\inputs\\promises.cf";
+const fileName = (path: string) => path.split(/[\\/]/).pop()!;
+// Distinct checksums of the files at a path, with the number of hosts each.
+function checksumsAt(path: string, selected: FileHost[] = typedHosts): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const h of selected) {
+    const sum = h.files[path];
+    if (sum) counts.set(sum, (counts.get(sum) ?? 0) + 1);
+  }
+  return counts;
+}
+const fileHref = (checksum: string) => `/entry/file/${checksum}`;
+const pathHref = (path: string) => `/entry/path/${encodeURIComponent(path)}`;
+
+test("the generated hosts have the policy files where CFEngine keeps them", async () => {
+  // The policy set is in inputs on every host and in masterfiles on hubHosts.
+  for (const h of linuxHosts) expect(h.files[INPUTS_PROMISES]).toMatch(/^[0-9a-f]{64}$/);
+  for (const h of windowsHosts) expect(h.files[WINDOWS_PROMISES]).toMatch(/^[0-9a-f]{64}$/);
+  for (const h of hubHosts) {
+    expect(h.files[MASTERFILES_PROMISES]).toBe(h.files[INPUTS_PROMISES]);
+  }
+  for (const h of typedHosts.filter((x) => x.role !== "Hub")) {
+    expect(h.files[MASTERFILES_PROMISES]).toBeUndefined();
+  }
+  // Every checksum has content (or, for binaries, at least a size).
+  for (const h of typedHosts) {
+    for (const [path, checksum] of Object.entries(h.files)) {
+      expect(fileContents[checksum], `${h.hostname} ${path}`).toBeDefined();
+    }
+  }
+  // Binaries have no content; the rest have content matching their size.
+  const hub = hubHosts[0]!;
+  const agent = fileContents[hub.files["/var/cfengine/bin/cf-agent"]!]!;
+  expect(agent.content).toBeNull();
+  expect(agent.size).toBeGreaterThan(1_000_000);
+  const promises = fileContents[hub.files[INPUTS_PROMISES]!]!;
+  expect(promises.content).toContain("promises.cf - Basic Policy for CFEngine");
+  expect(Buffer.byteLength(promises.content!, "utf8")).toBe(promises.size);
+  // One filename, several files: promises.cf differs between hosts.
+  expect(checksumsAt(INPUTS_PROMISES).size).toBeGreaterThan(1);
+  // One file, several paths: the same authorized_keys on many hosts.
+  expect(checksumsAt("/root/.ssh/authorized_keys").size).toBeGreaterThan(1);
+});
+
+test("a host page lists its files with their checksums in a Files modal", async ({ page }) => {
+  const hub = hubHosts[0]!;
+  await page.goto(`/entry/host/${hub.id}`);
+  const paths = Object.keys(hub.files).sort();
+  await expect(page.getByTestId("files-modal-open")).toHaveText(`${paths.length} present`);
+  await page.getByTestId("files-modal-open").click();
+  const dialog = page.getByTestId("files-modal-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: `Files on ${hub.hostname}` })).toBeVisible();
+  const rows = page.getByTestId("files-modal-list").locator("li[data-list-modal-row]");
+  await expect(rows).toHaveCount(paths.length);
+  // Each row: the path linking to its entry and the checksum to the file.
+  const first = rows.first();
+  await expect(first.locator(".type-badge")).toHaveText("path");
+  const links = first.locator("a.entry-link");
+  await expect(links.nth(0)).toHaveText(paths[0]!);
+  await expect(links.nth(0)).toHaveAttribute("href", pathHref(paths[0]!));
+  const firstSum = hub.files[paths[0]!]!;
+  await expect(links.nth(1)).toHaveText(firstSum.slice(0, 16));
+  await expect(links.nth(1)).toHaveAttribute("href", fileHref(firstSum));
+  // The filter narrows the list to matching paths.
+  await page.getByTestId("files-modal-filter").fill("promises.cf");
+  const matching = paths.filter((p) => p.includes("promises.cf"));
+  await expect(rows.locator("visible=true")).toHaveCount(matching.length);
+  await expect(page.getByTestId("files-modal-shown")).toHaveText(
+    `${matching.length} of ${paths.length} files match`,
+  );
+  // Following the checksum opens the file.
+  await page.getByTestId("files-modal-filter").fill("");
+  await links.nth(1).click();
+  await expect(page).toHaveURL(fileHref(firstSum));
+  await expect(page.getByTestId("entry-name")).toContainText(firstSum);
+});
+
+test("a file page shows its full content, the paths it is found at and its names", async ({
+  page,
+}) => {
+  const hub = hubHosts[0]!;
+  const checksum = hub.files[INPUTS_PROMISES]!;
+  const content = fileContents[checksum]!.content!;
+  const withFile = typedHosts.filter((h) => Object.values(h.files).includes(checksum));
+  await page.goto(fileHref(checksum));
+  // The title is the checksum, with the filename after it.
+  await expect(page.getByTestId("entry-name")).toHaveText(`${checksum} (promises.cf)`);
+  await expect(page.getByTestId("entry-type-link")).toHaveText("file");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `The file promises.cf (${(fileContents[checksum]!.size / 1000).toFixed(1)} kB), identified by its SHA-256 checksum.`,
+  );
+  // The Content tab is the first tab and shows the whole file.
+  await expect(page.getByTestId("content-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("content-heading")).toContainText("kB");
+  const lines = content.split("\n").length - 1;
+  await expect(page.getByTestId("content-description")).toHaveText(
+    `${(fileContents[checksum]!.size / 1000).toFixed(1)} kB, ${lines} lines:`,
+  );
+  const pre = page.getByTestId("file-content");
+  await expect(pre).toHaveText(content);
+  expect(await pre.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe("pre");
+  // The Paths tab: where the file is found, most hosts first.
+  const expectedPaths = new Map<string, number>();
+  for (const h of withFile) {
+    for (const [p, sum] of Object.entries(h.files)) {
+      if (sum === checksum) expectedPaths.set(p, (expectedPaths.get(p) ?? 0) + 1);
+    }
+  }
+  expect(expectedPaths.size).toBeGreaterThanOrEqual(2);
+  await expect(page.getByTestId("paths-heading")).toContainText(`Paths (${expectedPaths.size})`);
+  await page.getByTestId("paths-heading").click();
+  await expect(page.getByTestId("paths-description")).toHaveText("Paths where this file is found:");
+  const items = page.getByTestId("path-item");
+  await expect(items).toHaveCount(Math.min(PAGE_SIZE, expectedPaths.size));
+  const sorted = [...expectedPaths.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const [topPath, topPathCount] = sorted[0]!;
+  await expect(items.first().getByRole("link", { name: topPath })).toHaveAttribute("href", pathHref(topPath));
+  await expect(items.first().getByTestId("path-hosts-link")).toHaveText(
+    `${topPathCount} ${topPathCount === 1 ? "host" : "hosts"}`,
+  );
+  // The masterfiles copy on the hubHosts is among them.
+  await expect(page.getByTestId("paths").getByRole("link", { name: MASTERFILES_PROMISES })).toBeVisible();
+  // Checksums are not "similar" to each other; See also names the filename.
+  await expect(page.getByTestId("similar-heading")).toHaveText("Similar (0)");
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "promises.cf (filename)" })).toHaveAttribute(
+    "href",
+    "/entry/filename/promises.cf",
+  );
+  // Hosts on the right: everyone with the file.
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${withFile.length})`);
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `This file is found on ${withFile.length} hosts in your infrastructure, at ${expectedPaths.size} different paths.`,
+  );
+});
+
+test("a binary file has a checksum and size but no content", async ({ page }) => {
+  const checksum = hubHosts[0]!.files["/var/cfengine/bin/cf-agent"]!;
+  const mb = (fileContents[checksum]!.size / 1_000_000).toFixed(1);
+  await page.goto(fileHref(checksum));
+  await expect(page.getByTestId("entry-name")).toHaveText(`${checksum} (cf-agent)`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `The binary file cf-agent (${mb} MB). Its content is not available, only its checksum.`,
+  );
+  await expect(page.getByTestId("content-heading")).toHaveText(`Content (${mb} MB)`);
+  await expect(page.getByTestId("content-unavailable")).toHaveText(
+    `The content of this ${mb} MB binary file is not available, only its checksum.`,
+  );
+  await expect(page.getByTestId("file-content")).toHaveCount(0);
+  // The filename's description and links apply to the file too.
+  await expect(page.getByTestId("resources-heading")).toContainText("Resources (1)");
+  await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", "/logos/cfengine.svg");
+});
+
+test("a path page lists the different files found at it", async ({ page }) => {
+  const sums = checksumsAt(INPUTS_PROMISES);
+  expect(sums.size).toBe(2);
+  await page.goto(pathHref(INPUTS_PROMISES));
+  await expect(page.getByTestId("entry-name")).toHaveText(INPUTS_PROMISES);
+  await expect(page.getByTestId("entry-type-link")).toHaveText("path");
+  // Paths share their filename's description.
+  await expect(page.getByTestId("entry-description")).toContainText("The entry point of the CFEngine policy");
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `This path exists on ${linuxHosts.length} hosts in your infrastructure, with 2 different files (checksums).`,
+  );
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "promises.cf (filename)" })).toBeVisible();
+  // Files is the first tab: one card per checksum, most hosts first.
+  await expect(page.getByTestId("files-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("files-heading")).toHaveText("Files (2)");
+  await expect(page.getByTestId("files-description")).toHaveText(
+    "The file at this path differs between hosts; its checksums:",
+  );
+  const items = page.getByTestId("file-item");
+  await expect(items).toHaveCount(2);
+  const ranked = [...sums.entries()].sort((a, b) => b[1] - a[1]);
+  const [top, topCount] = ranked[0]!;
+  const [other, otherCount] = ranked[1]!;
+  await expect(items.nth(0).getByRole("link", { name: top.slice(0, 16) })).toHaveAttribute("href", fileHref(top));
+  await expect(items.nth(0).getByTestId("file-hosts-link")).toHaveText(`${topCount} hosts`);
+  await expect(items.nth(1).getByTestId("file-hosts-link")).toHaveText(`${otherCount} hosts`);
+  await expect(items.nth(0).locator(".host-facts")).toContainText("The file promises.cf");
+  // The hosts count links to a search for the hosts with that file at the path.
+  await items.nth(1).getByTestId("file-hosts-link").click();
+  await expect(page.getByTestId("search-input").nth(1)).toHaveValue(
+    `file:${other} path:${INPUTS_PROMISES}`,
+  );
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${otherCount} hosts matching file ${other}, path ${INPUTS_PROMISES}.`,
+  );
+  await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, otherCount));
+  // The stale policy is on the hosts that have not reported in.
+  const stale = linuxHosts.filter((h) => h.files[INPUTS_PROMISES] === other);
+  for (const h of stale) expect(h.online, h.hostname).toBe(false);
+});
+
+test("a filename page lists its paths and files across hosts", async ({ page }) => {
+  const paths = new Map<string, number>();
+  const sums = new Map<string, number>();
+  for (const h of typedHosts) {
+    for (const [p, sum] of Object.entries(h.files)) {
+      if (fileName(p) !== "promises.cf") continue;
+      paths.set(p, (paths.get(p) ?? 0) + 1);
+      sums.set(sum, (sums.get(sum) ?? 0) + 1);
+    }
+  }
+  expect([...paths.keys()].sort()).toEqual([MASTERFILES_PROMISES, INPUTS_PROMISES, WINDOWS_PROMISES].sort());
+  await page.goto("/entry/filename/promises.cf");
+  await expect(page.getByTestId("entry-name")).toHaveText("promises.cf");
+  await expect(page.getByTestId("entry-type-link")).toHaveText("filename");
+  await expect(page.getByTestId("entry-logo")).toHaveAttribute("src", "/logos/cfengine.svg");
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `Files named promises.cf exist on ${hosts.length} hosts in your infrastructure, at 3 different paths, with ${sums.size} different checksums.`,
+  );
+  await expect(page.getByTestId("paths-heading")).toHaveText("Paths (3)");
+  await expect(page.getByTestId("files-heading")).toHaveText(`Files (${sums.size})`);
+  await expect(page.getByTestId("paths-description")).toHaveText("Paths of files named promises.cf:");
+  const items = page.getByTestId("path-item");
+  await expect(items).toHaveCount(3);
+  // The inputs copy on every Linux host comes first, then Windows, then the hubHosts' masterfiles.
+  await expect(items.nth(0).getByRole("link", { name: INPUTS_PROMISES })).toBeVisible();
+  await expect(items.nth(0).getByTestId("path-hosts-link")).toHaveText(`${linuxHosts.length} hosts`);
+  await expect(items.nth(2).getByRole("link", { name: MASTERFILES_PROMISES })).toBeVisible();
+  await expect(items.nth(2).getByTestId("path-hosts-link")).toHaveText(`${hubHosts.length} hosts`);
+  // The Windows path opens like any other.
+  await items.nth(1).getByRole("link", { name: WINDOWS_PROMISES }).click();
+  await expect(page).toHaveURL(pathHref(WINDOWS_PROMISES));
+  await expect(page.getByTestId("entry-name")).toHaveText(WINDOWS_PROMISES);
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${windowsHosts.length})`);
+  // The Files tab of the filename lists every checksum.
+  await page.goto("/entry/filename/promises.cf?tab=files");
+  await expect(page.getByTestId("files-description")).toHaveText("Files named promises.cf, by checksum:");
+  await expect(page.getByTestId("file-item")).toHaveCount(sums.size);
+  // Similar filenames share a prefix.
+  await page.getByTestId("similar-heading").click();
+  await expect(page.getByTestId("similar-description")).toHaveText("Other filenames with similar names:");
+});
+
+test("a filename without hard coded information says so", async ({ page }) => {
+  await page.goto("/entry/filename/cf_agent.cf");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    "No information available about files with this name.",
+  );
+  await expect(page.getByTestId("resources-heading")).toHaveText("Resources (0)");
+});
+
+test("files, paths and filenames have front page buttons, listings and search filters", async ({
+  page,
+}) => {
+  const allSums = new Set(typedHosts.flatMap((h) => Object.values(h.files)));
+  const allPaths = new Set(typedHosts.flatMap((h) => Object.keys(h.files)));
+  const allNames = new Set([...allPaths].map(fileName));
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-file")).toHaveText(`Files (${allSums.size})`);
+  await expect(page.getByTestId("type-button-path")).toHaveText(`Paths (${allPaths.size})`);
+  await expect(page.getByTestId("type-button-filename")).toHaveText(`Filenames (${allNames.size})`);
+  await page.getByTestId("type-button-file").click();
+  await expect(page).toHaveURL("/search?type=file");
+  await expect(page.getByTestId("search-summary")).toHaveText(`${allSums.size} files in your infrastructure.`);
+  const items = page.getByTestId("search-results").locator("li");
+  await expect(items).toHaveCount(PAGE_SIZE);
+  // Files are listed by abbreviated checksum, with the full one as tooltip.
+  const first = items.first().locator("a.entry-link");
+  const label = (await first.textContent())!;
+  expect(label).toMatch(/^[0-9a-f]{16}$/);
+  await expect(first).toHaveAttribute("title", new RegExp(`^${label}[0-9a-f]{48}$`));
+
+  // path:<path> filters hosts; a Windows path needs quotes.
+  await page.goto(`/search?q=${encodeURIComponent("path:/etc/motd")}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${linuxHosts.length} hosts matching path /etc/motd.`,
+  );
+  await page.goto(`/search?q=${encodeURIComponent(`path:"${WINDOWS_PROMISES}"`)}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${windowsHosts.length} hosts matching path ${WINDOWS_PROMISES}.`,
+  );
+  // filename: and file: filters, combined.
+  const [sshd, sshdCount] = [...checksumsAt("/etc/ssh/sshd_config").entries()].sort((a, b) => b[1] - a[1])[0]!;
+  await page.goto(`/search?q=${encodeURIComponent(`filename:sshd_config file:${sshd}`)}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${sshdCount} hosts matching filename sshd_config, file ${sshd}.`,
+  );
+  // Searching for a filename finds the filename, its paths and its files.
+  await page.getByTestId("search-input").nth(1).fill("sshd_config");
+  await page.getByTestId("search-input").nth(1).press("Enter");
+  const results = page.getByTestId("search-results").locator("li");
+  await expect(results.filter({ has: page.getByRole("link", { name: "sshd_config", exact: true }) })).toHaveCount(1);
+  await expect(results.filter({ has: page.getByRole("link", { name: "/etc/ssh/sshd_config", exact: true }) })).toHaveCount(1);
+  await expect(results.filter({ hasText: "The file sshd_config" })).toHaveCount(checksumsAt("/etc/ssh/sshd_config").size);
+});
+
+test("a path can be pinned to show the checksum of its file on every host", async ({ page }) => {
+  const [a, b] = linuxHosts.filter((h) => h.role !== "Hub") as [FileHost, FileHost];
+  const win = windowsHosts[0]!;
+  await page.goto(`/entry/host/${a.id}`);
+  await page.getByTestId("files-modal-open").click();
+  const row = page
+    .getByTestId("files-modal-list")
+    .locator("li[data-list-modal-row]")
+    .filter({ has: page.getByRole("link", { name: "/etc/motd", exact: true }) });
+  await row.getByTestId("pin-button").click();
+  await expect(row.getByTestId("pin-button")).toHaveAttribute("aria-pressed", "true");
+  // Pinned: the path as the name, the checksum (linking to the file) as the value.
+  const pinned = page.getByTestId("pinned-list");
+  await expect(pinned.getByTestId("pinned-name")).toHaveText("/etc/motd");
+  const value = pinned.getByTestId("pinned-item").getByRole("link");
+  await expect(value).toHaveText(a.files["/etc/motd"]!.slice(0, 16));
+  await expect(value).toHaveAttribute("href", fileHref(a.files["/etc/motd"]!));
+  // On another host: its own checksum; on Windows: not present.
+  await page.goto(`/entry/host/${b.id}`);
+  await expect(pinned.getByTestId("pinned-item").getByRole("link")).toHaveText(
+    b.files["/etc/motd"]!.slice(0, 16),
+  );
+  await page.goto(`/entry/host/${win.id}`);
+  await expect(pinned.getByTestId("pinned-missing")).toHaveText("(not present)");
+  // Unpin from the host view.
+  await page.getByTestId("pinned-list").getByTestId("pin-button").click();
+  await expect(pinned.getByTestId("pinned-item")).toHaveCount(0);
 });

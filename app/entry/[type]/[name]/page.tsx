@@ -14,6 +14,7 @@ import {
   describeEntry,
   Entry,
   entrySeen,
+  fileNames,
   getEntry,
   getEntryLogo,
   getGroup,
@@ -94,6 +95,8 @@ export default async function EntryPage({
   const group = type === "group" ? getGroup(name) : undefined;
   const logo = getEntryLogo(entry);
   const portName = type === "port" ? getPortInfo(name)?.name : undefined;
+  // A file's title is its checksum, with the name(s) it goes by after it.
+  const hint = type === "port" ? portName : type === "file" ? fileNames(name).join(", ") : undefined;
   const summary = summarizeEntry(entry);
   const seen = entrySeen(entry);
 
@@ -130,10 +133,10 @@ export default async function EntryPage({
               data-testid="entry-logo"
             />
           )}
-          <h1 data-testid="entry-name">
-            {type === "port" && portName ? (
+          <h1 data-testid="entry-name" className={type === "file" ? "entry-name-checksum" : undefined}>
+            {hint ? (
               <>
-                {entry.name} <span className="muted">({portName})</span>
+                {entry.name} <span className="muted">({hint})</span>
               </>
             ) : (
               entry.name

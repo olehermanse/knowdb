@@ -52,6 +52,12 @@ function describeLinkedHosts(entry: Entry): string {
       const { software, version } = parseVersionEntryName(entry.name);
       return `Hosts with ${software} version ${version} installed:`;
     }
+    case "file":
+      return "Hosts with this file:";
+    case "path":
+      return `Hosts with a file at ${entry.name}:`;
+    case "filename":
+      return `Hosts with a file named ${entry.name}:`;
     default:
       return `Hosts linked to ${entry.name}:`;
   }
