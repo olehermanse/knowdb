@@ -3982,7 +3982,9 @@ test("the git promise type is defined with a promise agent block", async ({ page
   await expect(ref.getByTestId("file-line-link")).toHaveText("enable.cf:1");
   await expect(ref.getByTestId("file-line-link")).toHaveAttribute("href", `${fileHref(checksum)}#L1`);
   await page.goto("/");
-  await expect(page.getByTestId("type-button-promise-type")).toHaveText("Promise types (1)");
+  await expect(page.getByTestId("type-button-promise-type")).toHaveText("Custom promise types (1)");
+  await page.getByTestId("type-button-promise-type").click();
+  await expect(page.getByTestId("search-summary")).toHaveText("1 custom promise type in your infrastructure.");
 });
 
 test("a policy file lists what it defines, and the policy types have buttons and filters", async ({ page }) => {

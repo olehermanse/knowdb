@@ -184,8 +184,8 @@ Four entry types come from the CFEngine policy files themselves, indexed
 into `data/policy.json` by `scripts/index_policy.mjs` (run it after
 regenerating the hosts): `bundle` and `body`, named by their full heading
 `<keyword> <type> <name>` (`bundle agent main`, `body common control`);
-`promise-type`, a custom promise type defined with a `promise agent
-<name>` block; and `call`, a name called from the policy, named by the
+`promise-type`, labelled "Custom promise types", a custom promise type
+defined with a `promise agent <name>` block; and `call`, a name called from the policy, named by the
 callee (`ifelse`, `mog`). Variables promised in a `vars:` section, named
 `<bundle>.<name>` (`def.domain`), and classes promised in a `classes:`
 section are not separate types: they are `variable` and `class` entries

@@ -102,7 +102,7 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **IP and MAC addresses**: an address belonging to a single host shows
   that host; well-known addresses and ranges (`127.0.0.1`, `10.0.0.0/8`)
   are described in `data/info.json`.
-- **Bundles, bodies, promise types and calls**: what the CFEngine policy
+- **Bundles, bodies, custom promise types and calls**: what the CFEngine policy
   files define, indexed from their syntax trees. Each shows where in which
   file (with line links) it is defined or called. Variables and classes
   promised in the policy become variable and class entries with the same

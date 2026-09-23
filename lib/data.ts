@@ -901,7 +901,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   filename: "Filenames",
   bundle: "Bundles",
   body: "Bodies",
-  "promise-type": "Promise types",
+  "promise-type": "Custom promise types",
   call: "Calls",
 };
 
