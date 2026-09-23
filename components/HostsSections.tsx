@@ -58,6 +58,18 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts with a file at ${entry.name}:`;
     case "filename":
       return `Hosts with a file named ${entry.name}:`;
+    case "bundle":
+      return `Hosts whose policy defines the bundle ${entry.name}:`;
+    case "body":
+      return `Hosts whose policy defines the body ${entry.name}:`;
+    case "promise-type":
+      return `Hosts whose policy defines the promise type ${entry.name}:`;
+    case "function":
+      return `Hosts whose policy calls ${entry.name}:`;
+    case "policy-var":
+      return `Hosts whose policy defines the variable ${entry.name}:`;
+    case "policy-class":
+      return `Hosts whose policy defines the class ${entry.name}:`;
     default:
       return `Hosts linked to ${entry.name}:`;
   }

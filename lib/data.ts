@@ -3,6 +3,7 @@ import infoJson from "@/data/info.json";
 import groupsJson from "@/data/groups.json";
 import commentsJson from "@/data/comments.json";
 import filesJson from "@/data/files.json";
+import policyJson from "@/data/policy.json";
 
 export interface Host {
   os: string;
@@ -71,6 +72,73 @@ export function formatBytes(n: number): string {
 // The first 16 hex digits of a checksum, for lists and links.
 export function abbreviateChecksum(checksum: string): string {
   return checksum.length > 16 ? checksum.slice(0, 16) : checksum;
+}
+
+// What the CFEngine policy files define, from data/policy.json (written by
+// scripts/index_policy.mjs), keyed by the file's checksum.
+export interface PolicyBlockRef {
+  type: "bundle" | "body" | "promise-type";
+  // "agent main" for a bundle or body (type and name), the name for a
+  // promise type: the name of the corresponding entry.
+  name: string;
+}
+interface PolicyDefinition {
+  type: string;
+  name: string;
+  line: number;
+  parameters?: string[];
+}
+interface PolicyItem {
+  name: string;
+  line: number;
+  block: PolicyBlockRef;
+  // The type of a variable (string, slist, data, ...), if given.
+  type?: string;
+}
+interface PolicyCall {
+  name: string;
+  line: number;
+  block: PolicyBlockRef;
+  // The attribute the call is the value of, e.g. "if" or "usebundle".
+  attribute?: string;
+}
+export interface PolicyFile {
+  bundles: PolicyDefinition[];
+  bodies: PolicyDefinition[];
+  "promise-types": { name: string; line: number }[];
+  vars: PolicyItem[];
+  classes: PolicyItem[];
+  "function-calls": PolicyCall[];
+  errors: boolean;
+}
+const policyFiles = (policyJson as unknown as { files: Record<string, PolicyFile> }).files;
+
+export function getPolicyFile(checksum: string): PolicyFile | undefined {
+  return policyFiles[checksum];
+}
+
+// A place in a policy file where an entry is defined or used.
+export interface PolicyRef {
+  checksum: string;
+  line: number;
+  // The bundle or body the definition or call is in, for variables,
+  // classes and function calls.
+  block?: PolicyBlockRef;
+  // Extra words: a variable's type, a bundle's parameters, the attribute
+  // a function call is the value of.
+  detail?: string;
+}
+
+// Something defined or called inside a block or file, for Contents tabs.
+export interface PolicyContent {
+  entry: EntryRef;
+  checksum: string;
+  line: number;
+}
+
+// Link to a line of a file: the file page with a #L<n> anchor.
+export function fileLineHref(checksum: string, line: number): string {
+  return `${entryHref({ type: "file", name: checksum })}#L${line}`;
 }
 
 export type Role = "Hub" | "Client";
@@ -172,7 +240,24 @@ export type EntryType =
   // An absolute path a file is found at, e.g. "/var/cfengine/inputs/promises.cf".
   | "path"
   // The last component of a path, e.g. "promises.cf".
-  | "filename";
+  | "filename"
+  // Things defined in CFEngine policy files (data/policy.json): a bundle
+  // or body named "<type> <name>" ("agent main"), a custom promise type
+  // defined with a `promise agent` block, a function called from the
+  // policy, a variable named "<bundle>.<name>" and a class promised in a
+  // classes: section.
+  | "bundle"
+  | "body"
+  | "promise-type"
+  | "function"
+  | "policy-var"
+  | "policy-class";
+
+export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "function", "policy-var", "policy-class"];
+
+export function isPolicyType(type: EntryType): boolean {
+  return POLICY_TYPES.includes(type);
+}
 
 // A group of hosts, defined in data/groups.json by case-insensitive
 // substring matching on host fields. A host is in the group if, for every
@@ -255,7 +340,92 @@ export function normalizeName(name: string): string {
 }
 
 // Entry types whose names are worth matching against each other.
-const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service", "role"];
+const NAME_MATCH_TYPES: EntryType[] = ["os", "software", "user", "group", "class", "port", "cloud", "service", "role", "policy-class"];
+
+// Index the policy files: the entries each file gives rise to (to link
+// them to the hosts having the file), where each entry is defined or
+// called, and what each block and file contains. Calls of bodies
+// (`perms => mog(...)` with a body "perms mog") and of bundles
+// (`usebundle => name(...)`) are not functions.
+function indexPolicy() {
+  const entriesByFile = new Map<string, EntryRef[]>();
+  const refs = new Map<string, PolicyRef[]>();
+  const contents = new Map<string, PolicyContent[]>();
+  const bodyNames = new Set<string>();
+  for (const file of Object.values(policyFiles)) {
+    for (const b of file.bodies) bodyNames.add(`${b.type} ${b.name}`);
+  }
+  for (const [checksum, file] of Object.entries(policyFiles)) {
+    const own: EntryRef[] = [];
+    const seen = new Set<string>();
+    const add = (ref: EntryRef, line: number, extra: Omit<PolicyRef, "checksum" | "line"> = {}) => {
+      const key = entryKey(ref.type, ref.name);
+      if (!seen.has(key)) {
+        seen.add(key);
+        own.push(ref);
+      }
+      refs.set(key, [...(refs.get(key) ?? []), { checksum, line, ...extra }]);
+    };
+    const contain = (holder: EntryRef, entry: EntryRef, line: number) => {
+      const key = entryKey(holder.type, holder.name);
+      contents.set(key, [...(contents.get(key) ?? []), { entry, checksum, line }]);
+    };
+    const fileRef: EntryRef = { type: "file", name: checksum };
+    for (const b of file.bundles) {
+      const ref: EntryRef = { type: "bundle", name: `${b.type} ${b.name}` };
+      add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
+      contain(fileRef, ref, b.line);
+    }
+    for (const b of file.bodies) {
+      const ref: EntryRef = { type: "body", name: `${b.type} ${b.name}` };
+      add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
+      contain(fileRef, ref, b.line);
+    }
+    for (const p of file["promise-types"]) {
+      const ref: EntryRef = { type: "promise-type", name: p.name };
+      add(ref, p.line);
+      contain(fileRef, ref, p.line);
+    }
+    for (const v of file.vars) {
+      const bundle = v.block.name.split(" ").pop() ?? v.block.name;
+      const ref: EntryRef = { type: "policy-var", name: `${bundle}.${v.name}` };
+      add(ref, v.line, { block: v.block, detail: v.type });
+      contain(v.block, ref, v.line);
+    }
+    for (const c of file.classes) {
+      const ref: EntryRef = { type: "policy-class", name: c.name };
+      add(ref, c.line, { block: c.block });
+      contain(c.block, ref, c.line);
+    }
+    for (const call of file["function-calls"]) {
+      if (call.attribute === "usebundle") continue;
+      if (call.attribute && bodyNames.has(`${call.attribute} ${call.name}`)) continue;
+      const ref: EntryRef = { type: "function", name: call.name };
+      add(ref, call.line, { block: call.block, detail: call.attribute && `${call.attribute} =>` });
+      contain(call.block, ref, call.line);
+    }
+    entriesByFile.set(checksum, own);
+  }
+  return { entriesByFile, refs, contents };
+}
+
+const policy = indexPolicy();
+
+// Where an entry is defined (bundles, bodies, promise types, variables,
+// classes) or called (functions): by file, then line.
+export function getPolicyRefs(entry: EntryRef): PolicyRef[] {
+  return [...(policy.refs.get(entryKey(entry.type, entry.name)) ?? [])].sort(
+    (a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line,
+  );
+}
+
+// What a block (bundle, body, promise type) or a policy file contains:
+// definitions and calls, by file, then line.
+export function getPolicyContents(entry: EntryRef): PolicyContent[] {
+  return [...(policy.contents.get(entryKey(entry.type, entry.name)) ?? [])].sort(
+    (a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line,
+  );
+}
 
 function buildIndex() {
   const hostsByKey = new Map<string, Host>();
@@ -309,6 +479,8 @@ function buildIndex() {
       link("path", path, host.id);
       link("file", checksum, host.id);
       link("filename", filename, host.id);
+      // A host has everything its policy files define.
+      for (const ref of policy.entriesByFile.get(checksum) ?? []) link(ref.type, ref.name, host.id);
       pathsByFilename.set(filename, (pathsByFilename.get(filename) ?? new Set()).add(path));
       namesByFile.set(checksum, (namesByFile.get(checksum) ?? new Set()).add(filename));
     }
@@ -662,6 +834,12 @@ export const ENTRY_TYPES: EntryType[] = [
   "file",
   "path",
   "filename",
+  "bundle",
+  "body",
+  "promise-type",
+  "function",
+  "policy-var",
+  "policy-class",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -685,6 +863,12 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   file: "Files",
   path: "Paths",
   filename: "Filenames",
+  bundle: "Bundles",
+  body: "Bodies",
+  "promise-type": "Promise types",
+  function: "Functions",
+  "policy-var": "Policy variables",
+  "policy-class": "Policy classes",
 };
 
 // What to show for an entry in lists and links: its name, except for files
@@ -832,6 +1016,8 @@ interface Info {
   variables: Record<string, DescribedInfo>;
   // Well-known filenames such as "promises.cf" or "sshd_config".
   filenames: Record<string, DescribedInfo>;
+  // CFEngine built-in functions such as "ifelse".
+  functions: Record<string, DescribedInfo>;
 }
 
 export interface ServiceInfo extends DescribedInfo {
@@ -919,6 +1105,19 @@ export function getFilenameInfo(name: string): DescribedInfo | undefined {
   return info.filenames[name];
 }
 
+export function getFunctionInfo(name: string): DescribedInfo | undefined {
+  return info.functions[name];
+}
+
+// Every built-in function has a page in the CFEngine reference.
+export function functionDocsLink(name: string): ExternalLink {
+  return {
+    title: `Function ${name}`,
+    source: "docs.cfengine.com",
+    url: `https://docs.cfengine.com/docs/master/reference-functions-${name}.html`,
+  };
+}
+
 export function getUserInfo(name: string): DescribedInfo | undefined {
   return info.users[name];
 }
@@ -946,6 +1145,7 @@ export function getOsColor(os: string): string {
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
   if (entry.type === "version" || entry.type === "value") return [];
+  if (entry.type === "function") return getFunctionInfo(entry.name)?.links ?? [functionDocsLink(entry.name)];
   return infoFor(entry)?.links ?? [];
 }
 
@@ -984,6 +1184,8 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
       return getFilenameInfo(fileNameOf(entry.name));
     case "file":
       return fileNames(entry.name).map(getFilenameInfo).find((i) => i !== undefined);
+    case "function":
+      return getFunctionInfo(entry.name);
     default:
       return undefined;
   }
@@ -1022,6 +1224,13 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
     related.push({ type: "filename", name: fileNameOf(entry.name) });
   } else if (entry.type === "file") {
     for (const name of fileNames(entry.name)) related.push({ type: "filename", name });
+  } else if (entry.type === "policy-var" || entry.type === "policy-class") {
+    // The bundle(s) defining the variable or class.
+    for (const ref of getPolicyRefs(entry)) {
+      if (ref.block && !related.some((r) => r.type === ref.block!.type && r.name === ref.block!.name)) {
+        related.push({ type: ref.block.type, name: ref.block.name });
+      }
+    }
   } else if (entry.type === "role") {
     // The two roles point at each other; both run CFEngine, and hubs are
     // also marked by the policy server classes.
@@ -1065,6 +1274,7 @@ export const NO_SERVICE_INFO = "No information available about this service.";
 export const NO_ROLE_INFO = "No information available about this role.";
 export const NO_VARIABLE_INFO = "No information available about this variable.";
 export const NO_FILENAME_INFO = "No information available about files with this name.";
+export const NO_FUNCTION_INFO = "A function called from the CFEngine policy.";
 
 const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   host: "A machine reporting data to CFEngine, identified by its SHA-256 host key.",
@@ -1086,7 +1296,49 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   file: "A file, identified by the SHA-256 checksum of its content.",
   path: "The absolute path of a file on a host.",
   filename: "The name of a file, without its directory.",
+  bundle: "A bundle defined in the CFEngine policy.",
+  body: "A body defined in the CFEngine policy.",
+  "promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
+  function: "A function called from the CFEngine policy.",
+  "policy-var": "A variable defined in a bundle of the CFEngine policy.",
+  "policy-class": "A class defined in a bundle of the CFEngine policy.",
 };
+
+// "promises.cf and update.cf": the distinct names of the files an entry
+// is defined in, from its references.
+function refFileNames(entry: EntryRef): string {
+  const names = [...new Set(getPolicyRefs(entry).flatMap((r) => fileNames(r.checksum)))].sort();
+  if (names.length <= 2) return names.join(" and ");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+function describePolicyEntry(entry: EntryRef): string {
+  const files = refFileNames(entry);
+  const where = files ? ` in ${files}` : "";
+  switch (entry.type) {
+    case "bundle": {
+      const params = getPolicyRefs(entry).find((r) => r.detail)?.detail;
+      return `The bundle ${entry.name}${params ? ` with ${params}` : ""}, defined${where}.`;
+    }
+    case "body":
+      return `The body ${entry.name}, defined${where}.`;
+    case "promise-type":
+      return `The custom promise type ${entry.name}, defined with a promise agent block${where}.`;
+    case "policy-var": {
+      const refs = getPolicyRefs(entry);
+      const type = refs.find((r) => r.detail)?.detail;
+      const bundle = refs[0]?.block?.name;
+      return `The ${type ? `${type} ` : ""}variable ${entry.name}${bundle ? ` of bundle ${bundle}` : ""}, defined${where}.`;
+    }
+    case "policy-class": {
+      const bundles = [...new Set(getPolicyRefs(entry).map((r) => r.block?.name).filter(Boolean))].sort();
+      const inBundles = bundles.length > 0 ? ` by bundle ${bundles.join(" and ")}` : "";
+      return `The class ${entry.name}, defined${inBundles}${where}.`;
+    }
+    default:
+      return TYPE_DESCRIPTIONS[entry.type];
+  }
+}
 
 // "The file promises.cf (3.2 kB), identified by its SHA-256 checksum." or,
 // for a binary, that only the checksum is known.
@@ -1156,6 +1408,12 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "path") {
     const known = getFilenameInfo(fileNameOf(entry.name));
     if (known) return known.description;
+  }
+  if (entry.type === "function") {
+    return getFunctionInfo(entry.name)?.description ?? NO_FUNCTION_INFO;
+  }
+  if (isPolicyType(entry.type)) {
+    return describePolicyEntry(entry);
   }
   return TYPE_DESCRIPTIONS[entry.type];
 }
@@ -1271,6 +1529,21 @@ export function summarizeEntry(entry: Entry): string {
       return `This path exists on ${hosts} in your infrastructure, with ${plural(aggregateFilesAtPath(entry.name, entry.hosts).length, "different file")} (${n === 1 || aggregateFilesAtPath(entry.name, entry.hosts).length === 1 ? "checksum" : "checksums"}).`;
     case "filename":
       return `Files named ${entry.name} exist on ${hosts} in your infrastructure, at ${plural(aggregatePathsOfFilename(entry.name, entry.hosts).length, "different path")}, with ${plural(aggregateFilesOfFilename(entry.name, entry.hosts).length, "different checksum")}.`;
+    case "bundle":
+    case "body":
+    case "promise-type":
+    case "policy-var":
+    case "policy-class": {
+      const refs = getPolicyRefs(entry);
+      const files = new Set(refs.map((r) => r.checksum)).size;
+      return `Defined ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
+    }
+    case "function": {
+      const refs = getPolicyRefs(entry);
+      const files = new Set(refs.map((r) => r.checksum)).size;
+      const blocks = new Set(refs.map((r) => r.block?.name)).size;
+      return `${entry.name} is called ${plural(refs.length, "time")} from ${plural(blocks, "bundle or body", "bundles and bodies")} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
+    }
     case "host": {
       const host = hostsByKey.get(entry.name);
       return host ? describeHost(host) : "";

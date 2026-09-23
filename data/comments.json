@@ -54,7 +54,7 @@
       "text": "Most of the AWS fleet is in eu-north-1. The metadata service is reachable on 169.254.169.254 as usual."
     }
   ],
-  "host:SHA=5941d26486bee5dcd8dcf0acf702dd3b551005b03da89094554d0dba5ffbe382": [
+  "host:SHA=0a186140a62755339c980f2dd29f37c15526dae2dc3e85dc916c31c8412eb225": [
     {
       "author": "Craig",
       "time": "2026-09-14T06:40:00Z",

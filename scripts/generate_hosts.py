@@ -26,6 +26,17 @@ CLASSES_PATH = ROOT / "data" / "classes.json"
 # cfbs). Every file in it ends up in /var/cfengine/masterfiles on the hubs
 # and in /var/cfengine/inputs on every host.
 MASTERFILES_PATH = ROOT / "tmp" / "proj" / "out" / "masterfiles"
+# The cfengine/modules repository, for the git promise type module: the
+# policy set gets it as if added with `cfbs add promise-type-git`, so the
+# example data has a custom promise type (the MPF defines none).
+MODULES_PATH = ROOT.parent / "modules"
+GIT_PROMISE_TYPE_CF = """promise agent git
+# @brief Define git promise type
+{
+  path => "$(sys.workdir)/modules/promises/git.py";
+  interpreter => "/usr/bin/python3";
+}
+"""
 
 # CFEngine hard classes per operating system, from data/classes.json.
 with open(CLASSES_PATH) as _f:
@@ -589,6 +600,11 @@ def load_masterfiles():
     for path in sorted(MASTERFILES_PATH.rglob("*")):
         if path.is_file():
             policy[path.relative_to(MASTERFILES_PATH).as_posix()] = add_file(path.read_text())
+    # The git promise type module, where cfbs puts module files.
+    policy["services/cfbs/modules/promise-type-git/enable.cf"] = add_file(GIT_PROMISE_TYPE_CF)
+    git_py = MODULES_PATH / "promise-types" / "git" / "git.py"
+    if git_py.is_file():
+        policy["modules/promises/git.py"] = add_file(git_py.read_text())
     return policy
 
 

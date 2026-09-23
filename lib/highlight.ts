@@ -77,23 +77,43 @@ export function captureClass(name: string): string {
   return `hl-${name.replace(/\./g, "-")}`;
 }
 
-// Turn the captures into nested <span> elements over the escaped source.
-// Captures are sorted by start (outer before inner when they start at the
-// same place); a second capture of exactly the same range is dropped, and
-// one that only partly overlaps the span it is inside is skipped.
+// Turn the captures into nested <span> elements over the escaped source,
+// with every line wrapped in <span class="line" id="L<n>"> so links can
+// point at a line. Captures are sorted by start (outer before inner when
+// they start at the same place); a second capture of exactly the same
+// range is dropped, and one that only partly overlaps the span it is
+// inside is skipped. A capture spanning several lines is closed at the end
+// of each line and reopened on the next.
 function render(source: string, captures: QueryCapture[]): string {
   const ranges = captures
     .map((c) => ({ name: c.name, start: c.node.startIndex, end: c.node.endIndex }))
     .filter((r) => r.end > r.start)
     .sort((a, b) => a.start - b.start || b.end - a.end);
-  let html = "";
+  let html = `<span class="line" id="L1">`;
+  let lineNo = 1;
   let pos = 0;
-  const open: { end: number }[] = [];
+  const open: { end: number; cls: string }[] = [];
   let last: { start: number; end: number } | undefined;
+  // Escaped text with the line spans (and the open highlight spans) broken
+  // around every newline.
+  const emit = (text: string) => {
+    const lines = text.split("\n");
+    lines.forEach((part, i) => {
+      html += escapeHtml(part);
+      if (i === lines.length - 1) return;
+      for (let k = 0; k < open.length; k++) html += "</span>";
+      html += "</span>\n";
+      lineNo++;
+      html += `<span class="line" id="L${lineNo}">`;
+      for (const o of open) html += `<span class="${o.cls}">`;
+    });
+  };
   const closeUntil = (index: number) => {
     while (open.length > 0 && open[open.length - 1]!.end <= index) {
-      const { end } = open.pop()!;
-      html += escapeHtml(source.slice(pos, end)) + "</span>";
+      const { end } = open[open.length - 1]!;
+      emit(source.slice(pos, end));
+      open.pop();
+      html += "</span>";
       pos = end;
     }
   };
@@ -102,13 +122,23 @@ function render(source: string, captures: QueryCapture[]): string {
     closeUntil(r.start);
     const parent = open[open.length - 1];
     if (parent && r.end > parent.end) continue;
-    html += escapeHtml(source.slice(pos, r.start)) + `<span class="${captureClass(r.name)}">`;
+    emit(source.slice(pos, r.start));
+    const cls = captureClass(r.name);
+    html += `<span class="${cls}">`;
     pos = r.start;
-    open.push({ end: r.end });
+    open.push({ end: r.end, cls });
     last = r;
   }
   closeUntil(source.length);
-  return html + escapeHtml(source.slice(pos));
+  // A trailing newline ends the last line rather than starting an empty one.
+  const rest = source.slice(pos);
+  emit(rest.endsWith("\n") ? rest.slice(0, -1) : rest);
+  return html + "</span>";
+}
+
+// Plain text with line anchors, for files that are not highlighted.
+export function plainLines(source: string): string {
+  return render(source, []);
 }
 
 // The source as HTML with highlighting spans; plain escaped text if the

@@ -3,7 +3,7 @@ import EntryLink from "@/components/EntryLink";
 import Comments from "@/components/Comments";
 import Pagination, { paginate } from "@/components/Pagination";
 import { hostsLabel } from "@/components/PortsSection";
-import { highlightCfengine, isCfengineFile } from "@/lib/highlight";
+import { highlightCfengine, isCfengineFile, plainLines } from "@/lib/highlight";
 import {
   describeEntry,
   fileNames,
@@ -19,11 +19,16 @@ import {
   entryHref,
   externalLinkLabel,
   FileCount,
+  fileLineHref,
   formatBytes,
   getComments,
   getEntryLinks,
   getFileContent,
+  getPolicyContents,
+  getPolicyRefs,
   filterSearchHref,
+  isPolicyType,
+  abbreviateChecksum,
   parseValueEntryName,
   PathCount,
   valueEntryName,
@@ -31,11 +36,14 @@ import {
 } from "@/lib/data";
 
 // The entry's own tabs, shown on the left of an entry page: versions (for
-// software), values (for variables), content and paths (for files), files
-// (for paths), paths and files (for filenames), similar entries, resources
+// software), values (for variables), content, paths and contents (for
+// files), files (for paths), paths and files (for filenames), references
+// and contents (for things defined in policy), similar entries, resources
 // and comments. The hosts' ports are a tab on the right, with the hosts.
 export type Tab =
   | "content"
+  | "references"
+  | "contents"
   | "versions"
   | "values"
   | "paths"
@@ -43,7 +51,18 @@ export type Tab =
   | "similar"
   | "resources"
   | "comments";
-const TAB_ORDER: Tab[] = ["content", "versions", "values", "paths", "files", "similar", "resources", "comments"];
+const TAB_ORDER: Tab[] = [
+  "content",
+  "references",
+  "contents",
+  "versions",
+  "values",
+  "paths",
+  "files",
+  "similar",
+  "resources",
+  "comments",
+];
 
 export function parseTab(raw: string | string[] | undefined): Tab | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
@@ -59,6 +78,11 @@ export function entryTabs(entry: Entry): Tab[] {
   if (entry.type === "file") tabs.push("content", "paths");
   if (entry.type === "path") tabs.push("files");
   if (entry.type === "filename") tabs.push("paths", "files");
+  if (isPolicyType(entry.type)) tabs.push("references");
+  // Policy files and blocks list what they define; empty for other files.
+  if (entry.type === "file" || entry.type === "bundle" || entry.type === "body" || entry.type === "promise-type") {
+    if (getPolicyContents(entry).length > 0) tabs.push("contents");
+  }
   tabs.push("similar", "resources", "comments");
   return tabs;
 }
@@ -230,6 +254,120 @@ function ValuesPanel({ entry, tabs, page, keep }: PanelProps) {
   );
 }
 
+// "promises.cf" with the checksum after it, linking to a line of the file.
+function FileLineLink({ checksum, line }: { checksum: string; line: number }) {
+  const names = fileNames(checksum);
+  return (
+    <>
+      <Link href={fileLineHref(checksum, line)} className="entry-link" data-testid="file-line-link">
+        {names.join(", ") || abbreviateChecksum(checksum)}:{line}
+      </Link>{" "}
+      <span className="muted host-id" title={checksum}>
+        ({abbreviateChecksum(checksum)})
+      </span>
+    </>
+  );
+}
+
+// Where a bundle, body, promise type, variable or class is defined, or a
+// function called: one card per place, with the file and line and, for
+// things inside a block, the bundle or body they are in.
+function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
+  const refs = getPolicyRefs(entry);
+  const paged = paginate(refs, page);
+  const verb = entry.type === "function" ? "called" : "defined";
+  return (
+    <>
+      <p className="muted" data-testid="references-description">
+        Where {entry.name} is {verb} in the policy:
+      </p>
+      {refs.length === 0 && <p className="muted">None</p>}
+      <ul className="entry-list" data-testid="references">
+        {paged.shown.map((ref, i) => (
+          <li key={`${ref.checksum}:${ref.line}:${i}`} className="host-item" data-testid="reference-item">
+            <span className="type-badge">file</span>
+            <div className="host-summary">
+              <div>
+                <FileLineLink checksum={ref.checksum} line={ref.line} />
+              </div>
+              <div className="muted host-facts">
+                <span>Line {ref.line}</span>
+                {ref.block && (
+                  <span data-testid="reference-block">
+                    In {ref.block.type === "promise-type" ? "promise type" : ref.block.type}{" "}
+                    <EntryLink type={ref.block.type} name={ref.block.name} />
+                  </span>
+                )}
+                {ref.detail && <span data-testid="reference-detail">{ref.detail}</span>}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        keep={keep}
+        tab="references"
+        page={page}
+        total={refs.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="places"
+      />
+    </>
+  );
+}
+
+// What a policy file or block contains: the bundles, bodies and promise
+// types of a file; the variables, classes and function calls of a block.
+function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
+  const contents = getPolicyContents(entry);
+  const paged = paginate(contents, page);
+  return (
+    <>
+      <p className="muted" data-testid="contents-description">
+        {entry.type === "file"
+          ? "Defined in this file:"
+          : `Defined or called in ${entry.type === "promise-type" ? "promise type" : entry.type} ${entry.name}:`}
+      </p>
+      <ul className="entry-list" data-testid="contents">
+        {paged.shown.map((item, i) => (
+          <li key={`${item.entry.type}:${item.entry.name}:${item.line}:${i}`} className="host-item" data-testid="content-item">
+            <span className="type-badge">{item.entry.type}</span>
+            <div className="host-summary">
+              <div>
+                <EntryLink type={item.entry.type} name={item.entry.name} />
+              </div>
+              <div className="muted host-facts">
+                <Link href={fileLineHref(item.checksum, item.line)} className="entry-link" data-testid="content-line-link">
+                  Line {item.line}
+                </Link>
+                {entry.type !== "file" && <span>{fileNames(item.checksum).join(", ")}</span>}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        keep={keep}
+        tab="contents"
+        page={page}
+        total={contents.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="items"
+      />
+    </>
+  );
+}
+
 // The full content of a file, or a note that only its checksum is known.
 // CFEngine policy (files named *.cf) is syntax highlighted with
 // tree-sitter-cfengine (see lib/highlight.ts).
@@ -268,9 +406,11 @@ async function ContentPanel({ entry }: { entry: Entry }) {
   return (
     <>
       {description}
-      <pre className="file-content" data-testid="file-content">
-        {file.content}
-      </pre>
+      <pre
+        className="file-content"
+        data-testid="file-content"
+        dangerouslySetInnerHTML={{ __html: plainLines(file.content) }}
+      />
     </>
   );
 }
@@ -478,6 +618,8 @@ export default function RelatedHosts({
   const current = tab && enabled.includes(tab) ? tab : enabled[0];
   const counts: Record<Tab, number> = {
     content: 0,
+    references: isPolicyType(entry.type) ? getPolicyRefs(entry).length : 0,
+    contents: getPolicyContents(entry).length,
     similar: similarCount,
     resources: resourceCount,
     comments: getComments(entry).length,
@@ -492,6 +634,8 @@ export default function RelatedHosts({
     t === "content" ? (file ? formatBytes(file.size) : "unavailable") : String(counts[t]);
   const labels: Record<Tab, string> = {
     content: "Content",
+    references: "References",
+    contents: "Contents",
     versions: "Versions",
     values: "Values",
     paths: "Paths",
@@ -502,6 +646,8 @@ export default function RelatedHosts({
   };
   const testIds: Record<Tab, string> = {
     content: "content-heading",
+    references: "references-heading",
+    contents: "contents-heading",
     versions: "versions-heading",
     values: "values-heading",
     paths: "paths-heading",
@@ -552,6 +698,12 @@ export default function RelatedHosts({
       {current && (
         <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
           {current === "content" && <ContentPanel entry={entry} />}
+          {current === "references" && (
+            <ReferencesPanel entry={entry} tabs={tabs} page={page} keep={keep} />
+          )}
+          {current === "contents" && (
+            <ContentsPanel entry={entry} tabs={tabs} page={page} keep={keep} />
+          )}
           {current === "versions" && (
             <VersionsPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}
