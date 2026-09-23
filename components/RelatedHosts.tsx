@@ -294,7 +294,7 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
                 <span>Line {ref.line}</span>
                 {ref.block && (
                   <span data-testid="reference-block">
-                    In {ref.block.type === "promise-type" ? "promise type" : ref.block.type}{" "}
+                    In {ref.block.type === "promise-type" ? "promise type " : ""}
                     <EntryLink type={ref.block.type} name={ref.block.name} />
                   </span>
                 )}
@@ -334,7 +334,7 @@ function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
       <p className="muted" data-testid="contents-description">
         {entry.type === "file"
           ? "Defined in this file:"
-          : `Defined or called in ${entry.type === "promise-type" ? "promise type" : entry.type} ${entry.name}:`}
+          : `Defined or called in ${entry.type === "promise-type" ? "promise type " : ""}${entry.name}:`}
       </p>
       <ul className="entry-list" data-testid="contents">
         {paged.shown.map((item, i) => (

@@ -78,8 +78,9 @@ export function abbreviateChecksum(checksum: string): string {
 // scripts/index_policy.mjs), keyed by the file's checksum.
 export interface PolicyBlockRef {
   type: "bundle" | "body" | "promise-type";
-  // "agent main" for a bundle or body (type and name), the name for a
-  // promise type: the name of the corresponding entry.
+  // "bundle agent main" or "body common control" (keyword, type and name)
+  // for a bundle or body, the name for a promise type: the name of the
+  // corresponding entry.
   name: string;
 }
 interface PolicyDefinition {
@@ -248,7 +249,7 @@ export type EntryType =
   // The last component of a path, e.g. "promises.cf".
   | "filename"
   // Things defined in CFEngine policy files (data/policy.json): a bundle
-  // or body named "<type> <name>" ("agent main"), a custom promise type
+  // or body named "<keyword> <type> <name>" ("bundle agent main"), a custom promise type
   // defined with a `promise agent` block, something called from the
   // policy (a function, bundle or body), a variable named
   // "<bundle>.<name>" and a class promised in a classes: section.
@@ -386,12 +387,12 @@ function indexPolicy() {
     };
     const fileRef: EntryRef = { type: "file", name: checksum };
     for (const b of file.bundles) {
-      const ref: EntryRef = { type: "bundle", name: `${b.type} ${b.name}` };
+      const ref: EntryRef = { type: "bundle", name: `bundle ${b.type} ${b.name}` };
       add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
       contain(fileRef, ref, b.line);
     }
     for (const b of file.bodies) {
-      const ref: EntryRef = { type: "body", name: `${b.type} ${b.name}` };
+      const ref: EntryRef = { type: "body", name: `body ${b.type} ${b.name}` };
       add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
       contain(fileRef, ref, b.line);
     }
@@ -1334,8 +1335,8 @@ function describeCall(name: string): string {
   const parts: string[] = [];
   // A bundle or body not defined in the policy (a dynamic name like
   // `$(handlers)`, or one from elsewhere) is still a bundle or body call.
-  if (kinds.includes("bundle")) parts.push(bundles.length > 0 ? `the bundle ${bundles.join(" or ")}` : "a bundle");
-  if (kinds.includes("body")) parts.push(bodies.length > 0 ? `the body ${bodies.join(" or ")}` : "a body");
+  if (kinds.includes("bundle")) parts.push(bundles.length > 0 ? `the ${bundles.join(" or the ")}` : "a bundle");
+  if (kinds.includes("body")) parts.push(bodies.length > 0 ? `the ${bodies.join(" or the ")}` : "a body");
   if (kinds.includes("function") || parts.length === 0) parts.push("a function");
   const what = parts.length === 1 ? parts[0]! : `${parts.slice(0, -1).join(", ")} or ${parts[parts.length - 1]}`;
   return `Calls of ${what} from the CFEngine policy.`;
@@ -1383,21 +1384,21 @@ function describePolicyEntry(entry: EntryRef): string {
   switch (entry.type) {
     case "bundle": {
       const params = getPolicyRefs(entry).find((r) => r.detail)?.detail;
-      return `The bundle ${entry.name}${params ? ` with ${params}` : ""}, defined${where}.`;
+      return `The ${entry.name}${params ? ` with ${params}` : ""}, defined${where}.`;
     }
     case "body":
-      return `The body ${entry.name}, defined${where}.`;
+      return `The ${entry.name}, defined${where}.`;
     case "promise-type":
       return `The custom promise type ${entry.name}, defined with a promise agent block${where}.`;
     case "policy-var": {
       const refs = getPolicyRefs(entry);
       const type = refs.find((r) => r.detail)?.detail;
       const bundle = refs[0]?.block?.name;
-      return `The ${type ? `${type} ` : ""}variable ${entry.name}${bundle ? ` of bundle ${bundle}` : ""}, defined${where}.`;
+      return `The ${type ? `${type} ` : ""}variable ${entry.name}${bundle ? ` of ${bundle}` : ""}, defined${where}.`;
     }
     case "policy-class": {
       const bundles = [...new Set(getPolicyRefs(entry).map((r) => r.block?.name).filter(Boolean))].sort();
-      const inBundles = bundles.length > 0 ? ` by bundle ${bundles.join(" and ")}` : "";
+      const inBundles = bundles.length > 0 ? ` by ${bundles.join(" and ")}` : "";
       return `The class ${entry.name}, defined${inBundles}${where}.`;
     }
     default:

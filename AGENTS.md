@@ -182,8 +182,8 @@ exactly those hosts.
 
 Six entry types come from the CFEngine policy files themselves, indexed
 into `data/policy.json` by `scripts/index_policy.mjs` (run it after
-regenerating the hosts): `bundle` and `body`, named `<type> <name>`
-(`agent main`, `common control`); `promise-type`, a custom promise type
+regenerating the hosts): `bundle` and `body`, named by their full heading
+`<keyword> <type> <name>` (`bundle agent main`, `body common control`); `promise-type`, a custom promise type
 defined with a `promise agent <name>` block; `call`, a name called from
 the policy, named by the callee (`ifelse`, `mog`); `policy-var`, a
 variable promised in a `vars:` section, named `<bundle>.<name>`
@@ -195,7 +195,8 @@ body `perms mog` exists) or of a function otherwise; the reference says
 to ("Calls of the body perms mog"), and "See also" links the bundle or
 body. Only functions get a documentation link. Hosts are linked to
 everything their policy files define, so the right pane works as for any
-entry, and `call:ifelse` or `bundle:"common def"` work as search filters.
+entry, and `call:ifelse` or `bundle:"bundle common def"` work as search
+filters.
 
 Every entry has a References tab (first) listing each place it is defined
 or called: `def.cf:12` linking to the file page with a `#L12` anchor, the

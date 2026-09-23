@@ -105,7 +105,8 @@ function indexFile(source) {
       const def = { type, name, line: line(block) };
       if (parameters.length > 0) def.parameters = parameters;
       out[kind === "bundle" ? "bundles" : "bodies"].push(def);
-      indexBlock(block, { type: kind, name: `${type} ${name}` }, out);
+      // Blocks are referred to by their full heading: "bundle agent main".
+      indexBlock(block, { type: kind, name: `${kind} ${type} ${name}` }, out);
     } else if (block.type === "promise_block") {
       const name = child(block, "promise_block_name")?.text ?? "";
       out["promise-types"].push({ name, line: line(block) });

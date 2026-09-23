@@ -59,9 +59,9 @@ function describeLinkedHosts(entry: Entry): string {
     case "filename":
       return `Hosts with a file named ${entry.name}:`;
     case "bundle":
-      return `Hosts whose policy defines the bundle ${entry.name}:`;
+      return `Hosts whose policy defines ${entry.name}:`;
     case "body":
-      return `Hosts whose policy defines the body ${entry.name}:`;
+      return `Hosts whose policy defines ${entry.name}:`;
     case "promise-type":
       return `Hosts whose policy defines the promise type ${entry.name}:`;
     case "call":
