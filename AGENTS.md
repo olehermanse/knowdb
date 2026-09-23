@@ -212,7 +212,8 @@ href="#L<n>" data-line="<n>">` whose number is drawn by CSS (so it is not
 copied with the text) and links to the line. The line the URL's `#L<n>`
 points at gets the `line-target` class from the inline script on load,
 navigation and `hashchange` (`:target` alone does not follow client-side
-navigation) and is marked with a background.
+navigation) and is marked with a background; it is scrolled to with about
+five lines of context above it (`scroll-margin-top`).
 
 The indexer parses with the tree-sitter grammar in
 `public/tree-sitter-cfengine.wasm`, the same grammar `cfengine dev

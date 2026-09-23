@@ -868,8 +868,9 @@ a.type-badge:hover {
    attribute so it is not copied with the text; clicking it links to the
    line). The targeted line is marked; the class is set by the inline
    script, since :target does not follow client-side navigation. */
+/* Jumping to a line leaves about five lines of context above it. */
 .file-content .line {
-  scroll-margin-top: 1rem;
+  scroll-margin-top: calc(5 * 1.4 * 0.8rem + 1rem);
 }
 .file-content .line-number {
   display: inline-block;

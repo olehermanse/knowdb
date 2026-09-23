@@ -3766,7 +3766,11 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   expect(await line.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(
     await pre.evaluate((el) => getComputedStyle(el).backgroundColor),
   );
-  expect(await line.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(0);
+  // The line is not at the very top: about five lines of context above it.
+  const lineHeight = await line.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+  const top = await line.evaluate((el) => el.getBoundingClientRect().top);
+  expect(top).toBeGreaterThanOrEqual(4 * lineHeight);
+  expect(top).toBeLessThanOrEqual(8 * lineHeight);
   // All hosts have the policy.
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hostsWithFile(def.checksum).length})`);
 });
