@@ -8,6 +8,7 @@ import UserDetailsSection from "@/components/UserDetails";
 import FunctionDetails from "@/components/FunctionDetails";
 import PromiseTypeDetails from "@/components/PromiseTypeDetails";
 import PolicySetDetails from "@/components/PolicySetDetails";
+import FileDetails from "@/components/FileDetails";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import { cookies } from "next/headers";
@@ -177,6 +178,7 @@ export default async function EntryPage({
           {type === "function" && <FunctionDetails entry={entry} />}
           {type === "built-in-promise-type" && <PromiseTypeDetails entry={entry} />}
           {type === "policy-set" && <PolicySetDetails entry={entry} />}
+          {type === "file" && <FileDetails entry={entry} />}
           <RelatedHosts
             entry={entry}
             tabs={entryTabs(entry)}

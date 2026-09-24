@@ -61,7 +61,8 @@ each other, and files and paths to their filename.
 
 A host runs one policy set, `policy-set`: the checksum of an entry in
 `data/policy-sets.json`, which holds the set's `version` (what
-promises.cf states) and its `files`, relative path to checksum. The
+promises.cf states), its `size` (the files' sizes in bytes) and its
+`files`, relative path to checksum. The
 checksum of a set is the SHA-256 of its file list, one `<relative path>
 <checksum>` line per file, sorted. Hosts report the set, not each policy
 file: the frontend derives the absolute paths from the host's
@@ -72,12 +73,13 @@ the path, file and filename entries and their host links); the Files
 modal on a host page lists only the reported files. `policy-set` is an
 entry type ("Policy sets"), named by the checksum and shown as version
 first, checksum in parentheses (`3.27.1 (b3b6ad10f549e2c1)`), with the
-version, checksum and file count as details, a Files tab listing the
+version, checksum, file count and size as details, a Files tab listing the
 files by their path in the tree, the same Blocks, Promise types, Calls,
 Variables and Classes tabs as a file (over all its files, each row naming
 its file and block), the hosts running it on the right, and no similar
 entries. A host page shows its policy set below Role and Hub; a file
-lists the policy sets containing it in "See also". The generator makes
+page has a "Policy sets" field below its description (not in "See also")
+linking to the sets containing it, when there are any. The generator makes
 two sets: the current release on hubs and online hosts, and the previous
 release (promises.cf, update.cf and standalone_self_upgrade.cf naming the
 older version) on hosts that have not reported in for a while.

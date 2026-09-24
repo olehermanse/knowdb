@@ -54,6 +54,8 @@ export interface Host {
 // SHA-256 of its file list, with the version promises.cf states.
 export interface PolicySet {
   version: string;
+  // Total size of the files in bytes.
+  size: number;
   // Relative path in the policy tree -> checksum (see data/files.json).
   files: Record<string, string>;
 }
@@ -1558,8 +1560,8 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
   } else if (entry.type === "path") {
     related.push({ type: "filename", name: fileNameOf(entry.name) });
   } else if (entry.type === "file") {
+    // The policy sets containing the file are fields on its page instead.
     for (const name of fileNames(entry.name)) related.push({ type: "filename", name });
-    for (const set of policySetsWithFile(entry.name)) related.push({ type: "policy-set", name: set });
   } else if (entry.type === "call") {
     // The bundle(s) or body(ies) the name refers to.
     related.push(...calledBlocks(entry.name));
@@ -1797,7 +1799,7 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "policy-set") {
     const set = policySets[entry.name];
     if (set) {
-      return `CFEngine policy set version ${set.version} with ${plural(Object.keys(set.files).length, "file")}, identified by the SHA-256 checksum of its file list.`;
+      return `CFEngine policy set version ${set.version} with ${plural(Object.keys(set.files).length, "file")} (${formatBytes(set.size)}), identified by the SHA-256 checksum of its file list.`;
     }
   }
   if (entry.type === "filename") {

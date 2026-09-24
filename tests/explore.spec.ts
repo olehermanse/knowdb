@@ -3303,7 +3303,7 @@ test("filters appended to a type listing stay in the search bar and narrow the l
 // each checksum is in data/files.json.
 type FileHost = Omit<Host, "files"> & { files: Record<string, string>; "policy-set": string | null };
 const policySets = (policySetsJson as unknown as {
-  "policy-sets": Record<string, { version: string; files: Record<string, string> }>;
+  "policy-sets": Record<string, { version: string; size: number; files: Record<string, string> }>;
 })["policy-sets"];
 // Every file on a host: the ones it reports plus its policy set's files in
 // its inputs directory (and masterfiles on a hub), as lib/data.ts derives.
@@ -4319,8 +4319,11 @@ test("a policy set has a version, a checksum, its hosts, its files and everythin
   await expect(page.getByTestId("entry-name")).toHaveText(`${set.version} (${checksum})`);
   await expect(page.getByTestId("entry-type-link")).toHaveText("policy-set");
   const fileCount = Object.keys(set.files).length;
+  const size = Object.values(set.files).reduce((n, sum) => n + fileContents[sum]!.size, 0);
+  expect(set.size).toBe(size);
+  const sizeText = size >= 1_000_000 ? `${Number((size / 1_000_000).toFixed(1))} MB` : `${Number((size / 1000).toFixed(1))} kB`;
   await expect(page.getByTestId("entry-description")).toHaveText(
-    `CFEngine policy set version ${set.version} with ${fileCount} files, identified by the SHA-256 checksum of its file list.`,
+    `CFEngine policy set version ${set.version} with ${fileCount} files (${sizeText}), identified by the SHA-256 checksum of its file list.`,
   );
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `${running.length} hosts in your infrastructure run this policy set.`,
@@ -4328,6 +4331,7 @@ test("a policy set has a version, a checksum, its hosts, its files and everythin
   await expect(page.getByTestId("policy-set-version")).toHaveText(set.version);
   await expect(page.getByTestId("policy-set-checksum")).toHaveText(checksum);
   await expect(page.getByTestId("policy-set-files")).toHaveText(String(fileCount));
+  await expect(page.getByTestId("policy-set-size")).toHaveText(sizeText);
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${running.length})`);
   // Files: every file of the set by its path in the policy tree.
   await expect(page.getByTestId("files-heading")).toHaveAttribute("aria-selected", "true");
@@ -4365,11 +4369,22 @@ test("a policy set has a version, a checksum, its hosts, its files and everythin
   const link = page.getByTestId("host-policy-set").getByRole("link");
   await expect(link).toHaveText(`${policySets[hub["policy-set"]!]!.version} (${hub["policy-set"]!.slice(0, 16)})`);
   await expect(link).toHaveAttribute("href", `/entry/policy-set/${hub["policy-set"]}`);
+  // A file names its policy sets as a field below its description, not in
+  // See also. cfbs.json is in both sets; the previous promises.cf in one.
   await page.goto(fileHref(set.files["cfbs.json"]!));
-  await expect(page.getByTestId("see-also").getByRole("link", { name: `${label} (policy-set)` })).toHaveAttribute(
-    "href",
-    `/entry/policy-set/${checksum}`,
+  const field = page.getByTestId("file-policy-sets");
+  await expect(field.getByRole("link")).toHaveCount(Object.keys(policySets).length);
+  await expect(field.getByRole("link", { name: label })).toHaveAttribute("href", `/entry/policy-set/${checksum}`);
+  await expect(page.getByTestId("see-also").getByRole("link", { name: /policy-set/ })).toHaveCount(0);
+  const [otherSum, other] = Object.entries(policySets).find(([sum]) => sum !== checksum)!;
+  await page.goto(fileHref(other.files["promises.cf"]!));
+  await expect(page.getByTestId("file-policy-sets").getByRole("link")).toHaveCount(1);
+  await expect(page.getByTestId("file-policy-sets").getByRole("link")).toHaveText(
+    `${other.version} (${otherSum.slice(0, 16)})`,
   );
+  // A file outside any policy set has no such field.
+  await page.goto(fileHref(hub.files["/etc/motd"]!));
+  await expect(page.getByTestId("file-details")).toHaveCount(0);
   // And the hosts running it are a search away.
   await page.goto(`/search?q=${encodeURIComponent(`policy-set:${checksum}`)}`);
   await expect(page.getByTestId("search-summary")).toHaveText(
