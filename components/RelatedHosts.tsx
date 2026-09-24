@@ -171,19 +171,19 @@ function VersionsPanel({ entry, tabs, page, keep }: PanelProps) {
       <ul className="entry-list" data-testid="versions">
         {paged.shown.map(({ version, hosts }) => {
           const name = versionEntryName(entry.name, version);
-          const searchHref = filterSearchHref([{ type: "version", name }]);
+          const searchHref = filterSearchHref([{ type: "software-version", name }]);
           return (
             <li key={version} className="host-item" data-testid="version-item">
-              <span className="type-badge">version</span>
+              <span className="type-badge">software-version</span>
               <div className="host-summary">
                 <div>
-                  <EntryLink type="version" name={name} />
+                  <EntryLink type="software-version" name={name} />
                 </div>
                 <div className="muted host-facts">
                   <Link href={searchHref} className="entry-link" data-testid="version-hosts-link">
                     {hostsLabel(hosts)}
                   </Link>
-                  <span>{describeEntry({ type: "version", name })}</span>
+                  <span>{describeEntry({ type: "software-version", name })}</span>
                 </div>
               </div>
             </li>

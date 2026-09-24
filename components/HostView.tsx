@@ -226,7 +226,7 @@ function HostLists({ host }: { host: Host }) {
                 extra: version
                   ? {
                       label: version,
-                      href: entryHref({ type: "version", name: versionEntryName(sw, version) }),
+                      href: entryHref({ type: "software-version", name: versionEntryName(sw, version) }),
                     }
                   : undefined,
               };

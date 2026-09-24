@@ -53,7 +53,7 @@ function describeLinkedHosts(entry: Entry): string {
       const { variable, value } = parseValueEntryName(entry.name);
       return `Hosts where ${variable} is ${value}:`;
     }
-    case "version": {
+    case "software-version": {
       const { software, version } = parseVersionEntryName(entry.name);
       return `Hosts with ${software} version ${version} installed:`;
     }

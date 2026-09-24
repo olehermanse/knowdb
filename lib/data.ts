@@ -283,7 +283,7 @@ export type EntryType =
   | "group"
   | "class"
   // A specific version of a piece of software, named "<software> <version>".
-  | "version"
+  | "software-version"
   // A cloud provider hosts run in (AWS, Azure, ...).
   | "cloud"
   // A running systemd service, e.g. "sshd".
@@ -564,7 +564,7 @@ function buildIndex() {
     for (const sw of host.software) {
       link("software", sw, host.id);
       const version = host["software-versions"]?.[sw];
-      if (version) link("version", versionEntryName(sw, version), host.id);
+      if (version) link("software-version", versionEntryName(sw, version), host.id);
     }
     for (const user of host["local-users"]) link("user", user, host.id);
     for (const cls of host.classes ?? []) link("class", cls, host.id);
@@ -925,7 +925,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "user",
   "group",
   "class",
-  "version",
+  "software-version",
   "cloud",
   "service",
   "role",
@@ -954,7 +954,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   user: "Users",
   group: "Groups",
   class: "Classes",
-  version: "Versions",
+  "software-version": "Software versions",
   cloud: "Clouds",
   service: "Services",
   role: "Roles",
@@ -1244,7 +1244,7 @@ export function getOsColor(os: string): string {
 // External links for an entry, from info.json. Empty for entry types
 // without hard coded information (hosts, IPs, ...).
 export function getEntryLinks(entry: EntryRef): ExternalLink[] {
-  if (entry.type === "version" || entry.type === "value") return [];
+  if (entry.type === "software-version" || entry.type === "value") return [];
   if (entry.type === "function" || entry.type === "function-call") {
     return getFunctionInfo(entry.name)?.links ?? [functionDocsLink(entry.name)];
   }
@@ -1278,7 +1278,7 @@ function infoFor(entry: EntryRef): DescribedInfo | undefined {
     case "value":
       // Values share the variable's logo (they have no links of their own).
       return getVariableInfo(parseValueEntryName(entry.name).variable);
-    case "version":
+    case "software-version":
       // Versions share the software's description, links and logo.
       return getSoftwareInfo(parseVersionEntryName(entry.name).software);
     case "filename":
@@ -1306,7 +1306,7 @@ export function getEntryLogo(entry: EntryRef): string | undefined {
 // entries that exist in the infrastructure are returned.
 export function getSeeAlso(entry: EntryRef): EntryRef[] {
   const related: EntryRef[] = [];
-  if (entry.type === "version") {
+  if (entry.type === "software-version") {
     related.push({ type: "software", name: parseVersionEntryName(entry.name).software });
   } else if (entry.type === "value") {
     related.push({ type: "variable", name: parseValueEntryName(entry.name).variable });
@@ -1426,7 +1426,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   user: "A local user account present on a host.",
   group: "A group of hosts, defined in groups.json.",
   class: "A CFEngine class reported by hosts, describing something true about them.",
-  version: "A specific version of a piece of software.",
+  "software-version": "A specific version of a piece of software.",
   cloud: "A cloud provider that hosts run in.",
   service: "A systemd service running on hosts.",
   role: "A host's CFEngine role: a hub the clients report to, or a client.",
@@ -1539,7 +1539,7 @@ export function describeEntry(entry: EntryRef): string {
     const { variable, value } = parseValueEntryName(entry.name);
     return `The variable ${variable} has the value ${value}.`;
   }
-  if (entry.type === "version") {
+  if (entry.type === "software-version") {
     const { software, version } = parseVersionEntryName(entry.name);
     return `Version ${version} of ${software}.`;
   }
@@ -1653,7 +1653,7 @@ export function summarizeEntry(entry: Entry): string {
       const versionsText = versions > 0 ? `, in ${plural(versions, "different version")}` : "";
       return `${entry.name} is installed on ${hosts} in your infrastructure, across ${oses()}${versionsText}.`;
     }
-    case "version":
+    case "software-version":
       // Version pages are kept short: the software page has the numbers.
       return "";
     case "variable": {

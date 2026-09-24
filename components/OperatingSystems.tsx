@@ -7,7 +7,7 @@ export const OS_SECTION_SUBJECTS: Partial<Record<EntryType, string>> = {
   group: "group",
   class: "class",
   software: "software",
-  version: "software version",
+  "software-version": "software version",
   port: "port",
   user: "local user",
   hostname: "hostname",
@@ -44,7 +44,7 @@ function sectionText(type: EntryType, subject: string, name: string): string {
     const { variable, value } = parseValueEntryName(name);
     return `The hosts where ${variable} is ${value} run these operating systems:`;
   }
-  if (type === "version") {
+  if (type === "software-version") {
     return `The ${name} software version is installed on these operating systems:`;
   }
   return `Operating systems of the hosts with this ${subject}:`;

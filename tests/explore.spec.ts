@@ -130,7 +130,7 @@ test("front page always shows at least one entry of each type", async ({
     "user",
     "group",
     "class",
-    "version",
+    "software-version",
     "cloud",
     "service",
     "role",
@@ -1510,16 +1510,16 @@ test("software has versions which are entries of their own", async ({
   const ranked = [...versions.entries()].sort((a, b) => b[1] - a[1]);
   const [topVersion, topCount] = ranked[0];
   const first = items.first();
-  await expect(first.locator(".type-badge")).toHaveText("version");
+  await expect(first.locator(".type-badge")).toHaveText("software-version");
   // Named like in search results: "cfengine 3.27.0", with the description.
   await expect(
     first.getByRole("link", { name: `cfengine ${topVersion}`, exact: true }),
-  ).toHaveAttribute("href", `/entry/version/${encodeURIComponent(`cfengine ${topVersion}`)}`);
+  ).toHaveAttribute("href", `/entry/software-version/${encodeURIComponent(`cfengine ${topVersion}`)}`);
   await expect(first).toContainText(`Version ${topVersion} of cfengine.`);
   await expect(first.getByTestId("version-hosts-link")).toHaveText(`${topCount} hosts`);
   await expect(first.getByTestId("version-hosts-link")).toHaveAttribute(
     "href",
-    `/search?q=${encodeURIComponent(`version:"cfengine ${topVersion}"`)}`,
+    `/search?q=${encodeURIComponent(`software-version:"cfengine ${topVersion}"`)}`,
   );
   await expect(page.getByTestId("entry-summary")).toContainText(
     `in ${versions.size} different versions`,
@@ -1756,7 +1756,7 @@ test("host pages show software versions as links", async ({ page }) => {
     const item = list.locator("li", { has: page.getByRole("link", { name: sw, exact: true }) });
     await expect(item.getByRole("link", { name: version, exact: true })).toHaveAttribute(
       "href",
-      `/entry/version/${encodeURIComponent(`${sw} ${version}`)}`,
+      `/entry/software-version/${encodeURIComponent(`${sw} ${version}`)}`,
     );
   }
 });
@@ -1849,7 +1849,7 @@ test("pinned software, classes and variables follow the user between hosts", asy
   const version = (linux["software-versions"] as unknown as Record<string, string>)[software];
   await expect(items.nth(1).getByRole("link", { name: version, exact: true })).toHaveAttribute(
     "href",
-    `/entry/version/${encodeURIComponent(`${software} ${version}`)}`,
+    `/entry/software-version/${encodeURIComponent(`${software} ${version}`)}`,
   );
   await expect(items.nth(1)).toHaveText(version);
   const flavor = variablesOf(linux)["sys.flavor"];
@@ -2387,7 +2387,7 @@ test("a version on a single operating system has no operating systems section", 
   );
   test.skip(!single, "every multi-host software version spans several operating systems");
   const [name] = single!;
-  await page.goto(`/entry/version/${encodeURIComponent(name)}`);
+  await page.goto(`/entry/software-version/${encodeURIComponent(name)}`);
   await expect(page.getByTestId("hosts-heading")).toBeVisible();
   await expect(page.getByTestId("section-os")).toHaveCount(0);
   await expect(page.getByTestId("os-pie")).toHaveCount(0);

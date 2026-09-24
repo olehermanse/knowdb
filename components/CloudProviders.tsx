@@ -9,7 +9,7 @@ function sectionText(entry: Entry): string {
       return `The hosts with ${entry.name} installed run in these clouds:`;
     case "service":
       return `The hosts running ${entry.name} run in these clouds:`;
-    case "version":
+    case "software-version":
       return `The hosts with ${entry.name} run in these clouds:`;
     case "os":
       return `The ${entry.name} hosts run in these clouds:`;

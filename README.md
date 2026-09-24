@@ -80,8 +80,9 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
   can be pinned to show on every host page.
 - **Ports**: the ports hosts listen on, with a common name such as `ssh`
   for port 22 and a description.
-- **Software**: installed packages. A software page has a Versions tab, and
-  each version (`apache 2.4.62`) is an entry of its own.
+- **Software and software versions**: installed packages. A software page
+  has a Versions tab, and each software version (`apache 2.4.62`) is an
+  entry of its own.
 - **Services**: running systemd units on Linux hosts, such as `sshd` or
   `nginx`. A service can belong to a software, which links the two.
 - **Local users**: accounts on the hosts, with their home directories,
