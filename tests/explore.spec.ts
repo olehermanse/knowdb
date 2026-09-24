@@ -143,6 +143,7 @@ test("front page always shows at least one entry of each type", async ({
     "body",
     "custom-promise-type",
     "call",
+    "function-call",
     "function",
   ];
   // The sample is random, so check several page loads.
@@ -2321,7 +2322,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(24);
+  await expect(buttons).toHaveCount(25);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -3756,7 +3757,7 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   const first = [...contents].sort((a, b) => a.line - b.line)[0]!;
   await expect(items.first().getByTestId("content-line-link")).toHaveText(`Line ${first.line}`);
   await expect(items.first().locator(".host-facts")).toContainText("def.cf");
-  await expect(items.first().locator(".type-badge")).toHaveText(/^(variable|class|call)$/);
+  await expect(items.first().locator(".type-badge")).toHaveText(/^(variable|class|call|function-call)$/);
   // The variables are named bundle.name.
   const someVar = items.filter({ has: page.locator(".type-badge", { hasText: "variable" }) }).first();
   await expect(someVar.getByRole("link").first()).toHaveText(/^def\./);
@@ -3783,15 +3784,22 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hostsWithFile(def.checksum).length})`);
 });
 
-test("a call page lists the calls with the bundle or body they are in", async ({ page }) => {
+test("a function call page lists the calls with the bundle or body they are in", async ({ page }) => {
   const calls = callsOf("ifelse");
   expect(calls.length).toBeGreaterThan(PAGE_SIZE);
   const blocks = new Set(calls.map((c) => c.block.name)).size;
   const files = new Set(calls.map((c) => c.checksum)).size;
+  // A call of a built-in function is a function call, not a call.
   await page.goto("/entry/call/ifelse");
-  await expect(page.getByTestId("entry-type-link")).toHaveText("call");
+  await expect(page.getByText("404")).toBeVisible();
+  await page.goto("/entry/function-call/ifelse");
+  await expect(page.getByTestId("entry-type-link")).toHaveText("function-call");
   await expect(page.getByTestId("entry-description")).toHaveText(
-    "Returns the value after the first true class expression among its arguments, or the last argument as the default.",
+    "Calls of the built-in function ifelse from the CFEngine policy.",
+  );
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (function)" })).toHaveAttribute(
+    "href",
+    "/entry/function/ifelse",
   );
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `ifelse is called ${calls.length} times from ${blocks} bundles and bodies in ${files} policy files, on ${hosts.length} hosts in your infrastructure.`,
@@ -3835,17 +3843,17 @@ test("a call page lists the calls with the bundle or body they are in", async ({
     .filter((n) => /^[a-z_]+$/.test(n) && !known.has(n) && !bodyShortNames.has(n) && !bundleNames.has(n))
     .filter((n) => callsOf(n).every((c) => c.attribute !== "usebundle"))
     .sort()[0]!;
-  await page.goto(`/entry/call/${encodeURIComponent(other)}?tab=resources`);
-  // A built-in function is described from the syntax description.
-  await expect(page.getByTestId("entry-description")).toContainText(
-    `A built-in CFEngine function in the ${builtinFunctions[other]!.category} category that returns `,
+  await page.goto(`/entry/function-call/${encodeURIComponent(other)}?tab=resources`);
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `Calls of the built-in function ${other} from the CFEngine policy.`,
   );
   await expect(page.getByTestId("resource-item").getByRole("link").first()).toHaveAttribute(
     "href",
     `https://docs.cfengine.com/docs/master/reference-functions-${other}.html`,
   );
-  // Calls of a body: mog is body perms mog. Each call says so and the
-  // body is in See also; there is no function documentation to link to.
+  // Calls of a body: mog is body perms mog (also called as default:mog).
+  // Each call says so and the body is in See also; there is no function
+  // documentation to link to.
   const mog = callsOf("mog");
   expect(mog.length).toBeGreaterThan(0);
   await page.goto("/entry/call/mog");
@@ -3862,6 +3870,7 @@ test("a call page lists the calls with the bundle or body they are in", async ({
     .flatMap((f) => f.calls)
     .find((c) => c.attribute === "usebundle")!;
   await page.goto(`/entry/call/${encodeURIComponent(bundleCall.name)}`);
+  await expect(page.getByTestId("entry-type-link")).toHaveText("call");
   await expect(page.getByTestId("entry-description")).toContainText(`Calls of the bundle `);
   await expect(page.getByTestId("entry-description")).toContainText(` ${bundleCall.name} `);
   await expect(page.getByTestId("reference-item").filter({ hasText: "Bundle call" }).first()).toBeVisible();
@@ -4019,13 +4028,29 @@ test("a policy file lists what it defines, and the policy types have buttons and
   await expect(page.getByTestId("type-button-bundle")).toHaveText(`Bundles (${bundles.size})`);
   await expect(page.getByTestId("type-button-body")).toHaveText(`Bodies (${bodies.size})`);
   await expect(page.getByTestId("type-button-call")).toContainText("Calls (");
+  await expect(page.getByTestId("type-button-function-call")).toContainText("Function calls (");
   // Search filters: the hosts whose policy has it.
-  await page.goto(`/search?q=${encodeURIComponent('call:ifelse bundle:"bundle common def"')}`);
+  await page.goto(`/search?q=${encodeURIComponent('function-call:ifelse bundle:"bundle common def"')}`);
   await expect(page.getByTestId("search-summary")).toHaveText(
-    `${hosts.length} hosts matching call ifelse, bundle bundle common def.`,
+    `${hosts.length} hosts matching function-call ifelse, bundle bundle common def.`,
   );
   await page.goto(`/search?q=${encodeURIComponent("custom-promise-type:git")}`);
   await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching custom-promise-type git.`);
+});
+
+test("every call is a function call, a bundle call or a body call", async () => {
+  // Cross-referencing the callees with the built-in functions splits the
+  // calls: those matching a function (with or without the default:
+  // namespace) are function calls, the rest bundle or body calls.
+  const callees = new Set(Object.values(policyFiles).flatMap((f) => f.calls.map((c) => c.name.replace(/^default:/, ""))));
+  const functionCalls = [...callees].filter((n) => n in builtinFunctions);
+  const otherCalls = [...callees].filter((n) => !(n in builtinFunctions));
+  expect(functionCalls.length).toBeGreaterThan(50);
+  expect(otherCalls.length).toBeGreaterThan(10);
+  expect(functionCalls).toContain("ifelse");
+  expect(otherCalls).toContain("mog");
+  // default:mog and mog are the same body.
+  expect(Object.values(policyFiles).flatMap((f) => f.calls).some((c) => c.name === "default:mog")).toBe(true);
 });
 
 test("every built-in function is an entry, called or not", async ({ page }) => {
@@ -4060,17 +4085,11 @@ test("every built-in function is an entry, called or not", async ({ page }) => {
   await expect(page.getByTestId("references-heading")).toHaveText(`References (${calls.length})`);
   await expect(page.getByTestId("references-description")).toHaveText("Where ifelse is called in the policy:");
   await expect(page.getByTestId("reference-item").first().getByTestId("reference-block")).toContainText("In ");
-  await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (call)" })).toHaveAttribute(
+  await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (function-call)" })).toHaveAttribute(
     "href",
-    "/entry/call/ifelse",
+    "/entry/function-call/ifelse",
   );
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${hosts.length})`);
-  // And the call entry links back to the function.
-  await page.goto("/entry/call/ifelse");
-  await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (function)" })).toHaveAttribute(
-    "href",
-    "/entry/function/ifelse",
-  );
 
   // A function the policy never calls: described from the syntax
   // description, with documentation but no hosts or references.

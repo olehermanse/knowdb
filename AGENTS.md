@@ -180,13 +180,15 @@ exactly those hosts.
 
 ## Bundles, bodies, promise types, calls, and the policy's variables and classes
 
-Four entry types come from the CFEngine policy files themselves, indexed
+Five entry types come from the CFEngine policy files themselves, indexed
 into `data/policy.json` by `scripts/index_policy.mjs` (run it after
 regenerating the hosts): `bundle` and `body`, named by their full heading
 `<keyword> <type> <name>` (`bundle agent main`, `body common control`);
 `custom-promise-type`, labelled "Custom promise types", a custom promise type
-defined with a `promise agent <name>` block; and `call`, a name called from the policy, named by the
-callee (`ifelse`, `mog`). Variables promised in a `vars:` section, named
+defined with a `promise agent <name>` block; `function-call`, a call of a
+built-in function (the callee, without a `default:` namespace prefix, is
+in `data/functions.json`), named by the function (`ifelse`); and `call`,
+any other call, named by the callee (`mog`). Variables promised in a `vars:` section, named
 `<bundle>.<name>` (`def.domain`), and classes promised in a `classes:`
 section are not separate types: they are `variable` and `class` entries
 like the ones hosts report, so a class both set on hosts and promised in
@@ -198,15 +200,18 @@ description falls back to where the policy defines it when `info.json`
 has none, the Values tab appears only when hosts report values, and the
 References tab whenever the policy defines it.
 
-Each call is of a bundle (the value of `usebundle`, or a bare call of a
-defined bundle's name), of a body (`perms => mog(...)` where a body
-`perms mog` exists) or of a function otherwise; the reference says
-"Bundle call" or "Body call", the description says what the name refers
-to ("Calls of the body perms mog"), and "See also" links the bundle or
-body. Only functions get a documentation link. Hosts are linked to
-everything their policy files define, so the right pane works as for any
-entry, and `call:ifelse` or `bundle:"bundle common def"` work as search
-filters.
+A `call` is of a body when it is the value of an attribute other than
+`usebundle` (`perms => mog(...)`) and of a bundle otherwise (`usebundle
+=> name(...)`, or a bare call); the reference says "Bundle call" or "Body
+call", the description says what the name refers to ("Calls of the body
+perms mog", or "a bundle" for a dynamic name like `$(handlers)`), and
+"See also" links the bundle or body. A `function-call` is described as
+"Calls of the built-in function ifelse from the CFEngine policy.", links
+the `function` entry (and back) in "See also", and has the function's
+documentation link. Hosts are linked to everything their policy files
+define, so the right pane works as for any entry, and
+`function-call:ifelse`, `call:mog` or `bundle:"bundle common def"` work as
+search filters.
 
 Every entry the policy defines or calls has a References tab (first,
 after Values for a variable) listing each place: `def.cf:12` linking to
@@ -258,13 +263,13 @@ one, else "A built-in CFEngine function in the data category that returns
 a string." (return types are worded: context is "a class", slist "a list
 of strings", ...), plus " It is deprecated." for deprecated functions.
 Calls of a built-in function are also references of the function, so a
-function page has the same References tab as its call entry, the two link
+function page has the same References tab as its function-call entry, the two link
 to each other in "See also", and hosts are linked to the functions their
 policy calls; a function nobody calls has no hosts ("The policy on your
 hosts does not call this function.") and the summary "x is not called
 from the policy on your hosts." Only built-in functions get the
-documentation link, and a bare call of a name that is both a bundle and a
-built-in function counts as a function call.
+documentation link, and a call of a name that is a built-in function
+counts as a function call even where a bundle or body of that name exists.
 
 ## Syntax highlighting of CFEngine policy
 

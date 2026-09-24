@@ -107,9 +107,11 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **Functions**: every built-in CFEngine function, with its signature,
   parameters and return type from the CFEngine CLI's syntax description,
   and where the policy calls it.
-- **Bundles, bodies, custom promise types and calls**: what the CFEngine policy
-  files define, indexed from their syntax trees. Each shows where in which
-  file (with line links) it is defined or called. Variables and classes
+- **Bundles, bodies, custom promise types, function calls and calls**:
+  what the CFEngine policy files define, indexed from their syntax trees.
+  A call of a built-in function is a function call; other calls are of
+  bundles or bodies. Each shows where in which file (with line links) it
+  is defined or called. Variables and classes
   promised in the policy become variable and class entries with the same
   references, next to the ones hosts report.
 - **Files, paths and filenames**: the notable files on each host, such as

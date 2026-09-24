@@ -276,7 +276,7 @@ function FileLineLink({ checksum, line }: { checksum: string; line: number }) {
 function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
   const refs = getPolicyRefs(entry);
   const paged = paginate(refs, page);
-  const verb = entry.type === "call" || entry.type === "function" ? "called" : "defined";
+  const verb = ["call", "function-call", "function"].includes(entry.type) ? "called" : "defined";
   return (
     <>
       <p className="muted" data-testid="references-description">
@@ -299,7 +299,7 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
                     <EntryLink type={ref.block.type} name={ref.block.name} />
                   </span>
                 )}
-                {ref.kind && ref.kind !== "function" && (
+                {ref.kind && (
                   <span data-testid="reference-kind">{ref.kind === "bundle" ? "Bundle call" : "Body call"}</span>
                 )}
                 {ref.detail && <span data-testid="reference-detail">{ref.detail}</span>}
