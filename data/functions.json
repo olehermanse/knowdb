@@ -1,5 +1,5 @@
 {
- "_comment": "The built-in CFEngine functions, from the functions section of the CFEngine CLI's syntax-description.json (https://github.com/cfengine/cfengine-cli, generated from cf-agent): category, parameters (type, description, range), returnType, whether the function is variadic (with minArgs/maxArgs), cached or collecting, and status (normal or deprecated). Written by scripts/import_functions.py; the frontend reads this file at build time and shows every function as an entry.",
+ "_comment": "The built-in CFEngine functions, from the functions section of the CFEngine CLI's syntax-description.json (https://github.com/cfengine/cfengine-cli, generated from cf-agent): category, parameters (type, description, range), returnType, whether the function is variadic (with minArgs/maxArgs), cached or collecting, and status (normal or deprecated). Written by scripts/import_syntax.py; the frontend reads this file at build time and shows every function as an entry.",
  "functions": {
   "accessedbefore": {
    "cached": false,

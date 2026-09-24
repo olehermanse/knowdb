@@ -5,6 +5,7 @@ import commentsJson from "@/data/comments.json";
 import filesJson from "@/data/files.json";
 import policyJson from "@/data/policy.json";
 import functionsJson from "@/data/functions.json";
+import promiseTypesJson from "@/data/promise-types.json";
 
 export interface Host {
   os: string;
@@ -111,6 +112,39 @@ export function functionSignature(name: string, fn: FunctionSyntax): string {
   return `${name}(${parts.join(", ")})`;
 }
 
+// The built-in CFEngine promise types, from data/promise-types.json (the
+// promiseTypes section of the syntax description, with the bundle types
+// allowing each, copied by scripts/import_syntax.py).
+export interface PromiseTypeAttribute {
+  type: string;
+  range?: string;
+  status: string;
+  // "promiseType" for the promise type's own attributes, "global" for the
+  // ones every promise type has (action, classes, comment, ...).
+  visibility: string;
+}
+export interface PromiseTypeSyntax {
+  status: string;
+  "bundle-types": string[];
+  attributes: Record<string, PromiseTypeAttribute>;
+}
+const builtinPromiseTypes = (
+  promiseTypesJson as unknown as { "promise-types": Record<string, PromiseTypeSyntax> }
+)["promise-types"];
+
+export function getPromiseTypeSyntax(name: string): PromiseTypeSyntax | undefined {
+  return builtinPromiseTypes[name];
+}
+
+// Every built-in promise type has a page in the CFEngine reference.
+export function promiseTypeDocsLink(name: string): ExternalLink {
+  return {
+    title: `Promise type ${name}`,
+    source: "docs.cfengine.com",
+    url: `https://docs.cfengine.com/docs/master/reference-promise-types-${name}.html`,
+  };
+}
+
 // "a string", "a class", "a list of strings", ... for a return type.
 const RETURN_WORDS: Record<string, string> = {
   context: "a class",
@@ -159,6 +193,13 @@ interface PolicyCall {
 // (`usebundle => name(...)`, or a bare call) or a body (`perms => mog(...)`,
 // the value of an attribute).
 export type CallKind = "bundle" | "body";
+// A promise section of a bundle: `files:` and the promises under it.
+interface PolicySection {
+  type: string;
+  line: number;
+  block: PolicyBlockRef;
+  promises: number;
+}
 export interface PolicyFile {
   bundles: PolicyDefinition[];
   bodies: PolicyDefinition[];
@@ -166,6 +207,7 @@ export interface PolicyFile {
   vars: PolicyItem[];
   classes: PolicyItem[];
   calls: PolicyCall[];
+  sections: PolicySection[];
   errors: boolean;
 }
 const policyFiles = (policyJson as unknown as { files: Record<string, PolicyFile> }).files;
@@ -183,34 +225,32 @@ export interface PolicyRef {
   block?: PolicyBlockRef;
   // For calls: what is called.
   kind?: CallKind;
+  // For promise types, which are both defined (custom ones) and used (in
+  // promise sections): which of the two this place is.
+  role?: "definition" | "use";
   // Extra words: a variable's type, a bundle's parameters, the attribute
   // a function call is the value of.
   detail?: string;
 }
 
 // Something defined or called inside a block or file, for Contents tabs.
+// The Contents tabs of a file or block: its blocks (a file only), the
+// promise types of its sections, its calls (of functions, bundles and
+// bodies), variables and classes.
+export type ContentGroup = "blocks" | "promise-types" | "calls" | "variables" | "classes";
+export const CONTENT_GROUPS: ContentGroup[] = ["blocks", "promise-types", "calls", "variables", "classes"];
+
 export interface PolicyContent {
   entry: EntryRef;
   checksum: string;
   line: number;
-  // The bundle or body the item is in, for a file's variables, classes
-  // and calls.
+  group: ContentGroup;
+  // The bundle or body the item is in, for a file's variables, classes,
+  // calls and promise sections.
   block?: PolicyBlockRef;
+  // Extra words, like the number of promises in a section.
+  detail?: string;
 }
-
-// The Contents tabs of a file or block: its blocks (a file only), calls
-// (of functions, bundles and bodies), variables and classes.
-export type ContentGroup = "blocks" | "calls" | "variables" | "classes";
-export const CONTENT_GROUPS: ContentGroup[] = ["blocks", "calls", "variables", "classes"];
-const GROUP_OF_TYPE: Partial<Record<EntryType, ContentGroup>> = {
-  bundle: "blocks",
-  body: "blocks",
-  "custom-promise-type": "blocks",
-  call: "calls",
-  "function-call": "calls",
-  variable: "variables",
-  class: "classes",
-};
 
 // Link to a line of a file: the file page with a #L<n> anchor.
 export function fileLineHref(checksum: string, line: number): string {
@@ -331,9 +371,20 @@ export type EntryType =
   | "function-call"
   // A built-in CFEngine function (data/functions.json), whether the
   // policy calls it or not.
-  | "function";
+  | "function"
+  // A built-in CFEngine promise type (data/promise-types.json), whether
+  // the policy makes such promises or not.
+  | "built-in-promise-type";
 
-export const POLICY_TYPES: EntryType[] = ["bundle", "body", "custom-promise-type", "call", "function-call", "function"];
+export const POLICY_TYPES: EntryType[] = [
+  "bundle",
+  "body",
+  "custom-promise-type",
+  "call",
+  "function-call",
+  "function",
+  "built-in-promise-type",
+];
 
 // Names in the policy may carry the default namespace: "default:mog" is
 // the body "mog".
@@ -440,6 +491,9 @@ function indexPolicy() {
   const contents = new Map<string, PolicyContent[]>();
   const kindOf = (call: PolicyCall): CallKind =>
     call.attribute && call.attribute !== "usebundle" ? "body" : "bundle";
+  const customPromiseTypes = new Set(
+    Object.values(policyFiles).flatMap((f) => f["promise-types"].map((p) => p.name)),
+  );
   for (const [checksum, file] of Object.entries(policyFiles)) {
     const own: EntryRef[] = [];
     const seen = new Set<string>();
@@ -451,41 +505,62 @@ function indexPolicy() {
       }
       refs.set(key, [...(refs.get(key) ?? []), { checksum, line, ...extra }]);
     };
-    const contain = (holder: EntryRef, entry: EntryRef, line: number, block?: PolicyBlockRef) => {
+    const contain = (
+      holder: EntryRef,
+      entry: EntryRef,
+      line: number,
+      group: ContentGroup,
+      block?: PolicyBlockRef,
+      detail?: string,
+    ) => {
       const key = entryKey(holder.type, holder.name);
-      contents.set(key, [...(contents.get(key) ?? []), { entry, checksum, line, block }]);
+      contents.set(key, [...(contents.get(key) ?? []), { entry, checksum, line, group, block, detail }]);
     };
     const fileRef: EntryRef = { type: "file", name: checksum };
     // Something inside a block is a content of the block and of the file.
-    const containInBlock = (block: PolicyBlockRef, entry: EntryRef, line: number) => {
-      contain(block, entry, line);
-      contain(fileRef, entry, line, block);
+    const containInBlock = (block: PolicyBlockRef, entry: EntryRef, line: number, group: ContentGroup, detail?: string) => {
+      contain(block, entry, line, group, undefined, detail);
+      contain(fileRef, entry, line, group, block, detail);
     };
     for (const b of file.bundles) {
       const ref: EntryRef = { type: "bundle", name: `bundle ${b.type} ${b.name}` };
       add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
-      contain(fileRef, ref, b.line);
+      contain(fileRef, ref, b.line, "blocks");
     }
     for (const b of file.bodies) {
       const ref: EntryRef = { type: "body", name: `body ${b.type} ${b.name}` };
       add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
-      contain(fileRef, ref, b.line);
+      contain(fileRef, ref, b.line, "blocks");
     }
     for (const p of file["promise-types"]) {
       const ref: EntryRef = { type: "custom-promise-type", name: p.name };
-      add(ref, p.line);
-      contain(fileRef, ref, p.line);
+      add(ref, p.line, { role: "definition" });
+      contain(fileRef, ref, p.line, "blocks");
+    }
+    // Promise sections use a built-in promise type, or a custom one
+    // defined somewhere in the policy.
+    for (const s of file.sections) {
+      const type: EntryType | undefined = builtinPromiseTypes[s.type]
+        ? "built-in-promise-type"
+        : customPromiseTypes.has(s.type)
+          ? "custom-promise-type"
+          : undefined;
+      if (!type) continue;
+      const ref: EntryRef = { type, name: s.type };
+      const detail = plural(s.promises, "promise");
+      add(ref, s.line, { block: s.block, role: "use", detail });
+      containInBlock(s.block, ref, s.line, "promise-types", detail);
     }
     for (const v of file.vars) {
       const bundle = v.block.name.split(" ").pop() ?? v.block.name;
       const ref: EntryRef = { type: "variable", name: `${bundle}.${v.name}` };
       add(ref, v.line, { block: v.block, detail: v.type });
-      containInBlock(v.block, ref, v.line);
+      containInBlock(v.block, ref, v.line, "variables");
     }
     for (const c of file.classes) {
       const ref: EntryRef = { type: "class", name: c.name };
       add(ref, c.line, { block: c.block });
-      containInBlock(c.block, ref, c.line);
+      containInBlock(c.block, ref, c.line, "classes");
     }
     for (const call of file.calls) {
       const name = stripNamespace(call.name);
@@ -495,11 +570,11 @@ function indexPolicy() {
         const ref: EntryRef = { type: "function-call", name };
         add(ref, call.line, { block: call.block, detail });
         add({ type: "function", name }, call.line, { block: call.block, detail });
-        containInBlock(call.block, ref, call.line);
+        containInBlock(call.block, ref, call.line, "calls");
       } else {
         const ref: EntryRef = { type: "call", name };
         add(ref, call.line, { block: call.block, kind: kindOf(call), detail });
-        containInBlock(call.block, ref, call.line);
+        containInBlock(call.block, ref, call.line, "calls");
       }
     }
     entriesByFile.set(checksum, own);
@@ -549,11 +624,14 @@ export function getPolicyContents(entry: EntryRef): PolicyContent[] {
 
 // The contents of a file or block split into the Contents tabs.
 export function getPolicyContentsByGroup(entry: EntryRef): Record<ContentGroup, PolicyContent[]> {
-  const groups: Record<ContentGroup, PolicyContent[]> = { blocks: [], calls: [], variables: [], classes: [] };
-  for (const item of getPolicyContents(entry)) {
-    const group = GROUP_OF_TYPE[item.entry.type];
-    if (group) groups[group].push(item);
-  }
+  const groups: Record<ContentGroup, PolicyContent[]> = {
+    blocks: [],
+    "promise-types": [],
+    calls: [],
+    variables: [],
+    classes: [],
+  };
+  for (const item of getPolicyContents(entry)) groups[item.group].push(item);
   return groups;
 }
 
@@ -583,6 +661,7 @@ function buildIndex() {
   // every built-in function whether the policy calls it or not.
   for (const group of groups) ensure("group", group.name);
   for (const name of Object.keys(builtinFunctions)) ensure("function", name);
+  for (const name of Object.keys(builtinPromiseTypes)) ensure("built-in-promise-type", name);
 
   for (const host of hosts) {
     hostsByKey.set(host.id, host);
@@ -972,6 +1051,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "call",
   "function-call",
   "function",
+  "built-in-promise-type",
 ];
 
 // Plural, human readable names of the entry types, for buttons and summaries.
@@ -1001,6 +1081,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   call: "Calls",
   "function-call": "Function calls",
   function: "Functions",
+  "built-in-promise-type": "Built-in promise types",
 };
 
 // What to show for an entry in lists and links: its name, except for files
@@ -1280,6 +1361,7 @@ export function getEntryLinks(entry: EntryRef): ExternalLink[] {
   if (entry.type === "function" || entry.type === "function-call") {
     return getFunctionInfo(entry.name)?.links ?? [functionDocsLink(entry.name)];
   }
+  if (entry.type === "built-in-promise-type") return [promiseTypeDocsLink(entry.name)];
   // Bundles and bodies have no reference page.
   if (entry.type === "call") return [];
   return infoFor(entry)?.links ?? [];
@@ -1473,7 +1555,23 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   call: "A bundle or body called from the CFEngine policy.",
   "function-call": "A built-in CFEngine function called from the CFEngine policy.",
   function: "A built-in CFEngine function.",
+  "built-in-promise-type": "A built-in CFEngine promise type.",
 };
+
+// "A built-in CFEngine promise type, allowed in agent bundles, with 30
+// attributes of its own." from data/promise-types.json.
+function describePromiseType(name: string): string {
+  const pt = builtinPromiseTypes[name];
+  if (!pt) return TYPE_DESCRIPTIONS["built-in-promise-type"];
+  const own = Object.values(pt.attributes).filter((a) => a.visibility === "promiseType").length;
+  const bundles = pt["bundle-types"];
+  const allowed =
+    bundles.length > 0
+      ? `, allowed in ${bundles.length === 1 ? bundles[0] : `${bundles.slice(0, -1).join(", ")} and ${bundles[bundles.length - 1]}`} bundles`
+      : "";
+  const deprecated = pt.status === "deprecated" ? " It is deprecated." : "";
+  return `A built-in CFEngine promise type${allowed}, with ${plural(own, "attribute")} of its own.${deprecated}`;
+}
 
 // "promises.cf and update.cf": the distinct names of the files an entry
 // is defined in, from its references.
@@ -1593,6 +1691,9 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "function-call") {
     return `Calls of the built-in function ${entry.name} from the CFEngine policy.`;
+  }
+  if (entry.type === "built-in-promise-type") {
+    return describePromiseType(entry.name);
   }
   if (isPolicyType(entry.type)) {
     return describePolicyEntry(entry);
@@ -1741,8 +1842,19 @@ export function summarizeEntry(entry: Entry): string {
     case "body":
     case "custom-promise-type": {
       const refs = getPolicyRefs(entry);
+      const defs = refs.filter((r) => r.role !== "use");
+      const uses = refs.filter((r) => r.role === "use");
+      const files = new Set(defs.map((r) => r.checksum)).size;
+      const used = uses.length > 0 ? ` and used in ${plural(uses.length, "promise section")}` : "";
+      return `Defined ${defs.length === 1 ? "once" : `${defs.length} times`} in ${plural(files, "policy file")}${used}, on ${hosts} in your infrastructure.`;
+    }
+    case "built-in-promise-type": {
+      const refs = getPolicyRefs(entry);
+      if (refs.length === 0) return `No ${entry.name} promises are made in the policy on your hosts.`;
+      const promises = refs.reduce((sum, r) => sum + Number.parseInt(r.detail ?? "0", 10), 0);
+      const blocks = new Set(refs.map((r) => r.block?.name)).size;
       const files = new Set(refs.map((r) => r.checksum)).size;
-      return `Defined ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
+      return `${plural(promises, `${entry.name} promise`)} ${promises === 1 ? "is" : "are"} made in ${plural(refs.length, "section")} of ${plural(blocks, "bundle")} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;
     }
     case "call":
     case "function-call":

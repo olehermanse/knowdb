@@ -46,12 +46,17 @@ const unquote = (text) => text.replace(/^"([\s\S]*)"$/, "$1").replace(/^'([\s\S]
 const line = (node) => node.startPosition.row + 1;
 const child = (node, type) => node.namedChildren.find((c) => c.type === type);
 
-// Walk a block body: promises under promise guards (vars:, classes:) and
+// Walk a block body: the promise sections (files:, vars:, ...) with how
+// many promises each makes, the promises under vars: and classes:, and
 // every call (of a function, bundle or body), with the block they are in.
 function indexBlock(block, blockRef, out) {
   const walk = (node, guard) => {
     if (node.type === "promise_guard") return;
-    if (node.type === "bundle_section") guard = child(node, "promise_guard")?.text.replace(/:$/, "") ?? guard;
+    if (node.type === "bundle_section") {
+      guard = child(node, "promise_guard")?.text.replace(/:$/, "") ?? guard;
+      const promises = node.descendantsOfType(["promise", "half_promise"]).length;
+      out.sections.push({ type: guard, line: line(node), block: blockRef, promises });
+    }
     if (node.type === "promise" || node.type === "half_promise") {
       const promiser = child(node, "promiser");
       if (promiser && (guard === "vars" || guard === "classes")) {
@@ -91,7 +96,10 @@ function indexFile(source) {
     "promise-types": [],
     vars: [],
     classes: [],
-    "calls": [],
+    calls: [],
+    // The promise sections of the bundles: which promise type, where, how
+    // many promises.
+    sections: [],
     errors: tree.rootNode.hasError,
   };
   for (const block of tree.rootNode.namedChildren) {
@@ -157,14 +165,15 @@ const output = {
   _comment:
     "What the CFEngine policy files on the hosts define, keyed by the file's SHA-256 checksum " +
     "(see files.json): bundles, bodies and promise types with their line numbers, and the " +
-    "variables, classes and calls (of functions, bundles and bodies) inside them with the block they are in. Generated " +
+    "variables, classes and calls (of functions, bundles and bodies) inside them with the block they are in, and the " +
+    "promise sections (sections) of each bundle with their promise type, line and number of promises. Generated " +
     "by scripts/index_policy.mjs from hosts.json and files.json with the tree-sitter grammar " +
     "for CFEngine; the frontend reads this file at build time.",
   files: indexed,
 };
 writeFileSync(path.join(root, "data/policy.json"), JSON.stringify(output, null, 1) + "\n");
 
-const totals = { bundles: 0, bodies: 0, "promise-types": 0, vars: 0, classes: 0, "calls": 0 };
+const totals = { bundles: 0, bodies: 0, "promise-types": 0, vars: 0, classes: 0, calls: 0, sections: 0 };
 for (const f of Object.values(indexed)) for (const k of Object.keys(totals)) totals[k] += f[k].length;
 console.log(`Indexed ${policyFiles.size} policy files (${withErrors} with parse errors) into data/policy.json:`, totals);
 if (checked > 0) console.log(`Checked ${checked} syntax trees against \`cfengine dev syntax-tree\`, ${differing} differ.`);

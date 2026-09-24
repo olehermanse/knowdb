@@ -1,0 +1,3000 @@
+{
+ "_comment": "The built-in CFEngine promise types, from the promiseTypes section of the CFEngine CLI's syntax-description.json (https://github.com/cfengine/cfengine-cli, generated from cf-agent): status (normal or deprecated), the bundle types that allow the promise type (from bundleTypes), and the attributes with their type, range, status and visibility (global attributes are common to all promise types). Written by scripts/import_syntax.py; the frontend reads this file at build time and shows every promise type as an entry.",
+ "promise-types": {
+  "access": {
+   "status": "normal",
+   "bundle-types": [
+    "server"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "admit": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "admit_hostnames": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "admit_ips": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "admit_keys": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "deny": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "deny_hostnames": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "deny_ips": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "deny_keys": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifencrypted": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "maproot": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "report_data_select": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "resource_type": {
+     "range": "path,literal,context,query,variable,bundle",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "shortcut": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "build_xpath": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "classes": {
+   "status": "normal",
+   "bundle-types": [
+    "agent",
+    "common",
+    "edit_line",
+    "edit_xml",
+    "monitor",
+    "reactor",
+    "server",
+    "watch"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "and": {
+     "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+     "status": "normal",
+     "type": "clist",
+     "visibility": "promiseType"
+    },
+    "cancel": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "dist": {
+     "range": "-9.99999E100,9.99999E100",
+     "status": "normal",
+     "type": "rlist",
+     "visibility": "promiseType"
+    },
+    "expression": {
+     "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+     "status": "normal",
+     "type": "context",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "not": {
+     "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+     "status": "normal",
+     "type": "context",
+     "visibility": "promiseType"
+    },
+    "or": {
+     "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+     "status": "normal",
+     "type": "clist",
+     "visibility": "promiseType"
+    },
+    "persistence": {
+     "range": "0,99999999999",
+     "status": "normal",
+     "type": "int",
+     "visibility": "promiseType"
+    },
+    "scope": {
+     "range": "namespace,bundle",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "select_class": {
+     "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+     "status": "normal",
+     "type": "clist",
+     "visibility": "promiseType"
+    },
+    "timer_policy": {
+     "range": "absolute,reset",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "xor": {
+     "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+     "status": "normal",
+     "type": "clist",
+     "visibility": "promiseType"
+    }
+   }
+  },
+  "commands": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "arglist": {
+     "range": ".*",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "args": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "contain": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "inform": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "module": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "databases": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "database_columns": {
+     "range": ".*",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "database_operation": {
+     "range": "create,delete,drop,cache,verify,restore",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "database_rows": {
+     "range": ".*,.*",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "database_server": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "database_type": {
+     "range": "sql,ms_registry",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "registry_exclude": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "defaults": {
+   "status": "normal",
+   "bundle-types": [
+    "agent",
+    "common",
+    "edit_line",
+    "edit_xml",
+    "monitor",
+    "reactor",
+    "server",
+    "watch"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if_match_regex": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "slist": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "string": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "delete_attribute": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "delete_lines": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_line"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "delete_select": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "not_matching": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "select_region": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "delete_text": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "delete_tree": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "events": {
+   "status": "normal",
+   "bundle-types": [
+    "reactor",
+    "watch"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "then": {
+     "status": "normal",
+     "type": "bundle",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "when": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "field_edits": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_line"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "edit_field": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_region": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "files": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "acl": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "changes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "content": {
+     "range": ".*",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "copy_from": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "create": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "delete": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "depth_search": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "edit_defaults": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "edit_line": {
+     "status": "normal",
+     "type": "bundle",
+     "visibility": "promiseType"
+    },
+    "edit_template": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "edit_template_string": {
+     "range": ".*",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "edit_xml": {
+     "status": "normal",
+     "type": "bundle",
+     "visibility": "promiseType"
+    },
+    "file_select": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "file_type": {
+     "range": "regular,fifo",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "fsattrs": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "link_from": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "move_obstructions": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "pathtype": {
+     "range": "literal,regex,guess",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "perms": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "rename": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "repository": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "template_data": {
+     "range": "",
+     "status": "normal",
+     "type": "data",
+     "visibility": "promiseType"
+    },
+    "template_method": {
+     "range": "cfengine,inline_mustache,mustache",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "touch": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "transformer": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "guest_environments": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "environment_host": {
+     "range": "[a-zA-Z0-9_]+",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "environment_interface": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "environment_resources": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "environment_state": {
+     "range": "create,delete,running,suspended,down",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "environment_type": {
+     "range": "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "insert_lines": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_line"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "expand_scalars": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "insert_select": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "insert_type": {
+     "range": "literal,string,file,file_preserve_block,preserve_block,preserve_all_lines",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "location": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_region": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "whitespace_policy": {
+     "range": "ignore_leading,ignore_trailing,ignore_embedded,exact_match",
+     "status": "normal",
+     "type": "olist",
+     "visibility": "promiseType"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "insert_text": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "insert_tree": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "measurements": {
+   "status": "normal",
+   "bundle-types": [
+    "monitor"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "data_type": {
+     "range": "counter,int,real,string,slist",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "history_type": {
+     "range": "weekly,scalar,static,log",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "match_value": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "stream_type": {
+     "range": "pipe,file",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "units": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "meta": {
+   "status": "normal",
+   "bundle-types": [
+    "agent",
+    "common",
+    "edit_line",
+    "edit_xml",
+    "monitor",
+    "reactor",
+    "server",
+    "watch"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "data": {
+     "range": "",
+     "status": "normal",
+     "type": "data",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "slist": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "string": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "methods": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "inherit": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "usebundle": {
+     "status": "normal",
+     "type": "bundle",
+     "visibility": "promiseType"
+    },
+    "useresult": {
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "packages": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "additional_packages": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "architecture": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "options": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "package_architectures": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "package_method": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "package_module": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "package_policy": {
+     "range": "add,delete,reinstall,update,addupdate,patch,verify",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "package_select": {
+     "range": ">,<,==,!=,>=,<=",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "package_version": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "policy": {
+     "range": "absent,present",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "version": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "processes": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "process_count": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "process_select": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "process_stop": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "restart_class": {
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "signals": {
+     "range": "((?i:hup|int|trap|kill|pipe|cont|abrt|stop|quit|term|child|usr1|usr2|bus|segv)|[0-9]+s?)",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "replace_patterns": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_line"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "allow_non_convergent": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "replace_with": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "select_region": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "reports": {
+   "status": "normal",
+   "bundle-types": [
+    "agent",
+    "common",
+    "edit_line",
+    "edit_xml",
+    "monitor",
+    "reactor",
+    "server",
+    "watch"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "bundle_return_value_index": {
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "friend_pattern": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "intermittency": {
+     "range": "0,1",
+     "status": "normal",
+     "type": "real",
+     "visibility": "promiseType"
+    },
+    "lastseen": {
+     "range": "0,99999999999",
+     "status": "normal",
+     "type": "int",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "printfile": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "report_to_file": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "showstate": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "roles": {
+   "status": "normal",
+   "bundle-types": [
+    "server"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "authorize": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "services": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "service_dependencies": {
+     "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "service_method": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "service_policy": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "set_attribute": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "attribute_value": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "set_text": {
+   "status": "normal",
+   "bundle-types": [
+    "edit_xml"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "build_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "select_xpath": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "bundle"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "storage": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "mount": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "volume": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "users": {
+   "status": "normal",
+   "bundle-types": [
+    "agent"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "description": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "group_primary": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "groups_secondary": {
+     "range": ".*",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "home_bundle": {
+     "status": "normal",
+     "type": "bundle",
+     "visibility": "promiseType"
+    },
+    "home_bundle_inherit": {
+     "range": "true,false,yes,no,on,off",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "home_dir": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "password": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "promiseType"
+    },
+    "policy": {
+     "range": "present,absent,locked",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "shell": {
+     "range": "\"?(/.*)",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "uid": {
+     "range": "-99999999999,99999999999",
+     "status": "normal",
+     "type": "int",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  },
+  "vars": {
+   "status": "normal",
+   "bundle-types": [
+    "agent",
+    "common",
+    "edit_line",
+    "edit_xml",
+    "monitor",
+    "reactor",
+    "server",
+    "watch"
+   ],
+   "attributes": {
+    "action": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "classes": {
+     "status": "normal",
+     "type": "body",
+     "visibility": "global"
+    },
+    "comment": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "data": {
+     "range": "",
+     "status": "normal",
+     "type": "data",
+     "visibility": "promiseType"
+    },
+    "depends_on": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "handle": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "if": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ifvarclass": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "ilist": {
+     "range": "-99999999999,99999999999",
+     "status": "normal",
+     "type": "ilist",
+     "visibility": "promiseType"
+    },
+    "int": {
+     "range": "-99999999999,99999999999",
+     "status": "normal",
+     "type": "int",
+     "visibility": "promiseType"
+    },
+    "meta": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "global"
+    },
+    "policy": {
+     "range": "free,overridable,constant,ifdefined",
+     "status": "normal",
+     "type": "option",
+     "visibility": "promiseType"
+    },
+    "real": {
+     "range": "-9.99999E100,9.99999E100",
+     "status": "normal",
+     "type": "real",
+     "visibility": "promiseType"
+    },
+    "rlist": {
+     "range": "-9.99999E100,9.99999E100",
+     "status": "normal",
+     "type": "rlist",
+     "visibility": "promiseType"
+    },
+    "slist": {
+     "range": "",
+     "status": "normal",
+     "type": "slist",
+     "visibility": "promiseType"
+    },
+    "string": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "promiseType"
+    },
+    "unless": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    },
+    "with": {
+     "range": "",
+     "status": "normal",
+     "type": "string",
+     "visibility": "global"
+    }
+   }
+  }
+ }
+}

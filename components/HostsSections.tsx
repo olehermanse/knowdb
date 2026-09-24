@@ -73,6 +73,8 @@ function describeLinkedHosts(entry: Entry): string {
     case "function-call":
     case "function":
       return `Hosts whose policy calls ${entry.name}:`;
+    case "built-in-promise-type":
+      return `Hosts whose policy makes ${entry.name} promises:`;
     default:
       return `Hosts linked to ${entry.name}:`;
   }

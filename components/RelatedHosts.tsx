@@ -57,6 +57,7 @@ const TAB_ORDER: Tab[] = [
   "content",
   "references",
   "blocks",
+  "promise-types",
   "calls",
   "variables",
   "classes",
@@ -284,7 +285,13 @@ function FileLineLink({ checksum, line }: { checksum: string; line: number }) {
 function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
   const refs = getPolicyRefs(entry);
   const paged = paginate(refs, page);
-  const verb = ["call", "function-call", "function"].includes(entry.type) ? "called" : "defined";
+  const verb = ["call", "function-call", "function"].includes(entry.type)
+    ? "called"
+    : entry.type === "built-in-promise-type"
+      ? "used"
+      : entry.type === "custom-promise-type"
+        ? "defined or used"
+        : "defined";
   return (
     <>
       <p className="muted" data-testid="references-description">
@@ -309,6 +316,9 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
                 )}
                 {ref.kind && (
                   <span data-testid="reference-kind">{ref.kind === "bundle" ? "Bundle call" : "Body call"}</span>
+                )}
+                {ref.role && entry.type === "custom-promise-type" && (
+                  <span data-testid="reference-role">{ref.role === "use" ? "Used here" : "Defined here"}</span>
                 )}
                 {ref.detail && <span data-testid="reference-detail">{ref.detail}</span>}
               </div>
@@ -338,6 +348,7 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
 // are in) or in a block.
 const GROUP_WORDS: Record<ContentGroup, string> = {
   blocks: "Blocks defined",
+  "promise-types": "Promise types used",
   calls: "Calls",
   variables: "Variables defined",
   classes: "Classes defined",
@@ -373,6 +384,7 @@ function ContentsPanel({ entry, tabs, page, keep, group }: PanelProps & { group:
                     <EntryLink type={item.block.type} name={item.block.name} />
                   </span>
                 )}
+                {item.detail && <span data-testid="content-detail">{item.detail}</span>}
               </div>
             </div>
           </li>
@@ -665,6 +677,7 @@ export default function RelatedHosts({
     content: "Content",
     references: "References",
     blocks: "Blocks",
+    "promise-types": "Promise types",
     calls: "Calls",
     variables: "Variables",
     classes: "Classes",
@@ -680,6 +693,7 @@ export default function RelatedHosts({
     content: "content-heading",
     references: "references-heading",
     blocks: "blocks-heading",
+    "promise-types": "promise-types-heading",
     calls: "calls-heading",
     variables: "variables-heading",
     classes: "classes-heading",

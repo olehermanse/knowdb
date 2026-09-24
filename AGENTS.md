@@ -223,8 +223,9 @@ the file page with a `#L12` anchor, the line, the bundle or body it is in
 bundle's parameters, the attribute a call is the value of, like `if =>`).
 Bundles, bodies, promise types and policy files have one tab per kind of
 thing they contain, shown only when not empty: Blocks (a file's bundles,
-bodies and promise types), Calls (function calls and other calls),
-Variables and Classes, each row linking to its line. Everything inside a
+bodies and promise types), Promise types (the promise sections), Calls
+(function calls and other calls), Variables and Classes, each row linking
+to its line. Everything inside a
 block is also a content of its file, so a file's Variables tab lists the
 variables of all its bundles, each row saying which block it is in. Variables
 and classes have their defining bundle in "See also". Every line of a
@@ -253,13 +254,15 @@ checkout of https://github.com/cfengine/modules next to this repository
 when present), since the Masterfiles Policy Framework defines no custom
 promise types.
 
-## Built-in functions
+## Built-in functions and promise types
 
 `data/functions.json` is the `functions` section of the CFEngine CLI's
 `syntax-description.json` (generated from cf-agent; the CLI uses it for
-linting), copied by `scripts/import_functions.py` from a checkout of
-cfengine-cli next to this repository, the installed `cfengine` package, or
-a path given as argument. Every function is a `function` entry whether the
+linting), and `data/promise-types.json` its `promiseTypes` section with,
+per promise type, the bundle types allowing it (from `bundleTypes`); both
+are copied by `scripts/import_syntax.py` from a checkout of cfengine-cli
+next to this repository, the installed `cfengine` package, or a path
+given as argument. Every function is a `function` entry whether the
 policy calls it or not (like groups, they are created before the hosts are
 indexed). The page shows the signature (`ifelse(string, [string], ...)`:
 parameter types, optional ones in brackets, `...` when variadic), the
@@ -277,6 +280,24 @@ hosts does not call this function.") and the summary "x is not called
 from the policy on your hosts." Only built-in functions get the
 documentation link, and a call of a name that is a built-in function
 counts as a function call even where a bundle or body of that name exists.
+
+Every built-in promise type is a `built-in-promise-type` entry ("Built-in
+promise types"), also created before the hosts are indexed. The page shows
+the bundle types allowing it, its own attributes (visibility
+`promiseType`) and the common ones (`global`), and the status when
+deprecated; the description reads "A built-in CFEngine promise type,
+allowed in agent bundles, with 30 attributes of its own." and the
+documentation link is `reference-promise-types-<name>.html`. The indexer
+records every promise section of a bundle (`sections`: promise type,
+line, block, number of promises), and each section is a reference of the
+promise type it uses (`role: "use"`, detail "3 promises"), or of the
+custom promise type when the policy defines one of that name (whose
+references then say "Defined here" or "Used here"). Hosts are linked to
+the promise types their policy uses; the summary reads "83 files promises
+are made in 12 sections of 9 bundles in 4 policy files, on 100 hosts" or
+"No storage promises are made in the policy on your hosts." Files and
+blocks have a Promise types tab (between Blocks and Calls) listing their
+sections with line, block and promise count.
 
 ## Syntax highlighting of CFEngine policy
 

@@ -6,6 +6,7 @@ import EntryLink from "@/components/EntryLink";
 import HostView from "@/components/HostView";
 import UserDetailsSection from "@/components/UserDetails";
 import FunctionDetails from "@/components/FunctionDetails";
+import PromiseTypeDetails from "@/components/PromiseTypeDetails";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import { cookies } from "next/headers";
@@ -166,6 +167,7 @@ export default async function EntryPage({
           {group && <GroupRules group={group} />}
           {type === "user" && <UserDetailsSection entry={entry} />}
           {type === "function" && <FunctionDetails entry={entry} />}
+          {type === "built-in-promise-type" && <PromiseTypeDetails entry={entry} />}
           <RelatedHosts
             entry={entry}
             tabs={entryTabs(entry)}
@@ -189,7 +191,9 @@ export default async function EntryPage({
             <p className="muted" data-testid="no-hosts">
               {type === "function"
                 ? "The policy on your hosts does not call this function."
-                : `No hosts in your infrastructure have this ${entry.type}.`}
+                : type === "built-in-promise-type"
+                  ? `The policy on your hosts makes no ${entry.name} promises.`
+                  : `No hosts in your infrastructure have this ${entry.type}.`}
             </p>
           )}
         </aside>

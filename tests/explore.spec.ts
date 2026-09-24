@@ -5,6 +5,7 @@ import groupsJson from "../data/groups.json";
 import filesJson from "../data/files.json";
 import policyJson from "../data/policy.json";
 import functionsJson from "../data/functions.json";
+import promiseTypesJson from "../data/promise-types.json";
 
 type Host = (typeof hosts)[number];
 const fileContents = (filesJson as unknown as {
@@ -145,6 +146,7 @@ test("front page always shows at least one entry of each type", async ({
     "call",
     "function-call",
     "function",
+    "built-in-promise-type",
   ];
   // The sample is random, so check several page loads.
   for (let i = 0; i < 5; i++) {
@@ -2322,7 +2324,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(25);
+  await expect(buttons).toHaveCount(26);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -3307,9 +3309,13 @@ interface PolicyFile {
   vars: { name: string; line: number; block: PolicyBlock; type?: string }[];
   classes: { name: string; line: number; block: PolicyBlock }[];
   calls: { name: string; line: number; block: PolicyBlock; attribute?: string }[];
+  sections: { type: string; line: number; block: PolicyBlock; promises: number }[];
   errors: boolean;
 }
 const policyFiles = (policyJson as unknown as { files: Record<string, PolicyFile> }).files;
+const builtinPromiseTypes = (promiseTypesJson as unknown as {
+  "promise-types": Record<string, { status: string; "bundle-types": string[]; attributes: Record<string, { visibility: string }> }>;
+})["promise-types"];
 const builtinFunctions = (functionsJson as unknown as {
   functions: Record<string, { category: string; returnType: string; status: string; variadic: boolean; minArgs?: number; parameters: { type: string }[] }>;
 }).functions;
@@ -4056,7 +4062,7 @@ test("a policy file lists what it defines, and the policy types have buttons and
   await expect(page.getByTestId("content-item").first().getByTestId("content-block")).toContainText("In ");
   // Non-policy files have none of these tabs.
   await page.goto(fileHref(hub.files["/etc/motd"]!));
-  for (const tab of ["blocks", "calls", "variables", "classes"]) {
+  for (const tab of ["blocks", "promise-types", "calls", "variables", "classes"]) {
     await expect(page.getByTestId(`${tab}-heading`)).toHaveCount(0);
   }
 
@@ -4158,4 +4164,96 @@ test("every built-in function is an entry, called or not", async ({ page }) => {
   // function:<name> filters the hosts whose policy calls it.
   await page.goto(`/search?q=${encodeURIComponent("function:ifelse")}`);
   await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching function ifelse.`);
+});
+
+test("every built-in promise type is an entry, with the sections using it as references", async ({
+  page,
+}) => {
+  const names = Object.keys(builtinPromiseTypes);
+  expect(names.length).toBeGreaterThan(20);
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-built-in-promise-type")).toHaveText(
+    `Built-in promise types (${names.length})`,
+  );
+
+  // files: promises in agent bundles, used all over the policy.
+  const sections = Object.entries(policyFiles).flatMap(([checksum, f]) =>
+    f.sections.filter((s) => s.type === "files").map((s) => ({ ...s, checksum })),
+  );
+  expect(sections.length).toBeGreaterThan(PAGE_SIZE);
+  const spec = builtinPromiseTypes.files!;
+  const own = Object.values(spec.attributes).filter((a) => a.visibility === "promiseType").length;
+  await page.goto("/entry/built-in-promise-type/files");
+  await expect(page.getByTestId("entry-type-link")).toHaveText("built-in-promise-type");
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `A built-in CFEngine promise type, allowed in agent bundles, with ${own} attributes of its own.`,
+  );
+  const promises = sections.reduce((n, s) => n + s.promises, 0);
+  const blocks = new Set(sections.map((s) => s.block.name)).size;
+  const files = new Set(sections.map((s) => s.checksum)).size;
+  const onHosts = typedHosts.filter((h) => sections.some((s) => Object.values(h.files).includes(s.checksum)));
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `${promises} files promises are made in ${sections.length} sections of ${blocks} bundles in ${files} policy files, on ${onHosts.length} hosts in your infrastructure.`,
+  );
+  await expect(page.getByTestId("promise-type-bundle-types")).toHaveText("agent");
+  await expect(page.getByTestId("promise-type-attributes").locator("code")).toHaveCount(own);
+  await expect(page.getByTestId("promise-type-attributes").locator("code", { hasText: /^perms$/ })).toBeVisible();
+  await expect(page.getByTestId("promise-type-common-attributes").locator("code", { hasText: /^action$/ })).toBeVisible();
+  await expect(page.getByTestId("promise-type-status")).toHaveCount(0);
+  // References: every files: section, with its bundle and promise count,
+  // linking to the line of the section.
+  await expect(page.getByTestId("references-heading")).toHaveText(`References (${sections.length})`);
+  await expect(page.getByTestId("references-description")).toHaveText("Where files is used in the policy:");
+  const sorted = [...sections].sort((a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line);
+  const first = sorted[0]!;
+  const ref = page.getByTestId("reference-item").first();
+  await expect(ref.getByTestId("file-line-link")).toHaveAttribute("href", `${fileHref(first.checksum)}#L${first.line}`);
+  await expect(ref.getByTestId("reference-block")).toHaveText(`In ${first.block.name}`);
+  await expect(ref.getByTestId("reference-detail")).toHaveText(`${first.promises} promise${first.promises === 1 ? "" : "s"}`);
+  const lines = fileContents[first.checksum]!.content!.split("\n");
+  expect(lines[first.line - 1]).toMatch(/^\s*files:/);
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${onHosts.length})`);
+  await page.getByTestId("resources-heading").click();
+  await expect(page.getByTestId("resource-item").getByRole("link").first()).toHaveAttribute(
+    "href",
+    "https://docs.cfengine.com/docs/master/reference-promise-types-files.html",
+  );
+
+  // A promise type the policy never uses.
+  const used = new Set(Object.values(policyFiles).flatMap((f) => f.sections.map((s) => s.type)));
+  const unused = names.find((n) => !used.has(n))!;
+  await page.goto(`/entry/built-in-promise-type/${encodeURIComponent(unused)}`);
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `No ${unused} promises are made in the policy on your hosts.`,
+  );
+  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("no-hosts")).toHaveText(`The policy on your hosts makes no ${unused} promises.`);
+
+  // Files and bundles have a Promise types tab listing their sections.
+  const hub = hubHosts[0]!;
+  const checksum = hub.files[INPUTS_PROMISES]!;
+  const fileSections = policyFiles[checksum]!.sections;
+  await page.goto(`${fileHref(checksum)}?tab=promise-types`);
+  await expect(page.getByTestId("promise-types-heading")).toHaveText(`Promise types (${fileSections.length})`);
+  await expect(page.getByTestId("promise-types-description")).toHaveText("Promise types used in this file:");
+  const firstSection = [...fileSections].sort((a, b) => a.line - b.line)[0]!;
+  const item = page.getByTestId("content-item").first();
+  await expect(item.locator(".type-badge")).toHaveText("built-in-promise-type");
+  await expect(item.getByRole("link").first()).toHaveText(firstSection.type);
+  await expect(item.getByTestId("content-line-link")).toHaveAttribute("href", `${fileHref(checksum)}#L${firstSection.line}`);
+  await expect(item.getByTestId("content-block")).toHaveText(`In ${firstSection.block.name}`);
+  await expect(item.getByTestId("content-detail")).toHaveText(
+    `${firstSection.promises} promise${firstSection.promises === 1 ? "" : "s"}`,
+  );
+  const defSections = Object.values(policyFiles).flatMap((f) => f.sections.filter((s) => s.block.name === "bundle common def"));
+  await page.goto(`${bundleHref("bundle common def")}?tab=promise-types`);
+  await expect(page.getByTestId("promise-types-heading")).toHaveText(`Promise types (${defSections.length})`);
+  await expect(page.getByTestId("promise-types-description")).toHaveText("Promise types used in bundle common def:");
+  await expect(page.getByTestId("content-item")).toHaveCount(Math.min(PAGE_SIZE, defSections.length));
+  await expect(page.getByTestId("content-item").first().getByTestId("content-block")).toHaveCount(0);
+
+  // A custom promise type's references say whether it is defined or used there.
+  await page.goto("/entry/custom-promise-type/git");
+  await expect(page.getByTestId("references-description")).toHaveText("Where git is defined or used in the policy:");
+  await expect(page.getByTestId("reference-item").first().getByTestId("reference-role")).toHaveText("Defined here");
 });

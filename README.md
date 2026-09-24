@@ -62,8 +62,9 @@ The frontend reads its data at build time from the `data/` directory:
   and hostname.
 - `data/classes.json` lists the CFEngine hard classes per operating system,
   used by the generator.
-- `data/functions.json` lists every built-in CFEngine function, copied from
-  the CFEngine CLI's syntax description by `scripts/import_functions.py`.
+- `data/functions.json` and `data/promise-types.json` list every built-in
+  CFEngine function and promise type, copied from the CFEngine CLI's syntax
+  description by `scripts/import_syntax.py`.
 - `data/comments.json` holds example comments.
 
 Every entry has a page with its description, external resources, similar
@@ -108,6 +109,10 @@ filters such as `port:22 group:Windows`, `os:"Ubuntu 24"` or `disk<20%`.
 - **Functions**: every built-in CFEngine function, with its signature,
   parameters and return type from the CFEngine CLI's syntax description,
   and where the policy calls it.
+- **Built-in promise types**: every built-in CFEngine promise type, with
+  its attributes and the bundle types allowing it, and the promise
+  sections of the policy using it. Files and bundles list the promise
+  types they use.
 - **Bundles, bodies, custom promise types, function calls and calls**:
   what the CFEngine policy files define, indexed from their syntax trees.
   A call of a built-in function is a function call; other calls are of
