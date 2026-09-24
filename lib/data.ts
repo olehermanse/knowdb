@@ -6,6 +6,7 @@ import filesJson from "@/data/files.json";
 import policyJson from "@/data/policy.json";
 import functionsJson from "@/data/functions.json";
 import promiseTypesJson from "@/data/promise-types.json";
+import policySetsJson from "@/data/policy-sets.json";
 
 export interface Host {
   os: string;
@@ -41,9 +42,47 @@ export interface Host {
   // When the host first and most recently reported in (ISO 8601, UTC).
   "first-seen": string;
   "last-seen": string;
-  // Notable files on the host (the CFEngine policy, files CFEngine edits,
-  // the cf-agent binary): absolute path -> SHA-256 checksum of the content.
+  // The policy set the host runs (data/policy-sets.json), whose files
+  // are in its inputs directory (sys.inputdir); null if none.
+  "policy-set"?: string | null;
+  // Other notable files on the host (files CFEngine edits, the cf-agent
+  // binary): absolute path -> SHA-256 checksum of the content.
   files: Record<string, string>;
+}
+
+// A policy set: the tree of policy files a host runs, identified by the
+// SHA-256 of its file list, with the version promises.cf states.
+export interface PolicySet {
+  version: string;
+  // Relative path in the policy tree -> checksum (see data/files.json).
+  files: Record<string, string>;
+}
+const policySets = (policySetsJson as unknown as { "policy-sets": Record<string, PolicySet> })["policy-sets"];
+
+export function getPolicySet(checksum: string): PolicySet | undefined {
+  return policySets[checksum];
+}
+
+// "3.27.1 (b3b6ad10f549e2c1)": the version first, then the checksum.
+export function policySetLabel(checksum: string): string {
+  const set = policySets[checksum];
+  return set ? `${set.version} (${abbreviateChecksum(checksum)})` : abbreviateChecksum(checksum);
+}
+
+// The files on a host: the ones it reports, plus the files of its policy
+// set in its inputs directory (and in masterfiles on a hub), as absolute
+// paths, since a host reports the set rather than each file.
+export function hostFiles(host: Host): Record<string, string> {
+  const files: Record<string, string> = { ...(host.files ?? {}) };
+  const set = host["policy-set"] ? policySets[host["policy-set"]] : undefined;
+  if (!set) return files;
+  const inputdir = host.variables?.["sys.inputdir"] ?? "/var/cfengine/inputs";
+  const sep = inputdir.includes("\\") ? "\\" : "/";
+  for (const [rel, checksum] of Object.entries(set.files)) {
+    files[`${inputdir}${sep}${rel.split("/").join(sep)}`] = checksum;
+    if (host.role === ROLE_HUB && sep === "/") files[`/var/cfengine/masterfiles/${rel}`] = checksum;
+  }
+  return files;
 }
 
 // The content of a file, from data/files.json, keyed by checksum. Binaries
@@ -357,6 +396,8 @@ export type EntryType =
   | "path"
   // The last component of a path, e.g. "promises.cf".
   | "filename"
+  // A policy set (data/policy-sets.json), named by its checksum.
+  | "policy-set"
   // Things defined in CFEngine policy files (data/policy.json): a bundle
   // or body named "<keyword> <type> <name>" ("bundle agent main"), a custom promise type
   // defined with a `promise agent` block, and something called from the
@@ -622,7 +663,8 @@ export function getPolicyContents(entry: EntryRef): PolicyContent[] {
   );
 }
 
-// The contents of a file or block split into the Contents tabs.
+// The contents of a file or block split into the Contents tabs; a policy
+// set's are those of all its files.
 export function getPolicyContentsByGroup(entry: EntryRef): Record<ContentGroup, PolicyContent[]> {
   const groups: Record<ContentGroup, PolicyContent[]> = {
     blocks: [],
@@ -631,7 +673,13 @@ export function getPolicyContentsByGroup(entry: EntryRef): Record<ContentGroup, 
     variables: [],
     classes: [],
   };
-  for (const item of getPolicyContents(entry)) groups[item.group].push(item);
+  const items =
+    entry.type === "policy-set"
+      ? [...new Set(policySetFiles(entry.name).map((f) => f.checksum))].flatMap((checksum) =>
+          getPolicyContents({ type: "file", name: checksum }),
+        )
+      : getPolicyContents(entry);
+  for (const item of items) groups[item.group].push(item);
   return groups;
 }
 
@@ -639,9 +687,11 @@ function buildIndex() {
   const hostsByKey = new Map<string, Host>();
   const entries = new Map<string, { type: EntryType; name: string; hosts: Set<string> }>();
   const groupsByHost = new Map<string, string[]>();
-  // Files: the paths each filename is found at, and the names of each file.
+  // Files: the paths each filename is found at, the names of each file,
+  // and every file on each host (reported or from its policy set).
   const pathsByFilename = new Map<string, Set<string>>();
   const namesByFile = new Map<string, Set<string>>();
+  const filesByHost = new Map<string, Record<string, string>>();
 
   const ensure = (type: EntryType, name: string) => {
     const key = entryKey(type, name);
@@ -662,6 +712,7 @@ function buildIndex() {
   for (const group of groups) ensure("group", group.name);
   for (const name of Object.keys(builtinFunctions)) ensure("function", name);
   for (const name of Object.keys(builtinPromiseTypes)) ensure("built-in-promise-type", name);
+  for (const checksum of Object.keys(policySets)) ensure("policy-set", checksum);
 
   for (const host of hosts) {
     hostsByKey.set(host.id, host);
@@ -685,7 +736,10 @@ function buildIndex() {
       link("variable", variable, host.id);
       link("value", valueEntryName(variable, value), host.id);
     }
-    for (const [path, checksum] of Object.entries(host.files ?? {})) {
+    if (host["policy-set"] && policySets[host["policy-set"]]) link("policy-set", host["policy-set"], host.id);
+    const files = hostFiles(host);
+    filesByHost.set(host.id, files);
+    for (const [path, checksum] of Object.entries(files)) {
       const filename = fileNameOf(path);
       link("path", path, host.id);
       link("file", checksum, host.id);
@@ -719,11 +773,16 @@ function buildIndex() {
     }
   }
 
-  return { hostsByKey, entries, groupsByHost, byNormalizedName, pathsByFilename, namesByFile };
+  return { hostsByKey, entries, groupsByHost, byNormalizedName, pathsByFilename, namesByFile, filesByHost };
 }
 
-const { hostsByKey, entries, groupsByHost, byNormalizedName, pathsByFilename, namesByFile } =
+const { hostsByKey, entries, groupsByHost, byNormalizedName, pathsByFilename, namesByFile, filesByHost } =
   buildIndex();
+
+// Every file on a host by absolute path (see hostFiles).
+export function getHostFiles(hostkey: string): Record<string, string> {
+  return filesByHost.get(hostkey) ?? {};
+}
 
 // The distinct filenames a file (checksum) is found under, sorted.
 export function fileNames(checksum: string): string[] {
@@ -745,7 +804,7 @@ export interface FileCount {
 function countPaths(hostkeys: string[], wanted: (path: string, checksum: string) => boolean): PathCount[] {
   const counts = new Map<string, number>();
   for (const hostkey of hostkeys) {
-    for (const [path, checksum] of Object.entries(hostsByKey.get(hostkey)?.files ?? {})) {
+    for (const [path, checksum] of Object.entries(filesByHost.get(hostkey) ?? {})) {
       if (wanted(path, checksum)) counts.set(path, (counts.get(path) ?? 0) + 1);
     }
   }
@@ -757,7 +816,7 @@ function countPaths(hostkeys: string[], wanted: (path: string, checksum: string)
 function countFiles(hostkeys: string[], wanted: (path: string, checksum: string) => boolean): FileCount[] {
   const counts = new Map<string, number>();
   for (const hostkey of hostkeys) {
-    for (const [path, checksum] of Object.entries(hostsByKey.get(hostkey)?.files ?? {})) {
+    for (const [path, checksum] of Object.entries(filesByHost.get(hostkey) ?? {})) {
       if (wanted(path, checksum)) counts.set(checksum, (counts.get(checksum) ?? 0) + 1);
     }
   }
@@ -1045,6 +1104,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "file",
   "path",
   "filename",
+  "policy-set",
   "bundle",
   "body",
   "custom-promise-type",
@@ -1075,6 +1135,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   file: "Files",
   path: "Paths",
   filename: "Filenames",
+  "policy-set": "Policy sets",
   bundle: "Bundles",
   body: "Bodies",
   "custom-promise-type": "Custom promise types",
@@ -1085,9 +1146,26 @@ export const TYPE_LABELS: Record<EntryType, string> = {
 };
 
 // What to show for an entry in lists and links: its name, except for files
-// whose checksum is abbreviated (the full checksum is the page title).
+// whose checksum is abbreviated (the full checksum is the page title) and
+// policy sets, shown as their version and abbreviated checksum.
 export function entryLabel(ref: EntryRef): string {
-  return ref.type === "file" ? abbreviateChecksum(ref.name) : ref.name;
+  if (ref.type === "file") return abbreviateChecksum(ref.name);
+  if (ref.type === "policy-set") return policySetLabel(ref.name);
+  return ref.name;
+}
+
+// The files of a policy set: relative path and checksum, in path order.
+export function policySetFiles(checksum: string): { path: string; checksum: string }[] {
+  const set = policySets[checksum];
+  if (!set) return [];
+  return Object.entries(set.files).map(([path, sum]) => ({ path, checksum: sum }));
+}
+
+// The policy sets containing a file.
+export function policySetsWithFile(checksum: string): string[] {
+  return Object.entries(policySets)
+    .filter(([, set]) => Object.values(set.files).includes(checksum))
+    .map(([sum]) => sum);
 }
 
 // All entries of one type, sorted by name (numerically where names are
@@ -1126,7 +1204,7 @@ export interface SimilarEntry {
 // and then the first 3 characters of the value.
 function similarity(type: EntryType, a: string, b: string): number {
   // Checksums sharing a prefix have nothing in common.
-  if (type === "file") return -1;
+  if (type === "file" || type === "policy-set") return -1;
   if (type === "value") {
     const x = parseValueEntryName(a);
     const y = parseValueEntryName(b);
@@ -1443,6 +1521,7 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
     related.push({ type: "filename", name: fileNameOf(entry.name) });
   } else if (entry.type === "file") {
     for (const name of fileNames(entry.name)) related.push({ type: "filename", name });
+    for (const set of policySetsWithFile(entry.name)) related.push({ type: "policy-set", name: set });
   } else if (entry.type === "call") {
     // The bundle(s) or body(ies) the name refers to.
     related.push(...calledBlocks(entry.name));
@@ -1490,7 +1569,7 @@ export function seeAlsoLabel(ref: EntryRef): string {
     return name ? `port ${ref.name} (${name})` : `port ${ref.name}`;
   }
   const typeLabel = ref.type === "os" ? "OS" : ref.type;
-  return `${ref.name} (${typeLabel})`;
+  return `${entryLabel(ref)} (${typeLabel})`;
 }
 
 export const NO_USER_INFO = "No information available about this user.";
@@ -1549,6 +1628,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   file: "A file, identified by the SHA-256 checksum of its content.",
   path: "The absolute path of a file on a host.",
   filename: "The name of a file, without its directory.",
+  "policy-set": "A CFEngine policy set: the tree of policy files a host runs, identified by the SHA-256 checksum of its file list.",
   bundle: "A bundle defined in the CFEngine policy.",
   body: "A body defined in the CFEngine policy.",
   "custom-promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
@@ -1675,6 +1755,12 @@ export function describeEntry(entry: EntryRef): string {
   }
   if (entry.type === "file") {
     return describeFile(entry.name);
+  }
+  if (entry.type === "policy-set") {
+    const set = policySets[entry.name];
+    if (set) {
+      return `CFEngine policy set version ${set.version} with ${plural(Object.keys(set.files).length, "file")}, identified by the SHA-256 checksum of its file list.`;
+    }
   }
   if (entry.type === "filename") {
     return getFilenameInfo(entry.name)?.description ?? NO_FILENAME_INFO;
@@ -1834,6 +1920,8 @@ export function summarizeEntry(entry: Entry): string {
       return `${hosts} in your infrastructure ${n === 1 ? "has" : "share"} this hostname.`;
     case "file":
       return `This file is found on ${hosts} in your infrastructure, at ${plural(aggregatePathsOfFile(entry.name, entry.hosts).length, "different path")}.`;
+    case "policy-set":
+      return `${hosts} in your infrastructure ${n === 1 ? "runs" : "run"} this policy set.`;
     case "path":
       return `This path exists on ${hosts} in your infrastructure, with ${plural(aggregateFilesAtPath(entry.name, entry.hosts).length, "different file")} (${n === 1 || aggregateFilesAtPath(entry.name, entry.hosts).length === 1 ? "checksum" : "checksums"}).`;
     case "filename":

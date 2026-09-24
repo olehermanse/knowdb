@@ -9,6 +9,7 @@ import base64
 import hashlib
 import json
 import random
+import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -21,6 +22,7 @@ ROLE_CLIENT = "Client"
 ROOT = Path(__file__).parent.parent
 OUTPUT_PATH = ROOT / "tmp" / "hosts.json"
 FILES_OUTPUT_PATH = ROOT / "tmp" / "files.json"
+POLICY_SETS_OUTPUT_PATH = ROOT / "tmp" / "policy-sets.json"
 CLASSES_PATH = ROOT / "data" / "classes.json"
 # A real CFEngine policy set (the Masterfiles Policy Framework as built by
 # cfbs). Every file in it ends up in /var/cfengine/masterfiles on the hubs
@@ -608,15 +610,35 @@ def load_masterfiles():
     return policy
 
 
-# The hubs hold the current policy; a host that has not reported in for a
-# while still runs the previous release, in which the files naming the
-# version differ.
+# A policy set is the whole tree of policy files a host runs, identified
+# by the SHA-256 of its file list (relative path and checksum per line),
+# with the version promises.cf states. The hubs hold the current policy;
+# a host that has not reported in for a while still runs the previous
+# release, in which the files naming the version differ.
+POLICY_SETS = {}  # checksum -> {"version": ..., "files": {relative path: checksum}}
+
+
+def add_policy_set(policy):
+    """Register a policy set and return its checksum."""
+    listing = "\n".join(f"{rel} {checksum}" for rel, checksum in sorted(policy.items()))
+    checksum = hashlib.sha256(listing.encode("utf-8")).hexdigest()
+    version = "unknown"
+    promises = FILE_CONTENTS.get(policy.get("promises.cf", ""), {}).get("content") or ""
+    match = re.search(r'version\s*=>\s*"CFEngine Promises\.cf ([0-9.]+)"', promises)
+    if match:
+        version = match.group(1)
+    POLICY_SETS[checksum] = {"version": version, "files": dict(sorted(policy.items()))}
+    return checksum
+
+
 CURRENT_POLICY = load_masterfiles()
 PREVIOUS_POLICY = dict(CURRENT_POLICY)
 for _rel in ("promises.cf", "update.cf", "standalone_self_upgrade.cf"):
     if _rel in CURRENT_POLICY:
         _text = FILE_CONTENTS[CURRENT_POLICY[_rel]]["content"]
         PREVIOUS_POLICY[_rel] = add_file(_text.replace("3.27.1", "3.27.0"))
+CURRENT_POLICY_SET = add_policy_set(CURRENT_POLICY) if CURRENT_POLICY else None
+PREVIOUS_POLICY_SET = add_policy_set(PREVIOUS_POLICY) if CURRENT_POLICY else None
 
 # The cf-agent binary per CFEngine version: one checksum per version and
 # platform, a few megabytes, content not available.
@@ -686,25 +708,27 @@ def motd(environment):
     )
 
 
-def policy_paths(base, sep, policy):
-    return {f"{base}{sep}{rel.replace('/', sep)}": checksum for rel, checksum in policy.items()}
+def generate_policy_set(host):
+    """The checksum of the policy set the host runs: the current one on hubs
+    and online hosts, the previous release on hosts that have not reported
+    in for a while. The policy files themselves live in the host's inputs
+    directory (sys.inputdir), and in masterfiles on hubs."""
+    if host["online"] or host["role"] == ROLE_HUB:
+        return CURRENT_POLICY_SET
+    return PREVIOUS_POLICY_SET
 
 
 def generate_files(host):
-    """The notable files on a host: {absolute path: SHA-256 checksum}."""
+    """The notable files on a host besides its policy set: {absolute path:
+    SHA-256 checksum}."""
     os_name = host["os"]
     windows = os_name.startswith("Windows")
     environment = host["hostname"].split("-")[0].rstrip("0123456789")
-    policy = CURRENT_POLICY if host["online"] or host["role"] == ROLE_HUB else PREVIOUS_POLICY
     files = {}
     if windows:
         workdir = "C:\\Program Files\\Cfengine"
-        files.update(policy_paths(f"{workdir}\\inputs", "\\", policy))
         files[f"{workdir}\\bin\\cf-agent.exe"] = agent_binary(host["software-versions"]["cfengine"], True)
     else:
-        files.update(policy_paths("/var/cfengine/inputs", "/", policy))
-        if host["role"] == ROLE_HUB:
-            files.update(policy_paths("/var/cfengine/masterfiles", "/", CURRENT_POLICY))
         files["/var/cfengine/bin/cf-agent"] = agent_binary(host["software-versions"]["cfengine"], False)
         files["/etc/ssh/sshd_config"] = add_file(sshd_config(os_name, environment))
         files["/root/.ssh/authorized_keys"] = add_file(authorized_keys(environment))
@@ -770,7 +794,9 @@ def generate_host(used_hostnames, used_macs):
         "hub": None,
         # variables are filled in afterwards too: some depend on the hub.
         "variables": None,
-        # files too: hubs have the masterfiles and stale hosts old policy.
+        # The policy set and the other files are filled in afterwards too:
+        # stale hosts run the previous policy release.
+        "policy-set": None,
         "files": None,
         "cloud-provider": generate_cloud_provider(),
         "online": online,
@@ -786,6 +812,7 @@ def main():
     assign_roles(hosts)
     for host in hosts:
         host["variables"] = generate_variables(host)
+        host["policy-set"] = generate_policy_set(host)
         host["files"] = generate_files(host)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
@@ -806,6 +833,22 @@ def main():
         )
         f.write("\n")
     print(f"Wrote {len(FILE_CONTENTS)} files to {FILES_OUTPUT_PATH}")
+    with open(POLICY_SETS_OUTPUT_PATH, "w") as f:
+        json.dump(
+            {
+                "_comment": "The policy sets hosts run (the policy-set field of each host in "
+                "hosts.json), keyed by the SHA-256 of the set's file list (one 'relative path "
+                "checksum' line per file, sorted): the version promises.cf states and the files, "
+                "relative path to checksum (see files.json). A host has them in its inputs "
+                "directory (sys.inputdir); a hub also in /var/cfengine/masterfiles. Generated by "
+                "scripts/generate_hosts.py; the frontend reads this file at build time.",
+                "policy-sets": POLICY_SETS,
+            },
+            f,
+            indent=1,
+        )
+        f.write("\n")
+    print(f"Wrote {len(POLICY_SETS)} policy sets to {POLICY_SETS_OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

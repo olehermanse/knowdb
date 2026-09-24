@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Index the CFEngine policy found on the hosts: the bundles, bodies and
 // promise types each .cf file defines, and the variables, classes and
-// calls (of functions, bundles and bodies) inside them, with line numbers. Reads data/hosts.json and
-// data/files.json and writes data/policy.json.
+// calls (of functions, bundles and bodies) inside them, with line numbers.
+// Reads data/hosts.json, data/policy-sets.json and data/files.json and
+// writes data/policy.json.
 //
 // The files are parsed with the tree-sitter grammar for CFEngine
 // (public/tree-sitter-cfengine.wasm, the same grammar as
@@ -25,15 +26,17 @@ const skipCli = process.argv.includes("--skip-cli");
 
 const hosts = JSON.parse(readFileSync(path.join(root, "data/hosts.json"), "utf8"));
 const files = JSON.parse(readFileSync(path.join(root, "data/files.json"), "utf8")).files;
+const policySets = JSON.parse(readFileSync(path.join(root, "data/policy-sets.json"), "utf8"))["policy-sets"];
 
-// The .cf files on any host, by checksum, with one of their filenames.
+// The .cf files in any policy set or on any host, by checksum, with one of
+// their filenames.
 const policyFiles = new Map();
-for (const host of hosts) {
-  for (const [p, checksum] of Object.entries(host.files ?? {})) {
-    const name = p.split(/[\\/]/).pop();
-    if (/\.cf$/i.test(name) && files[checksum]?.content != null) policyFiles.set(checksum, name);
-  }
-}
+const consider = (p, checksum) => {
+  const name = p.split(/[\\/]/).pop();
+  if (/\.cf$/i.test(name) && files[checksum]?.content != null) policyFiles.set(checksum, name);
+};
+for (const set of Object.values(policySets)) for (const [rel, checksum] of Object.entries(set.files)) consider(rel, checksum);
+for (const host of hosts) for (const [p, checksum] of Object.entries(host.files ?? {})) consider(p, checksum);
 
 await Parser.init();
 const language = await Language.load(

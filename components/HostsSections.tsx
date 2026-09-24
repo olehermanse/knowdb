@@ -12,6 +12,7 @@ import {
   getHost,
   getPolicyRefs,
   Host,
+  policySetLabel,
   parseValueEntryName,
   parseVersionEntryName,
 } from "@/lib/data";
@@ -63,6 +64,8 @@ function describeLinkedHosts(entry: Entry): string {
       return `Hosts with a file at ${entry.name}:`;
     case "filename":
       return `Hosts with a file named ${entry.name}:`;
+    case "policy-set":
+      return `Hosts running policy set ${policySetLabel(entry.name)}:`;
     case "bundle":
       return `Hosts whose policy defines ${entry.name}:`;
     case "body":

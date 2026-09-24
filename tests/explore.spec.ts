@@ -6,6 +6,8 @@ import filesJson from "../data/files.json";
 import policyJson from "../data/policy.json";
 import functionsJson from "../data/functions.json";
 import promiseTypesJson from "../data/promise-types.json";
+import policySetsJson from "../data/policy-sets.json";
+import { createHash } from "node:crypto";
 
 type Host = (typeof hosts)[number];
 const fileContents = (filesJson as unknown as {
@@ -109,12 +111,12 @@ async function expectAggregatedPorts(
 // guaranteed to exist and be linked to all hosts.
 const someHost = hosts[0];
 
-test("front page shows 26 random entries", async ({ page }) => {
+test("front page shows 30 random entries", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Or pick one of the randomly selected entries below:")).toBeVisible();
   const items = page.getByTestId("entry-list").locator("li");
-  await expect(items).toHaveCount(26);
-  await expect(items.locator("a.entry-link")).toHaveCount(26);
+  await expect(items).toHaveCount(30);
+  await expect(items.locator("a.entry-link")).toHaveCount(30);
 });
 
 test("front page always shows at least one entry of each type", async ({
@@ -140,6 +142,7 @@ test("front page always shows at least one entry of each type", async ({
     "file",
     "path",
     "filename",
+    "policy-set",
     "bundle",
     "body",
     "custom-promise-type",
@@ -152,7 +155,7 @@ test("front page always shows at least one entry of each type", async ({
   for (let i = 0; i < 5; i++) {
     await page.goto("/");
     const badges = page.getByTestId("entry-list").locator(".type-badge");
-    await expect(badges).toHaveCount(26);
+    await expect(badges).toHaveCount(30);
     const shown = (await badges.allTextContents()).map((t) => t.toLowerCase());
     for (const type of allTypes) {
       expect(shown, `load ${i + 1} is missing type ${type}`).toContain(type);
@@ -2324,7 +2327,7 @@ test("clouds tab shows a pie chart of cloud providers", async ({ page }) => {
 test("front page buttons list everything of a type", async ({ page }) => {
   await page.goto("/");
   const buttons = page.getByTestId("type-buttons").getByRole("link");
-  await expect(buttons).toHaveCount(26);
+  await expect(buttons).toHaveCount(27);
   // Buttons come before the random list and sit side by side.
   await expect(page.getByTestId("entry-list")).toBeVisible();
   const buttonsBox = (await page.getByTestId("type-buttons").boundingBox())!;
@@ -2516,6 +2519,7 @@ test("host page has two columns with software, classes and variables spread belo
     "Role",
     "Hub",
     ...(isHub ? ["Clients"] : []),
+    "Policy set",
     "Local users",
     "Groups",
   ]);
@@ -3272,7 +3276,7 @@ test("filters appended to a type listing stay in the search bar and narrow the l
   );
   await expect(input).toHaveValue(query);
   await expect(page.getByTestId("search-summary")).toHaveText(
-    `${u24Clouds.size} clouds with hosts matching os ${osName}.`,
+    `${u24Clouds.size} ${u24Clouds.size === 1 ? "cloud" : "clouds"} with hosts matching os ${osName}.`,
   );
   const items = page.getByTestId("search-results").locator("li");
   await expect(items).toHaveCount(u24Clouds.size);
@@ -3297,7 +3301,24 @@ test("filters appended to a type listing stay in the search bar and narrow the l
 // Files: every host maps the absolute paths of its notable files to the
 // SHA-256 checksums of their content (data/hosts.json), and the content of
 // each checksum is in data/files.json.
-type FileHost = Omit<Host, "files"> & { files: Record<string, string> };
+type FileHost = Omit<Host, "files"> & { files: Record<string, string>; "policy-set": string | null };
+const policySets = (policySetsJson as unknown as {
+  "policy-sets": Record<string, { version: string; files: Record<string, string> }>;
+})["policy-sets"];
+// Every file on a host: the ones it reports plus its policy set's files in
+// its inputs directory (and masterfiles on a hub), as lib/data.ts derives.
+function filesOf(h: FileHost): Record<string, string> {
+  const files: Record<string, string> = { ...h.files };
+  const set = h["policy-set"] ? policySets[h["policy-set"]] : undefined;
+  if (!set) return files;
+  const inputdir = (h.variables as Record<string, string>)["sys.inputdir"]!;
+  const sep = inputdir.includes("\\") ? "\\" : "/";
+  for (const [rel, sum] of Object.entries(set.files)) {
+    files[`${inputdir}${sep}${rel.split("/").join(sep)}`] = sum;
+    if (h.role === "Hub" && sep === "/") files[`/var/cfengine/masterfiles/${rel}`] = sum;
+  }
+  return files;
+}
 interface PolicyBlock {
   type: string;
   name: string;
@@ -3331,7 +3352,7 @@ const fileName = (path: string) => path.split(/[\\/]/).pop()!;
 function checksumsAt(path: string, selected: FileHost[] = typedHosts): Map<string, number> {
   const counts = new Map<string, number>();
   for (const h of selected) {
-    const sum = h.files[path];
+    const sum = filesOf(h)[path];
     if (sum) counts.set(sum, (counts.get(sum) ?? 0) + 1);
   }
   return counts;
@@ -3339,31 +3360,49 @@ function checksumsAt(path: string, selected: FileHost[] = typedHosts): Map<strin
 const fileHref = (checksum: string) => `/entry/file/${checksum}`;
 const pathHref = (path: string) => `/entry/path/${encodeURIComponent(path)}`;
 
-test("the generated hosts have the policy files where CFEngine keeps them", async () => {
-  // The policy set is in inputs on every host and in masterfiles on hubHosts.
-  for (const h of linuxHosts) expect(h.files[INPUTS_PROMISES]).toMatch(/^[0-9a-f]{64}$/);
-  for (const h of windowsHosts) expect(h.files[WINDOWS_PROMISES]).toMatch(/^[0-9a-f]{64}$/);
-  for (const h of hubHosts) {
-    expect(h.files[MASTERFILES_PROMISES]).toBe(h.files[INPUTS_PROMISES]);
+test("the generated hosts run a policy set and have the policy files where CFEngine keeps them", async () => {
+  // Two policy sets: the current release on hubs and online hosts, the
+  // previous one on hosts that have not reported in for a while.
+  const versions = Object.values(policySets).map((p) => p.version).sort();
+  expect(versions.length).toBe(2);
+  const [current] = Object.entries(policySets).sort((a, b) => b[1].version.localeCompare(a[1].version))[0]!;
+  for (const h of typedHosts) {
+    expect(h["policy-set"]).not.toBeNull();
+    expect(policySets[h["policy-set"]!]).toBeDefined();
+    if (h.role === "Hub" || h.online) expect(h["policy-set"]).toBe(current);
+    else expect(h["policy-set"]).not.toBe(current);
   }
-  for (const h of typedHosts.filter((x) => x.role !== "Hub")) {
-    expect(h.files[MASTERFILES_PROMISES]).toBeUndefined();
+  // A set is identified by the SHA-256 of its file list.
+  for (const [checksum, set] of Object.entries(policySets)) {
+    const listing = Object.entries(set.files)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([rel, sum]) => `${rel} ${sum}`)
+      .join("\n");
+    expect(createHash("sha256").update(listing).digest("hex")).toBe(checksum);
+    expect(set.files["promises.cf"]).toMatch(/^[0-9a-f]{64}$/);
+    expect(fileContents[set.files["promises.cf"]!]!.content).toContain(`CFEngine Promises.cf ${set.version}`);
   }
+  // The policy files are in inputs on every host and in masterfiles on hubs.
+  for (const h of linuxHosts) expect(filesOf(h)[INPUTS_PROMISES]).toMatch(/^[0-9a-f]{64}$/);
+  for (const h of windowsHosts) expect(filesOf(h)[WINDOWS_PROMISES]).toMatch(/^[0-9a-f]{64}$/);
+  for (const h of hubHosts) expect(filesOf(h)[MASTERFILES_PROMISES]).toBe(filesOf(h)[INPUTS_PROMISES]);
+  for (const h of typedHosts.filter((x) => x.role !== "Hub")) expect(filesOf(h)[MASTERFILES_PROMISES]).toBeUndefined();
+  // Hosts report only their other files.
+  for (const h of typedHosts) for (const p of Object.keys(h.files)) expect(p).not.toContain("inputs");
   // Every checksum has content (or, for binaries, at least a size).
   for (const h of typedHosts) {
-    for (const [path, checksum] of Object.entries(h.files)) {
+    for (const [path, checksum] of Object.entries(filesOf(h))) {
       expect(fileContents[checksum], `${h.hostname} ${path}`).toBeDefined();
     }
   }
-  // Binaries have no content; the rest have content matching their size.
   const hub = hubHosts[0]!;
   const agent = fileContents[hub.files["/var/cfengine/bin/cf-agent"]!]!;
   expect(agent.content).toBeNull();
   expect(agent.size).toBeGreaterThan(1_000_000);
-  const promises = fileContents[hub.files[INPUTS_PROMISES]!]!;
+  const promises = fileContents[filesOf(hub)[INPUTS_PROMISES]!]!;
   expect(promises.content).toContain("promises.cf - Basic Policy for CFEngine");
   expect(Buffer.byteLength(promises.content!, "utf8")).toBe(promises.size);
-  // One filename, several files: promises.cf differs between hosts.
+  // One filename, several files: promises.cf differs between the sets.
   expect(checksumsAt(INPUTS_PROMISES).size).toBeGreaterThan(1);
   // One file, several paths: the same authorized_keys on many hosts.
   expect(checksumsAt("/root/.ssh/authorized_keys").size).toBeGreaterThan(1);
@@ -3391,9 +3430,12 @@ test("a host page lists its files with their checksums in a Files modal", async 
   await expect(first).toContainText(" at ");
   await expect(links.nth(1)).toHaveText(paths[0]!);
   await expect(links.nth(1)).toHaveAttribute("href", pathHref(paths[0]!));
-  // The filter narrows the list to matching paths.
-  await page.getByTestId("files-modal-filter").fill("promises.cf");
-  const matching = paths.filter((p) => p.includes("promises.cf"));
+  // The filter narrows the list to matching paths. The policy set's files
+  // are not listed here: the host reports the set, not each file.
+  await page.getByTestId("files-modal-filter").fill("sshd");
+  const matching = paths.filter((p) => p.includes("sshd"));
+  expect(matching.length).toBe(1);
+  expect(paths.some((p) => p.includes("inputs"))).toBe(false);
   await expect(rows.locator("visible=true")).toHaveCount(matching.length);
   await expect(page.getByTestId("files-modal-shown")).toHaveText(
     `${matching.length} of ${paths.length} files match`,
@@ -3409,9 +3451,9 @@ test("a file page shows its full content, the paths it is found at and its names
   page,
 }) => {
   const hub = hubHosts[0]!;
-  const checksum = hub.files[INPUTS_PROMISES]!;
+  const checksum = filesOf(hub)[INPUTS_PROMISES]!;
   const content = fileContents[checksum]!.content!;
-  const withFile = typedHosts.filter((h) => Object.values(h.files).includes(checksum));
+  const withFile = typedHosts.filter((h) => Object.values(filesOf(h)).includes(checksum));
   await page.goto(fileHref(checksum));
   // The title is the filename, with the checksum after it like a host's key.
   await expect(page.getByTestId("entry-name")).toHaveText(`promises.cf (${checksum})`);
@@ -3433,7 +3475,7 @@ test("a file page shows its full content, the paths it is found at and its names
   // The Paths tab: where the file is found, most hosts first.
   const expectedPaths = new Map<string, number>();
   for (const h of withFile) {
-    for (const [p, sum] of Object.entries(h.files)) {
+    for (const [p, sum] of Object.entries(filesOf(h))) {
       if (sum === checksum) expectedPaths.set(p, (expectedPaths.get(p) ?? 0) + 1);
     }
   }
@@ -3465,7 +3507,7 @@ test("a file page shows its full content, the paths it is found at and its names
 });
 
 test("a binary file has a checksum and size but no content", async ({ page }) => {
-  const checksum = hubHosts[0]!.files["/var/cfengine/bin/cf-agent"]!;
+  const checksum = filesOf(hubHosts[0]!)["/var/cfengine/bin/cf-agent"]!;
   const mb = (fileContents[checksum]!.size / 1_000_000).toFixed(1);
   await page.goto(fileHref(checksum));
   await expect(page.getByTestId("entry-name")).toHaveText(`cf-agent (${checksum})`);
@@ -3519,7 +3561,7 @@ test("a path page lists the different files found at it", async ({ page }) => {
   );
   await expect(page.getByTestId("host-item")).toHaveCount(Math.min(PAGE_SIZE, otherCount));
   // The stale policy is on the hosts that have not reported in.
-  const stale = linuxHosts.filter((h) => h.files[INPUTS_PROMISES] === other);
+  const stale = linuxHosts.filter((h) => filesOf(h)[INPUTS_PROMISES] === other);
   for (const h of stale) expect(h.online, h.hostname).toBe(false);
 });
 
@@ -3527,7 +3569,7 @@ test("a filename page lists its paths and files across hosts", async ({ page }) 
   const paths = new Map<string, number>();
   const sums = new Map<string, number>();
   for (const h of typedHosts) {
-    for (const [p, sum] of Object.entries(h.files)) {
+    for (const [p, sum] of Object.entries(filesOf(h))) {
       if (fileName(p) !== "promises.cf") continue;
       paths.set(p, (paths.get(p) ?? 0) + 1);
       sums.set(sum, (sums.get(sum) ?? 0) + 1);
@@ -3576,8 +3618,8 @@ test("a filename without hard coded information says so", async ({ page }) => {
 test("files, paths and filenames have front page buttons, listings and search filters", async ({
   page,
 }) => {
-  const allSums = new Set(typedHosts.flatMap((h) => Object.values(h.files)));
-  const allPaths = new Set(typedHosts.flatMap((h) => Object.keys(h.files)));
+  const allSums = new Set(typedHosts.flatMap((h) => Object.values(filesOf(h))));
+  const allPaths = new Set(typedHosts.flatMap((h) => Object.keys(filesOf(h))));
   const allNames = new Set([...allPaths].map(fileName));
   await page.goto("/");
   await expect(page.getByTestId("type-button-file")).toHaveText(`Files (${allSums.size})`);
@@ -3633,12 +3675,12 @@ test("a path can be pinned to show the checksum of its file on every host", asyn
   const pinned = page.getByTestId("pinned-list");
   await expect(pinned.getByTestId("pinned-name")).toHaveText("/etc/motd");
   const value = pinned.getByTestId("pinned-item").getByRole("link");
-  await expect(value).toHaveText(`motd (${a.files["/etc/motd"]!.slice(0, 16)})`);
-  await expect(value).toHaveAttribute("href", fileHref(a.files["/etc/motd"]!));
+  await expect(value).toHaveText(`motd (${filesOf(a)["/etc/motd"]!.slice(0, 16)})`);
+  await expect(value).toHaveAttribute("href", fileHref(filesOf(a)["/etc/motd"]!));
   // On another host: its own file; on Windows: not present.
   await page.goto(`/entry/host/${b.id}`);
   await expect(pinned.getByTestId("pinned-item").getByRole("link")).toHaveText(
-    `motd (${b.files["/etc/motd"]!.slice(0, 16)})`,
+    `motd (${filesOf(b)["/etc/motd"]!.slice(0, 16)})`,
   );
   await page.goto(`/entry/host/${win.id}`);
   await expect(pinned.getByTestId("pinned-missing")).toHaveText("(not present)");
@@ -3649,7 +3691,7 @@ test("a path can be pinned to show the checksum of its file on every host", asyn
 
 test("CFEngine policy files are syntax highlighted with tree-sitter", async ({ page }) => {
   const hub = hubHosts[0]!;
-  const checksum = hub.files[INPUTS_PROMISES]!;
+  const checksum = filesOf(hub)[INPUTS_PROMISES]!;
   const content = fileContents[checksum]!.content!;
   await page.goto(fileHref(checksum));
   await expect(page.getByTestId("content-description")).toContainText(", CFEngine policy:");
@@ -3675,7 +3717,7 @@ test("CFEngine policy files are syntax highlighted with tree-sitter", async ({ p
     await pre.evaluate((el) => getComputedStyle(el).color),
   );
   // Other files are shown as plain text.
-  const motd = hub.files["/etc/motd"]!;
+  const motd = filesOf(hub)["/etc/motd"]!;
   await page.goto(fileHref(motd));
   await expect(page.getByTestId("content-description")).not.toContainText("CFEngine policy");
   await expect(page.getByTestId("file-content")).not.toHaveAttribute("data-language", /.*/);
@@ -3699,12 +3741,12 @@ function callsOf(name: string) {
   );
 }
 const hostsWithFile = (checksum: string) =>
-  typedHosts.filter((h) => Object.values(h.files).includes(checksum));
+  typedHosts.filter((h) => Object.values(filesOf(h)).includes(checksum));
 
 test("the policy index covers every .cf file and its line numbers point at the definitions", async () => {
   const cfChecksums = new Set(
     typedHosts.flatMap((h) =>
-      Object.entries(h.files)
+      Object.entries(filesOf(h))
         .filter(([p]) => fileName(p).endsWith(".cf"))
         .map(([, sum]) => sum),
     ),
@@ -3897,7 +3939,7 @@ test("a function call page lists the calls with the bundle or body they are in",
 
 test("file content has clickable line numbers that are not part of the text", async ({ page }) => {
   const hub = hubHosts[0]!;
-  const checksum = hub.files[INPUTS_PROMISES]!;
+  const checksum = filesOf(hub)[INPUTS_PROMISES]!;
   const content = fileContents[checksum]!.content!;
   const lines = content.split("\n").length - 1;
   await page.goto(fileHref(checksum));
@@ -3920,7 +3962,7 @@ test("file content has clickable line numbers that are not part of the text", as
   await expect(page.locator("#L40")).toHaveClass(/line-target/);
   await expect(page.locator("#L39")).not.toHaveClass(/line-target/);
   // Plain files have them too.
-  await page.goto(fileHref(hub.files["/etc/motd"]!));
+  await page.goto(fileHref(filesOf(hub)["/etc/motd"]!));
   await expect(page.getByTestId("file-content").locator(".line-number")).toHaveCount(3);
 });
 
@@ -3971,7 +4013,7 @@ test("variables and classes defined in policy are variables and classes with ref
   const defs = Object.entries(policyFiles).flatMap(([checksum, f]) =>
     f.classes.filter((c) => c.name === cls.name).map((c) => ({ ...c, checksum })),
   );
-  const onHosts = typedHosts.filter((h) => defs.some((d) => Object.values(h.files).includes(d.checksum)));
+  const onHosts = typedHosts.filter((h) => defs.some((d) => Object.values(filesOf(h)).includes(d.checksum)));
   await page.goto(`/entry/class/${encodeURIComponent(cls.name)}`);
   await expect(page.getByTestId("entry-type-link")).toHaveText("class");
   await expect(page.getByTestId("entry-description")).toContainText(`The class ${cls.name}, defined by bundle `);
@@ -4024,7 +4066,7 @@ test("the git promise type is defined with a promise agent block", async ({ page
 
 test("a policy file lists what it defines, and the policy types have buttons and filters", async ({ page }) => {
   const hub = hubHosts[0]!;
-  const checksum = hub.files[INPUTS_PROMISES]!;
+  const checksum = filesOf(hub)[INPUTS_PROMISES]!;
   const f = policyFiles[checksum]!;
   const defs = [...f.bundles, ...f.bodies].sort((a, b) => a.line - b.line);
   // Blocks: the bundles and bodies of the file.
@@ -4061,7 +4103,7 @@ test("a policy file lists what it defines, and the policy types have buttons and
   await expect(page.getByTestId("content-item").first().locator(".type-badge")).toHaveText(/^(call|function-call)$/);
   await expect(page.getByTestId("content-item").first().getByTestId("content-block")).toContainText("In ");
   // Non-policy files have none of these tabs.
-  await page.goto(fileHref(hub.files["/etc/motd"]!));
+  await page.goto(fileHref(filesOf(hub)["/etc/motd"]!));
   for (const tab of ["blocks", "promise-types", "calls", "variables", "classes"]) {
     await expect(page.getByTestId(`${tab}-heading`)).toHaveCount(0);
   }
@@ -4191,7 +4233,7 @@ test("every built-in promise type is an entry, with the sections using it as ref
   const promises = sections.reduce((n, s) => n + s.promises, 0);
   const blocks = new Set(sections.map((s) => s.block.name)).size;
   const files = new Set(sections.map((s) => s.checksum)).size;
-  const onHosts = typedHosts.filter((h) => sections.some((s) => Object.values(h.files).includes(s.checksum)));
+  const onHosts = typedHosts.filter((h) => sections.some((s) => Object.values(filesOf(h)).includes(s.checksum)));
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `${promises} files promises are made in ${sections.length} sections of ${blocks} bundles in ${files} policy files, on ${onHosts.length} hosts in your infrastructure.`,
   );
@@ -4231,7 +4273,7 @@ test("every built-in promise type is an entry, with the sections using it as ref
 
   // Files and bundles have a Promise types tab listing their sections.
   const hub = hubHosts[0]!;
-  const checksum = hub.files[INPUTS_PROMISES]!;
+  const checksum = filesOf(hub)[INPUTS_PROMISES]!;
   const fileSections = policyFiles[checksum]!.sections;
   await page.goto(`${fileHref(checksum)}?tab=promise-types`);
   await expect(page.getByTestId("promise-types-heading")).toHaveText(`Promise types (${fileSections.length})`);
@@ -4256,4 +4298,75 @@ test("every built-in promise type is an entry, with the sections using it as ref
   await page.goto("/entry/custom-promise-type/git");
   await expect(page.getByTestId("references-description")).toHaveText("Where git is defined or used in the policy:");
   await expect(page.getByTestId("reference-item").first().getByTestId("reference-role")).toHaveText("Defined here");
+});
+
+test("a policy set has a version, a checksum, its hosts, its files and everything in them", async ({ page }) => {
+  const [checksum, set] = Object.entries(policySets).sort((a, b) => b[1].version.localeCompare(a[1].version))[0]!;
+  const running = typedHosts.filter((h) => h["policy-set"] === checksum);
+  expect(running.length).toBeGreaterThan(PAGE_SIZE);
+  const label = `${set.version} (${checksum.slice(0, 16)})`;
+  await page.goto("/");
+  await expect(page.getByTestId("type-button-policy-set")).toHaveText(`Policy sets (${Object.keys(policySets).length})`);
+
+  await page.goto(`/entry/policy-set/${checksum}`);
+  // The version first, the checksum in parentheses like a host's key.
+  await expect(page.getByTestId("entry-name")).toHaveText(`${set.version} (${checksum})`);
+  await expect(page.getByTestId("entry-type-link")).toHaveText("policy-set");
+  const fileCount = Object.keys(set.files).length;
+  await expect(page.getByTestId("entry-description")).toHaveText(
+    `CFEngine policy set version ${set.version} with ${fileCount} files, identified by the SHA-256 checksum of its file list.`,
+  );
+  await expect(page.getByTestId("entry-summary")).toHaveText(
+    `${running.length} hosts in your infrastructure run this policy set.`,
+  );
+  await expect(page.getByTestId("policy-set-version")).toHaveText(set.version);
+  await expect(page.getByTestId("policy-set-checksum")).toHaveText(checksum);
+  await expect(page.getByTestId("policy-set-files")).toHaveText(String(fileCount));
+  await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${running.length})`);
+  // Files: every file of the set by its path in the policy tree.
+  await expect(page.getByTestId("files-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("files-heading")).toHaveText(`Files (${fileCount})`);
+  await expect(page.getByTestId("files-description")).toHaveText("Files in this policy set:");
+  const items = page.getByTestId("file-item");
+  await expect(items).toHaveCount(PAGE_SIZE);
+  const [firstPath, firstSum] = Object.entries(set.files)[0]!;
+  await expect(items.first().getByRole("link").first()).toHaveText(firstPath);
+  await expect(items.first().getByRole("link").first()).toHaveAttribute("href", fileHref(firstSum));
+  await expect(items.first()).toContainText(`(${firstSum.slice(0, 16)})`);
+  // Everything in its files, recursively: blocks, promise types, calls,
+  // variables and classes across the whole set.
+  const cfFiles = [...new Set(Object.values(set.files))].filter((sum) => policyFiles[sum]);
+  const total = (pick: (f: PolicyFile) => number) => cfFiles.reduce((n, sum) => n + pick(policyFiles[sum]!), 0);
+  await expect(page.getByTestId("blocks-heading")).toHaveText(
+    `Blocks (${total((f) => f.bundles.length + f.bodies.length + f["promise-types"].length)})`,
+  );
+  await expect(page.getByTestId("promise-types-heading")).toHaveText(`Promise types (${total((f) => f.sections.length)})`);
+  await expect(page.getByTestId("calls-heading")).toHaveText(`Calls (${total((f) => f.calls.length)})`);
+  await expect(page.getByTestId("variables-heading")).toHaveText(`Variables (${total((f) => f.vars.length)})`);
+  await expect(page.getByTestId("classes-heading")).toHaveText(`Classes (${total((f) => f.classes.length)})`);
+  await page.getByTestId("variables-heading").click();
+  await expect(page.getByTestId("variables-description")).toHaveText("Variables defined in this policy set:");
+  const varItem = page.getByTestId("content-item").first();
+  await expect(varItem.locator(".type-badge")).toHaveText("variable");
+  await expect(varItem.getByTestId("content-block")).toContainText("In bundle ");
+  await expect(varItem.locator(".host-facts")).toContainText(".cf");
+  // Checksums are not similar to each other.
+  await expect(page.getByTestId("similar-heading")).toHaveText("Similar (0)");
+
+  // A host page shows its policy set, and a file its policy sets.
+  const hub = hubHosts[0]!;
+  await page.goto(`/entry/host/${hub.id}`);
+  const link = page.getByTestId("host-policy-set").getByRole("link");
+  await expect(link).toHaveText(`${policySets[hub["policy-set"]!]!.version} (${hub["policy-set"]!.slice(0, 16)})`);
+  await expect(link).toHaveAttribute("href", `/entry/policy-set/${hub["policy-set"]}`);
+  await page.goto(fileHref(set.files["cfbs.json"]!));
+  await expect(page.getByTestId("see-also").getByRole("link", { name: `${label} (policy-set)` })).toHaveAttribute(
+    "href",
+    `/entry/policy-set/${checksum}`,
+  );
+  // And the hosts running it are a search away.
+  await page.goto(`/search?q=${encodeURIComponent(`policy-set:${checksum}`)}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(
+    `${running.length} hosts matching policy-set ${checksum}.`,
+  );
 });

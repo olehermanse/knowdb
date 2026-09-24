@@ -32,6 +32,7 @@ import {
   abbreviateChecksum,
   parseValueEntryName,
   PathCount,
+  policySetFiles,
   valueEntryName,
   versionEntryName,
 } from "@/lib/data";
@@ -86,10 +87,17 @@ export function entryTabs(entry: Entry): Tab[] {
   if (entry.type === "file") tabs.push("content", "paths");
   if (entry.type === "path") tabs.push("files");
   if (entry.type === "filename") tabs.push("paths", "files");
+  if (entry.type === "policy-set") tabs.push("files");
   if (getPolicyRefs(entry).length > 0) tabs.push("references");
   // Policy files and blocks list what they contain, one tab per kind;
   // other files and empty kinds have none.
-  if (entry.type === "file" || entry.type === "bundle" || entry.type === "body" || entry.type === "custom-promise-type") {
+  if (
+    entry.type === "file" ||
+    entry.type === "policy-set" ||
+    entry.type === "bundle" ||
+    entry.type === "body" ||
+    entry.type === "custom-promise-type"
+  ) {
     const groups = getPolicyContentsByGroup(entry);
     for (const group of CONTENT_GROUPS) if (groups[group].length > 0) tabs.push(group);
   }
@@ -359,7 +367,9 @@ function ContentsPanel({ entry, tabs, page, keep, group }: PanelProps & { group:
   const holder =
     entry.type === "file"
       ? "this file"
-      : `${entry.type === "custom-promise-type" ? "promise type " : ""}${entry.name}`;
+      : entry.type === "policy-set"
+        ? "this policy set"
+        : `${entry.type === "custom-promise-type" ? "promise type " : ""}${entry.name}`;
   return (
     <>
       <p className="muted" data-testid={`${group}-description`}>
@@ -378,7 +388,7 @@ function ContentsPanel({ entry, tabs, page, keep, group }: PanelProps & { group:
                   Line {item.line}
                 </Link>
                 {entry.type !== "file" && <span>{fileNames(item.checksum).join(", ")}</span>}
-                {entry.type === "file" && item.block && (
+                {(entry.type === "file" || entry.type === "policy-set") && item.block && (
                   <span data-testid="content-block">
                     In {item.block.type === "custom-promise-type" ? "promise type " : ""}
                     <EntryLink type={item.block.type} name={item.block.name} />
@@ -505,9 +515,55 @@ function PathsPanel({ entry, tabs, page, keep }: PanelProps) {
   );
 }
 
+// The files of a policy set, one card per file in path order: the path in
+// the policy tree linking to the file, with its checksum and description.
+function PolicySetFilesPanel({ entry, tabs, page, keep }: PanelProps) {
+  const files = policySetFiles(entry.name);
+  const paged = paginate(files, page);
+  return (
+    <>
+      <p className="muted" data-testid="files-description">
+        Files in this policy set:
+      </p>
+      <ul className="entry-list" data-testid="files">
+        {paged.shown.map(({ path, checksum }) => (
+          <li key={path} className="host-item" data-testid="file-item">
+            <span className="type-badge">file</span>
+            <div className="host-summary">
+              <div>
+                <EntryLink type="file" name={checksum} label={path} />{" "}
+                <span className="muted host-id" title={checksum}>
+                  ({abbreviateChecksum(checksum)})
+                </span>
+              </div>
+              <div className="muted host-facts">
+                <span>{describeEntry({ type: "file", name: checksum })}</span>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <TabPagination
+        entry={entry}
+        tabs={tabs}
+        keep={keep}
+        tab="files"
+        page={page}
+        total={files.length}
+        shown={paged.shown.length}
+        start={paged.start}
+        current={paged.current}
+        totalPages={paged.totalPages}
+        noun="files"
+      />
+    </>
+  );
+}
+
 // The files (checksums) found at a path or under a filename, one card per
 // file, most hosts first: more than one means the file differs between hosts.
 function FilesPanel({ entry, tabs, page, keep }: PanelProps) {
+  if (entry.type === "policy-set") return <PolicySetFilesPanel entry={entry} tabs={tabs} page={page} keep={keep} />;
   const files = filesOf(entry);
   const paged = paginate(files, page);
   return (
@@ -667,7 +723,7 @@ export default function RelatedHosts({
     versions: entry.type === "software" ? aggregateVersions(entry.name, entry.hosts).length : 0,
     values: entry.type === "variable" ? aggregateValues(entry.name, entry.hosts).length : 0,
     paths: pathsOf(entry).length,
-    files: filesOf(entry).length,
+    files: entry.type === "policy-set" ? policySetFiles(entry.name).length : filesOf(entry).length,
   };
   // The Content tab shows the file's size instead of a count.
   const file = entry.type === "file" ? getFileContent(entry.name) : undefined;

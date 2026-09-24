@@ -7,6 +7,7 @@ import HostView from "@/components/HostView";
 import UserDetailsSection from "@/components/UserDetails";
 import FunctionDetails from "@/components/FunctionDetails";
 import PromiseTypeDetails from "@/components/PromiseTypeDetails";
+import PolicySetDetails from "@/components/PolicySetDetails";
 import SeenLine from "@/components/SeenLine";
 import { parsePage } from "@/components/HostList";
 import { cookies } from "next/headers";
@@ -21,6 +22,7 @@ import {
   getEntryLogo,
   getGroup,
   getHost,
+  getPolicySet,
   getPortInfo,
   getSeeAlso,
   Group,
@@ -97,9 +99,15 @@ export default async function EntryPage({
   const group = type === "group" ? getGroup(name) : undefined;
   const logo = getEntryLogo(entry);
   const portName = type === "port" ? getPortInfo(name)?.name : undefined;
-  // A file's title is the name(s) it goes by, with the checksum after it in
-  // parentheses, like a host's hostname and key.
-  const names = type === "file" ? fileNames(name) : [];
+  // A file's title is the name(s) it goes by, and a policy set's its
+  // version, with the checksum after it in parentheses, like a host's
+  // hostname and key.
+  const names =
+    type === "file"
+      ? fileNames(name)
+      : type === "policy-set"
+        ? [getPolicySet(name)?.version].filter((v): v is string => v !== undefined)
+        : [];
   const summary = summarizeEntry(entry);
   const seen = entrySeen(entry);
 
@@ -168,6 +176,7 @@ export default async function EntryPage({
           {type === "user" && <UserDetailsSection entry={entry} />}
           {type === "function" && <FunctionDetails entry={entry} />}
           {type === "built-in-promise-type" && <PromiseTypeDetails entry={entry} />}
+          {type === "policy-set" && <PolicySetDetails entry={entry} />}
           <RelatedHosts
             entry={entry}
             tabs={entryTabs(entry)}

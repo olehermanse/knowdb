@@ -116,6 +116,14 @@ function HostDetails({ host, embedded = false }: { host: Host; embedded?: boolea
             )}
           </dd>
           <RoleDetails host={host} />
+          <dt>Policy set</dt>
+          <dd className="inline-links" data-testid="host-policy-set">
+            {host["policy-set"] ? (
+              <EntryLink type="policy-set" name={host["policy-set"]} />
+            ) : (
+              <span className="muted">None</span>
+            )}
+          </dd>
           <dt>Local users</dt>
           <dd className="inline-links">
             {host["local-users"].map((user) => (

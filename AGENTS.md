@@ -57,10 +57,35 @@ case and punctuation: the group `Linux` and the class `linux`, the class
 services and the software they belong to, the Hub and Client roles to
 each other, and files and paths to their filename.
 
+## Policy sets
+
+A host runs one policy set, `policy-set`: the checksum of an entry in
+`data/policy-sets.json`, which holds the set's `version` (what
+promises.cf states) and its `files`, relative path to checksum. The
+checksum of a set is the SHA-256 of its file list, one `<relative path>
+<checksum>` line per file, sorted. Hosts report the set, not each policy
+file: the frontend derives the absolute paths from the host's
+`sys.inputdir` variable (`/var/cfengine/inputs/...`, or the Windows
+inputs directory), and for hubs also `/var/cfengine/masterfiles/...`, and
+treats them like reported files (`hostFiles` in `lib/data.ts`, used for
+the path, file and filename entries and their host links); the Files
+modal on a host page lists only the reported files. `policy-set` is an
+entry type ("Policy sets"), named by the checksum and shown as version
+first, checksum in parentheses (`3.27.1 (b3b6ad10f549e2c1)`), with the
+version, checksum and file count as details, a Files tab listing the
+files by their path in the tree, the same Blocks, Promise types, Calls,
+Variables and Classes tabs as a file (over all its files, each row naming
+its file and block), the hosts running it on the right, and no similar
+entries. A host page shows its policy set below Role and Hub; a file
+lists the policy sets containing it in "See also". The generator makes
+two sets: the current release on hubs and online hosts, and the previous
+release (promises.cf, update.cf and standalone_self_upgrade.cf naming the
+older version) on hosts that have not reported in for a while.
+
 ## Files, paths and filenames
 
 Each host reports its notable files in `files`, a map from absolute path
-to the SHA-256 checksum of the content. Files, paths and filenames are
+to the SHA-256 checksum of the content, besides the policy set above. Files, paths and filenames are
 three entry types. A file is named by its checksum; its page has the
 filename(s) it goes by as the title with the checksum in parentheses
 (like a host's hostname and key), a Content tab first showing the whole file in a `<pre>` (or,
@@ -450,13 +475,12 @@ The relevant information from a host looks like this:
   "cloud-provider": "AWS",
   "first-seen": "2024-03-02T09:14:55Z",
   "last-seen": "2026-09-14T17:02:11Z",
+  "policy-set": "b3b6ad...",
   "files": {
     "/etc/motd": "5f2a7c...",
     "/etc/ssh/sshd_config": "1f1d7d...",
     "/root/.ssh/authorized_keys": "9b0c31...",
-    "/var/cfengine/bin/cf-agent": "e3a1f0...",
-    "/var/cfengine/inputs/promises.cf": "468fb4...",
-    "/var/cfengine/masterfiles/promises.cf": "468fb4..."
+    "/var/cfengine/bin/cf-agent": "e3a1f0..."
   }
 }
 ```
@@ -487,7 +511,8 @@ Some guidelines for generating random hosts:
 - `cloud-provider` should be a well-known provider (AWS, Azure, GCP, Hetzner, DigitalOcean) or the empty string for hosts outside any cloud. AWS should be the most common, and about a quarter of hosts should have none.
 - `first-seen` and `last-seen` are ISO 8601 UTC timestamps of when the host first and most recently reported in. Online hosts were last seen within the last 15 minutes of generation, offline hosts hours to weeks earlier, and every host was first seen between a day and a few years before that.
 - `online` is whether the host has reported in recently. Around 70% of hosts should be online.
-- `files` maps absolute paths to SHA-256 checksums (64 hex digits) of the content in `files.json`. Every host has the whole policy set under `/var/cfengine/inputs` (`C:\Program Files\Cfengine\inputs` on Windows) and the cf-agent binary (one checksum per CFEngine version and platform, content unavailable); hubs also have the policy under `/var/cfengine/masterfiles`. Hosts that are offline still have the previous policy release, so `promises.cf`, `update.cf` and `standalone_self_upgrade.cf` differ from the hubs' copies. Linux hosts also have `/etc/ssh/sshd_config` (Debian-like or RHEL-like defaults, stricter in production and staging), `/root/.ssh/authorized_keys` (the whole team on dev and testing hosts, two admins elsewhere) and `/etc/motd` (per environment), all as CFEngine edits them. Checksums must be the real SHA-256 of the content; the same content on many hosts gives the same checksum.
+- `policy-set` is the checksum of the policy set the host runs, from `policy-sets.json`: the current release (the whole masterfiles tree, plus the git promise type module) on hubs and online hosts, the previous release (in which `promises.cf`, `update.cf` and `standalone_self_upgrade.cf` name the older version) on offline hosts. The files live in the host's `sys.inputdir`, and in `/var/cfengine/masterfiles` on hubs, but are not listed in `files`.
+- `files` maps absolute paths to SHA-256 checksums (64 hex digits) of the content in `files.json`, for the host's other notable files: the cf-agent binary (one checksum per CFEngine version and platform, content unavailable), and on Linux hosts `/etc/ssh/sshd_config` (Debian-like or RHEL-like defaults, stricter in production and staging), `/root/.ssh/authorized_keys` (the whole team on dev and testing hosts, two admins elsewhere) and `/etc/motd` (per environment), all as CFEngine edits them. Checksums must be the real SHA-256 of the content; the same content on many hosts gives the same checksum.
 - `local-users` should include root on all Linux machines, and Administrator on Windows.
   Make sure to include some common system / application users for things like email software, printing, etc.
 
