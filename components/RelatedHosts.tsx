@@ -27,7 +27,8 @@ import {
   CONTENT_GROUPS,
   ContentGroup,
   getPolicyContentsByGroup,
-  getPolicyRefs,
+  getPolicyDefinitions,
+  getPolicyUses,
   filterSearchHref,
   abbreviateChecksum,
   parseValueEntryName,
@@ -45,7 +46,8 @@ import {
 // hosts' ports are a tab on the right, with the hosts.
 export type Tab =
   | "content"
-  | "references"
+  | "definitions"
+  | "uses"
   | ContentGroup
   | "versions"
   | "values"
@@ -56,7 +58,8 @@ export type Tab =
   | "comments";
 const TAB_ORDER: Tab[] = [
   "content",
-  "references",
+  "definitions",
+  "uses",
   "blocks",
   "promise-types",
   "calls",
@@ -88,7 +91,10 @@ export function entryTabs(entry: Entry): Tab[] {
   if (entry.type === "path") tabs.push("files");
   if (entry.type === "filename") tabs.push("paths", "files");
   if (entry.type === "policy-set") tabs.push("files");
-  if (getPolicyRefs(entry).length > 0) tabs.push("references");
+  // Where the policy defines the entry, and where it uses it (calls of a
+  // function, bundle or body; promise sections of a promise type).
+  if (getPolicyDefinitions(entry).length > 0) tabs.push("definitions");
+  if (getPolicyUses(entry).length > 0) tabs.push("uses");
   // Policy files and blocks list what they contain, one tab per kind;
   // other files and empty kinds have none.
   if (
@@ -287,26 +293,26 @@ function FileLineLink({ checksum, line }: { checksum: string; line: number }) {
   );
 }
 
-// Where a bundle, body, promise type, variable or class is defined, or a
-// name called: one card per place, with the file and line and, for
-// things inside a block, the bundle or body they are in.
-function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
-  const refs = getPolicyRefs(entry);
+// Where an entry is defined or used in the policy: one card per place,
+// with the file and line and, for things inside a block, the bundle or
+// body they are in.
+function ReferencesPanel({ entry, tabs, page, keep, role }: PanelProps & { role: "definition" | "use" }) {
+  const refs = role === "definition" ? getPolicyDefinitions(entry) : getPolicyUses(entry);
   const paged = paginate(refs, page);
-  const verb = ["call", "function-call", "function"].includes(entry.type)
-    ? "called"
-    : entry.type === "built-in-promise-type"
-      ? "used"
-      : entry.type === "custom-promise-type"
-        ? "defined or used"
-        : "defined";
+  const tab: Tab = role === "definition" ? "definitions" : "uses";
+  const verb =
+    role === "definition"
+      ? "defined"
+      : entry.type === "built-in-promise-type" || entry.type === "custom-promise-type"
+        ? "used"
+        : "called";
   return (
     <>
-      <p className="muted" data-testid="references-description">
+      <p className="muted" data-testid={`${tab}-description`}>
         Where {entry.name} is {verb} in the policy:
       </p>
       {refs.length === 0 && <p className="muted">None</p>}
-      <ul className="entry-list" data-testid="references">
+      <ul className="entry-list" data-testid={tab}>
         {paged.shown.map((ref, i) => (
           <li key={`${ref.checksum}:${ref.line}:${i}`} className="host-item" data-testid="reference-item">
             <span className="type-badge">file</span>
@@ -325,9 +331,6 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
                 {ref.kind && (
                   <span data-testid="reference-kind">{ref.kind === "bundle" ? "Bundle call" : "Body call"}</span>
                 )}
-                {ref.role && entry.type === "custom-promise-type" && (
-                  <span data-testid="reference-role">{ref.role === "use" ? "Used here" : "Defined here"}</span>
-                )}
                 {ref.detail && <span data-testid="reference-detail">{ref.detail}</span>}
               </div>
             </div>
@@ -338,7 +341,7 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
         entry={entry}
         tabs={tabs}
         keep={keep}
-        tab="references"
+        tab={tab}
         page={page}
         total={refs.length}
         shown={paged.shown.length}
@@ -713,7 +716,8 @@ export default function RelatedHosts({
   const current = tab && enabled.includes(tab) ? tab : enabled[0];
   const counts: Record<Tab, number> = {
     content: 0,
-    references: getPolicyRefs(entry).length,
+    definitions: getPolicyDefinitions(entry).length,
+    uses: getPolicyUses(entry).length,
     ...(Object.fromEntries(
       CONTENT_GROUPS.map((g) => [g, getPolicyContentsByGroup(entry)[g].length]),
     ) as Record<ContentGroup, number>),
@@ -731,7 +735,8 @@ export default function RelatedHosts({
     t === "content" ? (file ? formatBytes(file.size) : "unavailable") : String(counts[t]);
   const labels: Record<Tab, string> = {
     content: "Content",
-    references: "References",
+    definitions: "Definitions",
+    uses: "Uses",
     blocks: "Blocks",
     "promise-types": "Promise types",
     calls: "Calls",
@@ -747,7 +752,8 @@ export default function RelatedHosts({
   };
   const testIds: Record<Tab, string> = {
     content: "content-heading",
-    references: "references-heading",
+    definitions: "definitions-heading",
+    uses: "uses-heading",
     blocks: "blocks-heading",
     "promise-types": "promise-types-heading",
     calls: "calls-heading",
@@ -803,8 +809,11 @@ export default function RelatedHosts({
       {current && (
         <div className="tab-panel" role="tabpanel" data-testid={`tab-${current}`}>
           {current === "content" && <ContentPanel entry={entry} />}
-          {current === "references" && (
-            <ReferencesPanel entry={entry} tabs={tabs} page={page} keep={keep} />
+          {current === "definitions" && (
+            <ReferencesPanel entry={entry} tabs={tabs} page={page} keep={keep} role="definition" />
+          )}
+          {current === "uses" && (
+            <ReferencesPanel entry={entry} tabs={tabs} page={page} keep={keep} role="use" />
           )}
           {CONTENT_GROUPS.includes(current as ContentGroup) && (
             <ContentsPanel entry={entry} tabs={tabs} page={page} keep={keep} group={current as ContentGroup} />

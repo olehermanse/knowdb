@@ -241,11 +241,19 @@ define, so the right pane works as for any entry, and
 `function-call:ifelse`, `call:mog` or `bundle:"bundle common def"` work as
 search filters.
 
-Every entry the policy defines or calls has a References tab (first,
-after Values for a variable) listing each place: `def.cf:12` linking to
-the file page with a `#L12` anchor, the line, the bundle or body it is in
-(variables, classes and calls), and a detail (a variable's type, a
-bundle's parameters, the attribute a call is the value of, like `if =>`).
+Every entry the policy defines or uses has a Definitions tab and/or a
+Uses tab (first, after Values for a variable; each only when not empty)
+listing each place: `def.cf:12` linking to the file page with a `#L12`
+anchor, the line, the bundle or body it is in (variables, classes, calls
+and promise sections), and a detail (a variable's type, a bundle's
+parameters, the attribute a call is the value of, like `if =>`, a
+section's promise count). Definitions are where a bundle, body, custom
+promise type, variable or class is defined; uses are the calls of a
+function, the promise sections of a promise type, and the calls invoking
+a bundle (`usebundle =>`, "Bundle call") or a body (`perms => mog(...)`,
+"Body call"), so a bundle page lists who calls it and its summary says
+"Defined once in 1 policy file and called 3 times". Every reference has a
+`role`, definition or use.
 Bundles, bodies, promise types and policy files have one tab per kind of
 thing they contain, shown only when not empty: Blocks (a file's bundles,
 bodies and promise types), Promise types (the promise sections), Calls
@@ -314,10 +322,10 @@ deprecated; the description reads "A built-in CFEngine promise type,
 allowed in agent bundles, with 30 attributes of its own." and the
 documentation link is `reference-promise-types-<name>.html`. The indexer
 records every promise section of a bundle (`sections`: promise type,
-line, block, number of promises), and each section is a reference of the
-promise type it uses (`role: "use"`, detail "3 promises"), or of the
-custom promise type when the policy defines one of that name (whose
-references then say "Defined here" or "Used here"). Hosts are linked to
+line, block, number of promises), and each section is a use of the
+promise type (`role: "use"`, detail "3 promises"), or of the custom
+promise type when the policy defines one of that name (so a custom
+promise type has both Definitions and Uses). Hosts are linked to
 the promise types their policy uses; the summary reads "83 files promises
 are made in 12 sections of 9 bundles in 4 policy files, on 100 hosts" or
 "No storage promises are made in the policy on your hosts." Files and

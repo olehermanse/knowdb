@@ -3789,9 +3789,9 @@ test("a bundle page lists where it is defined and what it defines and calls", as
     `Defined ${defs.length === 1 ? "once" : `${defs.length} times`} in ${defs.length} policy file${defs.length === 1 ? "" : "s"}, on ${hosts.length} hosts in your infrastructure.`,
   );
   // References is the first tab: file:line linking to the line of the file.
-  await expect(page.getByTestId("references-heading")).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByTestId("references-heading")).toHaveText(`References (${defs.length})`);
-  await expect(page.getByTestId("references-description")).toHaveText("Where bundle common def is defined in the policy:");
+  await expect(page.getByTestId("definitions-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("definitions-heading")).toHaveText(`Definitions (${defs.length})`);
+  await expect(page.getByTestId("definitions-description")).toHaveText("Where bundle common def is defined in the policy:");
   const ref = page.getByTestId("reference-item").first();
   await expect(ref.getByTestId("file-line-link")).toHaveText(`def.cf:${def.line}`);
   await expect(ref.getByTestId("file-line-link")).toHaveAttribute("href", `${fileHref(def.checksum)}#L${def.line}`);
@@ -3822,7 +3822,7 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   await expect(page.getByTestId("calls-description")).toHaveText("Calls in bundle common def:");
   await expect(page.getByTestId("content-item").first().locator(".type-badge")).toHaveText(/^(call|function-call)$/);
   // Following the line link opens the file at that line.
-  await page.getByTestId("references-heading").click();
+  await page.getByTestId("definitions-heading").click();
   await ref.getByTestId("file-line-link").click();
   await expect(page).toHaveURL(`${fileHref(def.checksum)}#L${def.line}`);
   const line = page.locator(`#L${def.line}`);
@@ -3864,8 +3864,9 @@ test("a function call page lists the calls with the bundle or body they are in",
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `ifelse is called ${calls.length} times from ${blocks} bundles and bodies in ${files} policy files, on ${hosts.length} hosts in your infrastructure.`,
   );
-  await expect(page.getByTestId("references-heading")).toHaveText(`References (${calls.length})`);
-  await expect(page.getByTestId("references-description")).toHaveText("Where ifelse is called in the policy:");
+  await expect(page.getByTestId("uses-heading")).toHaveText(`Uses (${calls.length})`);
+  await expect(page.getByTestId("uses-description")).toHaveText("Where ifelse is called in the policy:");
+  await expect(page.getByTestId("definitions-heading")).toHaveCount(0);
   const items = page.getByTestId("reference-item");
   await expect(items).toHaveCount(PAGE_SIZE);
   await expect(page.getByTestId("pagination")).toBeVisible();
@@ -3984,14 +3985,15 @@ test("variables and classes defined in policy are variables and classes with ref
     `def.domain is not reported by any host in your infrastructure. It is defined in the policy once in 1 policy file, on ${hosts.length} hosts.`,
   );
   await expect(page.getByTestId("values-heading")).toHaveCount(0);
-  await expect(page.getByTestId("references-heading")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("definitions-heading")).toHaveAttribute("aria-selected", "true");
   await page.goto(`/entry/variable/${encodeURIComponent("def.domain")}?htab=list`);
   await expect(page.getByTestId("hosts-description")).toHaveText(
     "Hosts with the variable def.domain, reported or defined in their policy:",
   );
   // A reported variable has no References tab and reads as before.
   await page.goto("/entry/variable/sys.arch");
-  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("definitions-heading")).toHaveCount(0);
+  await expect(page.getByTestId("uses-heading")).toHaveCount(0);
   await expect(page.getByTestId("values-heading")).toHaveAttribute("aria-selected", "true");
   await page.goto(`/entry/variable/${encodeURIComponent("def.domain")}`);
   await expect(page.getByTestId("see-also").getByRole("link", { name: "bundle common def (bundle)" })).toHaveAttribute(
@@ -4021,7 +4023,7 @@ test("variables and classes defined in policy are variables and classes with ref
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `This class is not set on any host in your infrastructure. It is defined in the policy ${defs.length === 1 ? "once" : `${defs.length} times`} in ${new Set(defs.map((d) => d.checksum)).size} policy file${new Set(defs.map((d) => d.checksum)).size === 1 ? "" : "s"}, on ${onHosts.length} hosts.`,
   );
-  await expect(page.getByTestId("references-heading")).toHaveText(`References (${defs.length})`);
+  await expect(page.getByTestId("definitions-heading")).toHaveText(`Definitions (${defs.length})`);
   await expect(page.getByTestId("reference-item").first().getByTestId("reference-block")).toContainText("In bundle ");
   await expect(page.getByTestId("see-also").getByRole("link", { name: `${cls.block.name} (bundle)` })).toBeVisible();
   await expect(page.getByTestId("hosts-heading")).toHaveText(`Hosts (${onHosts.length})`);
@@ -4035,14 +4037,14 @@ test("variables and classes defined in policy are variables and classes with ref
     await page.goto(`/entry/class/${encodeURIComponent(shared)}?htab=list`);
     await expect(page.getByTestId("entry-summary")).toContainText(`This class is set on ${set} hosts in your infrastructure`);
     await expect(page.getByTestId("entry-summary")).toContainText(" It is defined in the policy ");
-    await expect(page.getByTestId("references-heading")).toContainText("References (");
+    await expect(page.getByTestId("definitions-heading")).toContainText("Definitions (");
     await expect(page.getByTestId("hosts-description")).toHaveText(
       `Hosts with the class ${shared} set, or defining it in their policy:`,
     );
   }
   // A class only reported by hosts has no References tab and reads as before.
   await page.goto("/entry/class/any");
-  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("definitions-heading")).toHaveCount(0);
 });
 
 test("the git promise type is defined with a promise agent block", async ({ page }) => {
@@ -4169,8 +4171,9 @@ test("every built-in function is an entry, called or not", async ({ page }) => {
   await expect(page.getByTestId("function-category")).toHaveText(fn.category);
   await expect(page.getByTestId("function-status")).toHaveCount(0);
   // References are its calls, and the call entry is in See also.
-  await expect(page.getByTestId("references-heading")).toHaveText(`References (${calls.length})`);
-  await expect(page.getByTestId("references-description")).toHaveText("Where ifelse is called in the policy:");
+  await expect(page.getByTestId("uses-heading")).toHaveText(`Uses (${calls.length})`);
+  await expect(page.getByTestId("uses-description")).toHaveText("Where ifelse is called in the policy:");
+  await expect(page.getByTestId("definitions-heading")).toHaveCount(0);
   await expect(page.getByTestId("reference-item").first().getByTestId("reference-block")).toContainText("In ");
   await expect(page.getByTestId("see-also").getByRole("link", { name: "ifelse (function-call)" })).toHaveAttribute(
     "href",
@@ -4188,7 +4191,7 @@ test("every built-in function is an entry, called or not", async ({ page }) => {
     `A built-in CFEngine function in the ${spec.category} category that returns `,
   );
   await expect(page.getByTestId("entry-summary")).toHaveText(`${unused} is not called from the policy on your hosts.`);
-  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("uses-heading")).toHaveCount(0);
   await expect(page.getByTestId("no-hosts")).toHaveText("The policy on your hosts does not call this function.");
   await expect(page.getByTestId("resources-heading")).toHaveText("Resources (1)");
   await page.getByTestId("resources-heading").click();
@@ -4244,8 +4247,9 @@ test("every built-in promise type is an entry, with the sections using it as ref
   await expect(page.getByTestId("promise-type-status")).toHaveCount(0);
   // References: every files: section, with its bundle and promise count,
   // linking to the line of the section.
-  await expect(page.getByTestId("references-heading")).toHaveText(`References (${sections.length})`);
-  await expect(page.getByTestId("references-description")).toHaveText("Where files is used in the policy:");
+  await expect(page.getByTestId("uses-heading")).toHaveText(`Uses (${sections.length})`);
+  await expect(page.getByTestId("uses-description")).toHaveText("Where files is used in the policy:");
+  await expect(page.getByTestId("definitions-heading")).toHaveCount(0);
   const sorted = [...sections].sort((a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line);
   const first = sorted[0]!;
   const ref = page.getByTestId("reference-item").first();
@@ -4268,7 +4272,7 @@ test("every built-in promise type is an entry, with the sections using it as ref
   await expect(page.getByTestId("entry-summary")).toHaveText(
     `No ${unused} promises are made in the policy on your hosts.`,
   );
-  await expect(page.getByTestId("references-heading")).toHaveCount(0);
+  await expect(page.getByTestId("uses-heading")).toHaveCount(0);
   await expect(page.getByTestId("no-hosts")).toHaveText(`The policy on your hosts makes no ${unused} promises.`);
 
   // Files and bundles have a Promise types tab listing their sections.
@@ -4294,10 +4298,12 @@ test("every built-in promise type is an entry, with the sections using it as ref
   await expect(page.getByTestId("content-item")).toHaveCount(Math.min(PAGE_SIZE, defSections.length));
   await expect(page.getByTestId("content-item").first().getByTestId("content-block")).toHaveCount(0);
 
-  // A custom promise type's references say whether it is defined or used there.
+  // A custom promise type has its definition in Definitions; git is never
+  // used in a section, so there is no Uses tab.
   await page.goto("/entry/custom-promise-type/git");
-  await expect(page.getByTestId("references-description")).toHaveText("Where git is defined or used in the policy:");
-  await expect(page.getByTestId("reference-item").first().getByTestId("reference-role")).toHaveText("Defined here");
+  await expect(page.getByTestId("definitions-heading")).toHaveText("Definitions (1)");
+  await expect(page.getByTestId("definitions-description")).toHaveText("Where git is defined in the policy:");
+  await expect(page.getByTestId("uses-heading")).toHaveCount(0);
 });
 
 test("a policy set has a version, a checksum, its hosts, its files and everything in them", async ({ page }) => {
@@ -4369,4 +4375,48 @@ test("a policy set has a version, a checksum, its hosts, its files and everythin
   await expect(page.getByTestId("search-summary")).toHaveText(
     `${running.length} hosts matching policy-set ${checksum}.`,
   );
+});
+
+test("bundles and bodies list the calls invoking them as uses", async ({ page }) => {
+  // A bundle invoked with usebundle somewhere.
+  const bundleShort = new Map(
+    Object.values(policyFiles).flatMap((f) => f.bundles.map((b) => [b.name, `bundle ${b.type} ${b.name}`] as const)),
+  );
+  const bundleCalls = Object.entries(policyFiles).flatMap(([checksum, f]) =>
+    f.calls
+      .filter((c) => c.attribute === "usebundle" && bundleShort.has(c.name.replace(/^default:/, "")))
+      .map((c) => ({ ...c, checksum, name: c.name.replace(/^default:/, "") })),
+  );
+  expect(bundleCalls.length).toBeGreaterThan(0);
+  const target = bundleCalls[0]!;
+  const uses = bundleCalls.filter((c) => c.name === target.name);
+  const full = bundleShort.get(target.name)!;
+  const defs = Object.values(policyFiles).flatMap((f) => f.bundles.filter((b) => `bundle ${b.type} ${b.name}` === full));
+  await page.goto(bundleHref(full));
+  await expect(page.getByTestId("definitions-heading")).toHaveText(`Definitions (${defs.length})`);
+  await expect(page.getByTestId("uses-heading")).toHaveText(`Uses (${uses.length})`);
+  await expect(page.getByTestId("entry-summary")).toContainText(` and called ${uses.length} time${uses.length === 1 ? "" : "s"}`);
+  await page.getByTestId("uses-heading").click();
+  await expect(page.getByTestId("uses-description")).toHaveText(`Where ${full} is called in the policy:`);
+  const sorted = [...uses].sort((a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line);
+  const ref = page.getByTestId("reference-item").first();
+  await expect(ref.getByTestId("file-line-link")).toHaveAttribute("href", `${fileHref(sorted[0]!.checksum)}#L${sorted[0]!.line}`);
+  await expect(ref.getByTestId("reference-kind")).toHaveText("Bundle call");
+  await expect(ref.getByTestId("reference-block")).toHaveText(`In ${sorted[0]!.block.name}`);
+  await expect(ref.getByTestId("reference-detail")).toHaveText("usebundle =>");
+
+  // The body perms mog, called as mog and default:mog.
+  const mogCalls = Object.values(policyFiles).flatMap((f) =>
+    f.calls.filter((c) => c.attribute === "perms" && c.name.replace(/^default:/, "") === "mog"),
+  );
+  expect(mogCalls.length).toBeGreaterThan(0);
+  await page.goto("/entry/body/body%20perms%20mog");
+  await expect(page.getByTestId("uses-heading")).toHaveText(`Uses (${mogCalls.length})`);
+  await page.getByTestId("uses-heading").click();
+  await expect(page.getByTestId("reference-item").first().getByTestId("reference-kind")).toHaveText("Body call");
+  // A bundle nobody calls has no Uses tab.
+  const called = new Set(bundleCalls.map((c) => c.name));
+  const quiet = [...bundleShort.entries()].find(([short]) => !called.has(short))!;
+  await page.goto(bundleHref(quiet[1]));
+  await expect(page.getByTestId("uses-heading")).toHaveCount(0);
 });

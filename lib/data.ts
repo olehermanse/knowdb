@@ -264,9 +264,10 @@ export interface PolicyRef {
   block?: PolicyBlockRef;
   // For calls: what is called.
   kind?: CallKind;
-  // For promise types, which are both defined (custom ones) and used (in
-  // promise sections): which of the two this place is.
-  role?: "definition" | "use";
+  // Whether the entry is defined here (a bundle, body, custom promise
+  // type, variable or class) or used here (a call, a promise section, a
+  // bundle or body being called).
+  role: "definition" | "use";
   // Extra words: a variable's type, a bundle's parameters, the attribute
   // a function call is the value of.
   detail?: string;
@@ -535,16 +536,30 @@ function indexPolicy() {
   const customPromiseTypes = new Set(
     Object.values(policyFiles).flatMap((f) => f["promise-types"].map((p) => p.name)),
   );
+  // The bundles by their short name and the bodies by full name, to turn
+  // a call into a use of the bundle or body it invokes.
+  const bundlesByShortName = new Map<string, Set<string>>();
+  const bodyFullNames = new Set<string>();
+  for (const f of Object.values(policyFiles)) {
+    for (const b of f.bundles) {
+      bundlesByShortName.set(b.name, (bundlesByShortName.get(b.name) ?? new Set()).add(`bundle ${b.type} ${b.name}`));
+    }
+    for (const b of f.bodies) bodyFullNames.add(`body ${b.type} ${b.name}`);
+  }
   for (const [checksum, file] of Object.entries(policyFiles)) {
     const own: EntryRef[] = [];
     const seen = new Set<string>();
-    const add = (ref: EntryRef, line: number, extra: Omit<PolicyRef, "checksum" | "line"> = {}) => {
+    const add = (
+      ref: EntryRef,
+      line: number,
+      extra: Omit<PolicyRef, "checksum" | "line" | "role"> & { role?: PolicyRef["role"] } = {},
+    ) => {
       const key = entryKey(ref.type, ref.name);
       if (!seen.has(key)) {
         seen.add(key);
         own.push(ref);
       }
-      refs.set(key, [...(refs.get(key) ?? []), { checksum, line, ...extra }]);
+      refs.set(key, [...(refs.get(key) ?? []), { checksum, line, role: "definition", ...extra }]);
     };
     const contain = (
       holder: EntryRef,
@@ -609,13 +624,27 @@ function indexPolicy() {
       if (builtinFunctions[name]) {
         // A function call, and a reference of the function itself.
         const ref: EntryRef = { type: "function-call", name };
-        add(ref, call.line, { block: call.block, detail });
-        add({ type: "function", name }, call.line, { block: call.block, detail });
+        add(ref, call.line, { block: call.block, role: "use", detail });
+        add({ type: "function", name }, call.line, { block: call.block, role: "use", detail });
         containInBlock(call.block, ref, call.line, "calls");
       } else {
         const ref: EntryRef = { type: "call", name };
-        add(ref, call.line, { block: call.block, kind: kindOf(call), detail });
+        const kind = kindOf(call);
+        add(ref, call.line, { block: call.block, kind, role: "use", detail });
         containInBlock(call.block, ref, call.line, "calls");
+        // The call is also a use of the bundle(s) or body it invokes.
+        if (kind === "bundle") {
+          for (const full of bundlesByShortName.get(name) ?? []) {
+            add({ type: "bundle", name: full }, call.line, { block: call.block, kind, role: "use", detail });
+          }
+        } else if (call.attribute && bodyFullNames.has(`body ${call.attribute} ${name}`)) {
+          add({ type: "body", name: `body ${call.attribute} ${name}` }, call.line, {
+            block: call.block,
+            kind,
+            role: "use",
+            detail,
+          });
+        }
       }
     }
     entriesByFile.set(checksum, own);
@@ -648,11 +677,20 @@ export function calledBlocks(name: string): EntryRef[] {
 }
 
 // Where an entry is defined (bundles, bodies, promise types, variables,
-// classes) or called (functions): by file, then line.
+// classes) or used (calls, promise sections, and the calls invoking a
+// bundle or body): by file, then line.
 export function getPolicyRefs(entry: EntryRef): PolicyRef[] {
   return [...(policy.refs.get(entryKey(entry.type, entry.name)) ?? [])].sort(
     (a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line,
   );
+}
+
+export function getPolicyDefinitions(entry: EntryRef): PolicyRef[] {
+  return getPolicyRefs(entry).filter((r) => r.role === "definition");
+}
+
+export function getPolicyUses(entry: EntryRef): PolicyRef[] {
+  return getPolicyRefs(entry).filter((r) => r.role === "use");
 }
 
 // What a block (bundle, body, promise type) or a policy file contains:
@@ -1532,7 +1570,7 @@ export function getSeeAlso(entry: EntryRef): EntryRef[] {
     related.push({ type: "function-call", name: entry.name });
   } else if (entry.type === "variable" || entry.type === "class") {
     // The bundle(s) defining the variable or class in the policy, if any.
-    for (const ref of getPolicyRefs(entry)) {
+    for (const ref of getPolicyDefinitions(entry)) {
       if (ref.block && !related.some((r) => r.type === ref.block!.type && r.name === ref.block!.name)) {
         related.push({ type: ref.block.type, name: ref.block.name });
       }
@@ -1656,7 +1694,7 @@ function describePromiseType(name: string): string {
 // "promises.cf and update.cf": the distinct names of the files an entry
 // is defined in, from its references.
 function refFileNames(entry: EntryRef): string {
-  const names = [...new Set(getPolicyRefs(entry).flatMap((r) => fileNames(r.checksum)))].sort();
+  const names = [...new Set(getPolicyDefinitions(entry).flatMap((r) => fileNames(r.checksum)))].sort();
   if (names.length <= 2) return names.join(" and ");
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
@@ -1666,7 +1704,7 @@ function describePolicyEntry(entry: EntryRef): string {
   const where = files ? ` in ${files}` : "";
   switch (entry.type) {
     case "bundle": {
-      const params = getPolicyRefs(entry).find((r) => r.detail)?.detail;
+      const params = getPolicyDefinitions(entry).find((r) => r.detail)?.detail;
       return `The ${entry.name}${params ? ` with ${params}` : ""}, defined${where}.`;
     }
     case "body":
@@ -1674,13 +1712,13 @@ function describePolicyEntry(entry: EntryRef): string {
     case "custom-promise-type":
       return `The custom promise type ${entry.name}, defined with a promise agent block${where}.`;
     case "variable": {
-      const refs = getPolicyRefs(entry);
+      const refs = getPolicyDefinitions(entry);
       const type = refs.find((r) => r.detail)?.detail;
       const bundle = refs[0]?.block?.name;
       return `The ${type ? `${type} ` : ""}variable ${entry.name}${bundle ? ` of ${bundle}` : ""}, defined${where}.`;
     }
     case "class": {
-      const bundles = [...new Set(getPolicyRefs(entry).map((r) => r.block?.name).filter(Boolean))].sort();
+      const bundles = [...new Set(getPolicyDefinitions(entry).map((r) => r.block?.name).filter(Boolean))].sort();
       const inBundles = bundles.length > 0 ? ` by ${bundles.join(" and ")}` : "";
       return `The class ${entry.name}, defined${inBundles}${where}.`;
     }
@@ -1729,7 +1767,7 @@ export function describeEntry(entry: EntryRef): string {
     // Described in info.json, or by where the policy defines it.
     const known = getClassInfo(entry.name)?.description;
     if (known) return known;
-    return getPolicyRefs(entry).length > 0 ? describePolicyEntry(entry) : NO_CLASS_INFO;
+    return getPolicyDefinitions(entry).length > 0 ? describePolicyEntry(entry) : NO_CLASS_INFO;
   }
   if (entry.type === "cloud") {
     return getCloudProviderInfo(entry.name)?.description ?? NO_CLOUD_INFO;
@@ -1743,7 +1781,7 @@ export function describeEntry(entry: EntryRef): string {
   if (entry.type === "variable") {
     const known = getVariableInfo(entry.name)?.description;
     if (known) return known;
-    return getPolicyRefs(entry).length > 0 ? describePolicyEntry(entry) : NO_VARIABLE_INFO;
+    return getPolicyDefinitions(entry).length > 0 ? describePolicyEntry(entry) : NO_VARIABLE_INFO;
   }
   if (entry.type === "value") {
     const { variable, value } = parseValueEntryName(entry.name);
@@ -1848,7 +1886,7 @@ function plural(n: number, singular: string, pluralForm = `${singular}s`): strin
 // " It is defined in the policy 3 times in 2 policy files, on 100 hosts."
 // for a variable or class the policy defines; "" otherwise.
 function policySummary(entry: EntryRef): string {
-  const refs = getPolicyRefs(entry);
+  const refs = getPolicyDefinitions(entry);
   if (refs.length === 0) return "";
   const files = new Set(refs.map((r) => r.checksum));
   const onHosts = new Set<string>();
@@ -1929,11 +1967,15 @@ export function summarizeEntry(entry: Entry): string {
     case "bundle":
     case "body":
     case "custom-promise-type": {
-      const refs = getPolicyRefs(entry);
-      const defs = refs.filter((r) => r.role !== "use");
-      const uses = refs.filter((r) => r.role === "use");
+      const defs = getPolicyDefinitions(entry);
+      const uses = getPolicyUses(entry);
       const files = new Set(defs.map((r) => r.checksum)).size;
-      const used = uses.length > 0 ? ` and used in ${plural(uses.length, "promise section")}` : "";
+      const used =
+        uses.length === 0
+          ? ""
+          : entry.type === "custom-promise-type"
+            ? ` and used in ${plural(uses.length, "promise section")}`
+            : ` and called ${plural(uses.length, "time")}`;
       return `Defined ${defs.length === 1 ? "once" : `${defs.length} times`} in ${plural(files, "policy file")}${used}, on ${hosts} in your infrastructure.`;
     }
     case "built-in-promise-type": {

@@ -10,7 +10,7 @@ import {
   Entry,
   entryHref,
   getHost,
-  getPolicyRefs,
+  getPolicyDefinitions,
   Host,
   policySetLabel,
   parseValueEntryName,
@@ -39,7 +39,7 @@ function describeLinkedHosts(entry: Entry): string {
     case "group":
       return `Hosts in the group ${entry.name}:`;
     case "class":
-      return getPolicyRefs(entry).length > 0
+      return getPolicyDefinitions(entry).length > 0
         ? `Hosts with the class ${entry.name} set, or defining it in their policy:`
         : `Hosts with the class ${entry.name} set:`;
     case "cloud":
@@ -47,7 +47,7 @@ function describeLinkedHosts(entry: Entry): string {
     case "role":
       return `Hosts with the CFEngine role ${entry.name}:`;
     case "variable":
-      return getPolicyRefs(entry).length > 0
+      return getPolicyDefinitions(entry).length > 0
         ? `Hosts with the variable ${entry.name}, reported or defined in their policy:`
         : `Hosts defining the variable ${entry.name}:`;
     case "value": {
