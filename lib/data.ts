@@ -128,7 +128,7 @@ const RETURN_WORDS: Record<string, string> = {
 // What the CFEngine policy files define, from data/policy.json (written by
 // scripts/index_policy.mjs), keyed by the file's checksum.
 export interface PolicyBlockRef {
-  type: "bundle" | "body" | "promise-type";
+  type: "bundle" | "body" | "custom-promise-type";
   // "bundle agent main" or "body common control" (keyword, type and name)
   // for a bundle or body, the name for a promise type: the name of the
   // corresponding entry.
@@ -307,13 +307,13 @@ export type EntryType =
   // "variable" and "class" entries, like the ones hosts report.
   | "bundle"
   | "body"
-  | "promise-type"
+  | "custom-promise-type"
   | "call"
   // A built-in CFEngine function (data/functions.json), whether the
   // policy calls it or not.
   | "function";
 
-export const POLICY_TYPES: EntryType[] = ["bundle", "body", "promise-type", "call", "function"];
+export const POLICY_TYPES: EntryType[] = ["bundle", "body", "custom-promise-type", "call", "function"];
 
 export function isPolicyType(type: EntryType): boolean {
   return POLICY_TYPES.includes(type);
@@ -450,7 +450,7 @@ function indexPolicy() {
       contain(fileRef, ref, b.line);
     }
     for (const p of file["promise-types"]) {
-      const ref: EntryRef = { type: "promise-type", name: p.name };
+      const ref: EntryRef = { type: "custom-promise-type", name: p.name };
       add(ref, p.line);
       contain(fileRef, ref, p.line);
     }
@@ -932,7 +932,7 @@ export const ENTRY_TYPES: EntryType[] = [
   "filename",
   "bundle",
   "body",
-  "promise-type",
+  "custom-promise-type",
   "call",
   "function",
 ];
@@ -960,7 +960,7 @@ export const TYPE_LABELS: Record<EntryType, string> = {
   filename: "Filenames",
   bundle: "Bundles",
   body: "Bodies",
-  "promise-type": "Custom promise types",
+  "custom-promise-type": "Custom promise types",
   call: "Calls",
   function: "Functions",
 };
@@ -1438,7 +1438,7 @@ const TYPE_DESCRIPTIONS: Record<EntryType, string> = {
   filename: "The name of a file, without its directory.",
   bundle: "A bundle defined in the CFEngine policy.",
   body: "A body defined in the CFEngine policy.",
-  "promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
+  "custom-promise-type": "A custom promise type defined in the CFEngine policy with a promise agent block.",
   call: "A function, bundle or body called from the CFEngine policy.",
   function: "A built-in CFEngine function.",
 };
@@ -1461,7 +1461,7 @@ function describePolicyEntry(entry: EntryRef): string {
     }
     case "body":
       return `The ${entry.name}, defined${where}.`;
-    case "promise-type":
+    case "custom-promise-type":
       return `The custom promise type ${entry.name}, defined with a promise agent block${where}.`;
     case "variable": {
       const refs = getPolicyRefs(entry);
@@ -1704,7 +1704,7 @@ export function summarizeEntry(entry: Entry): string {
       return `Files named ${entry.name} exist on ${hosts} in your infrastructure, at ${plural(aggregatePathsOfFilename(entry.name, entry.hosts).length, "different path")}, with ${plural(aggregateFilesOfFilename(entry.name, entry.hosts).length, "different checksum")}.`;
     case "bundle":
     case "body":
-    case "promise-type": {
+    case "custom-promise-type": {
       const refs = getPolicyRefs(entry);
       const files = new Set(refs.map((r) => r.checksum)).size;
       return `Defined ${refs.length === 1 ? "once" : `${refs.length} times`} in ${plural(files, "policy file")}, on ${hosts} in your infrastructure.`;

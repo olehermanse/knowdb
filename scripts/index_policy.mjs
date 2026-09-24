@@ -110,7 +110,7 @@ function indexFile(source) {
     } else if (block.type === "promise_block") {
       const name = child(block, "promise_block_name")?.text ?? "";
       out["promise-types"].push({ name, line: line(block) });
-      indexBlock(block, { type: "promise-type", name }, out);
+      indexBlock(block, { type: "custom-promise-type", name }, out);
     }
   }
   const sexp = tree.rootNode.toString();

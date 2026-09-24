@@ -141,7 +141,7 @@ test("front page always shows at least one entry of each type", async ({
     "filename",
     "bundle",
     "body",
-    "promise-type",
+    "custom-promise-type",
     "call",
     "function",
   ];
@@ -3809,7 +3809,7 @@ test("a call page lists the calls with the bundle or body they are in", async ({
     `${fileHref(first.checksum)}#L${first.line}`,
   );
   await expect(items.first().getByTestId("reference-block")).toHaveText(
-    `In ${first.block.type === "promise-type" ? "promise type " : ""}${first.block.name}`,
+    `In ${first.block.type === "custom-promise-type" ? "promise type " : ""}${first.block.name}`,
   );
   await expect(items.first().getByTestId("reference-block").getByRole("link")).toHaveAttribute(
     "href",
@@ -3978,7 +3978,7 @@ test("variables and classes defined in policy are variables and classes with ref
 
 test("the git promise type is defined with a promise agent block", async ({ page }) => {
   const [checksum] = Object.entries(policyFiles).find(([, f]) => f["promise-types"].length > 0)!;
-  await page.goto("/entry/promise-type/git");
+  await page.goto("/entry/custom-promise-type/git");
   await expect(page.getByTestId("entry-name")).toHaveText("git");
   await expect(page.getByTestId("entry-description")).toHaveText(
     "The custom promise type git, defined with a promise agent block in enable.cf.",
@@ -3990,8 +3990,8 @@ test("the git promise type is defined with a promise agent block", async ({ page
   await expect(ref.getByTestId("file-line-link")).toHaveText("enable.cf:1");
   await expect(ref.getByTestId("file-line-link")).toHaveAttribute("href", `${fileHref(checksum)}#L1`);
   await page.goto("/");
-  await expect(page.getByTestId("type-button-promise-type")).toHaveText("Custom promise types (1)");
-  await page.getByTestId("type-button-promise-type").click();
+  await expect(page.getByTestId("type-button-custom-promise-type")).toHaveText("Custom promise types (1)");
+  await page.getByTestId("type-button-custom-promise-type").click();
   await expect(page.getByTestId("search-summary")).toHaveText("1 custom promise type in your infrastructure.");
 });
 
@@ -4024,8 +4024,8 @@ test("a policy file lists what it defines, and the policy types have buttons and
   await expect(page.getByTestId("search-summary")).toHaveText(
     `${hosts.length} hosts matching call ifelse, bundle bundle common def.`,
   );
-  await page.goto(`/search?q=${encodeURIComponent("promise-type:git")}`);
-  await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching promise-type git.`);
+  await page.goto(`/search?q=${encodeURIComponent("custom-promise-type:git")}`);
+  await expect(page.getByTestId("search-summary")).toHaveText(`${hosts.length} hosts matching custom-promise-type git.`);
 });
 
 test("every built-in function is an entry, called or not", async ({ page }) => {

@@ -81,7 +81,7 @@ export function entryTabs(entry: Entry): Tab[] {
   if (entry.type === "filename") tabs.push("paths", "files");
   if (getPolicyRefs(entry).length > 0) tabs.push("references");
   // Policy files and blocks list what they define; empty for other files.
-  if (entry.type === "file" || entry.type === "bundle" || entry.type === "body" || entry.type === "promise-type") {
+  if (entry.type === "file" || entry.type === "bundle" || entry.type === "body" || entry.type === "custom-promise-type") {
     if (getPolicyContents(entry).length > 0) tabs.push("contents");
   }
   tabs.push("similar", "resources", "comments");
@@ -295,7 +295,7 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
                 <span>Line {ref.line}</span>
                 {ref.block && (
                   <span data-testid="reference-block">
-                    In {ref.block.type === "promise-type" ? "promise type " : ""}
+                    In {ref.block.type === "custom-promise-type" ? "promise type " : ""}
                     <EntryLink type={ref.block.type} name={ref.block.name} />
                   </span>
                 )}
@@ -335,7 +335,7 @@ function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
       <p className="muted" data-testid="contents-description">
         {entry.type === "file"
           ? "Defined in this file:"
-          : `Defined or called in ${entry.type === "promise-type" ? "promise type " : ""}${entry.name}:`}
+          : `Defined or called in ${entry.type === "custom-promise-type" ? "promise type " : ""}${entry.name}:`}
       </p>
       <ul className="entry-list" data-testid="contents">
         {paged.shown.map((item, i) => (
