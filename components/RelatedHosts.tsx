@@ -24,7 +24,9 @@ import {
   getComments,
   getEntryLinks,
   getFileContent,
-  getPolicyContents,
+  CONTENT_GROUPS,
+  ContentGroup,
+  getPolicyContentsByGroup,
   getPolicyRefs,
   filterSearchHref,
   abbreviateChecksum,
@@ -35,14 +37,15 @@ import {
 } from "@/lib/data";
 
 // The entry's own tabs, shown on the left of an entry page: versions (for
-// software), values (for variables), content, paths and contents (for
-// files), files (for paths), paths and files (for filenames), references
-// and contents (for things defined in policy), similar entries, resources
-// and comments. The hosts' ports are a tab on the right, with the hosts.
+// software), values (for variables), content and paths (for files), files
+// (for paths), paths and files (for filenames), references (for things
+// defined in policy), the contents of a policy file or block (blocks,
+// calls, variables, classes), similar entries, resources and comments. The
+// hosts' ports are a tab on the right, with the hosts.
 export type Tab =
   | "content"
   | "references"
-  | "contents"
+  | ContentGroup
   | "versions"
   | "values"
   | "paths"
@@ -53,7 +56,10 @@ export type Tab =
 const TAB_ORDER: Tab[] = [
   "content",
   "references",
-  "contents",
+  "blocks",
+  "calls",
+  "variables",
+  "classes",
   "versions",
   "values",
   "paths",
@@ -80,9 +86,11 @@ export function entryTabs(entry: Entry): Tab[] {
   if (entry.type === "path") tabs.push("files");
   if (entry.type === "filename") tabs.push("paths", "files");
   if (getPolicyRefs(entry).length > 0) tabs.push("references");
-  // Policy files and blocks list what they define; empty for other files.
+  // Policy files and blocks list what they contain, one tab per kind;
+  // other files and empty kinds have none.
   if (entry.type === "file" || entry.type === "bundle" || entry.type === "body" || entry.type === "custom-promise-type") {
-    if (getPolicyContents(entry).length > 0) tabs.push("contents");
+    const groups = getPolicyContentsByGroup(entry);
+    for (const group of CONTENT_GROUPS) if (groups[group].length > 0) tabs.push(group);
   }
   tabs.push("similar", "resources", "comments");
   return tabs;
@@ -325,19 +333,28 @@ function ReferencesPanel({ entry, tabs, page, keep }: PanelProps) {
   );
 }
 
-// What a policy file or block contains: the bundles, bodies and promise
-// types of a file; the variables, classes and calls of a block.
-function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
-  const contents = getPolicyContents(entry);
+// One kind of thing a policy file or block contains: the blocks of a
+// file, or the calls, variables or classes in a file (with the block they
+// are in) or in a block.
+const GROUP_WORDS: Record<ContentGroup, string> = {
+  blocks: "Blocks defined",
+  calls: "Calls",
+  variables: "Variables defined",
+  classes: "Classes defined",
+};
+function ContentsPanel({ entry, tabs, page, keep, group }: PanelProps & { group: ContentGroup }) {
+  const contents = getPolicyContentsByGroup(entry)[group];
   const paged = paginate(contents, page);
+  const holder =
+    entry.type === "file"
+      ? "this file"
+      : `${entry.type === "custom-promise-type" ? "promise type " : ""}${entry.name}`;
   return (
     <>
-      <p className="muted" data-testid="contents-description">
-        {entry.type === "file"
-          ? "Defined in this file:"
-          : `Defined or called in ${entry.type === "custom-promise-type" ? "promise type " : ""}${entry.name}:`}
+      <p className="muted" data-testid={`${group}-description`}>
+        {GROUP_WORDS[group]} in {holder}:
       </p>
-      <ul className="entry-list" data-testid="contents">
+      <ul className="entry-list" data-testid={group}>
         {paged.shown.map((item, i) => (
           <li key={`${item.entry.type}:${item.entry.name}:${item.line}:${i}`} className="host-item" data-testid="content-item">
             <span className="type-badge">{item.entry.type}</span>
@@ -350,6 +367,12 @@ function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
                   Line {item.line}
                 </Link>
                 {entry.type !== "file" && <span>{fileNames(item.checksum).join(", ")}</span>}
+                {entry.type === "file" && item.block && (
+                  <span data-testid="content-block">
+                    In {item.block.type === "custom-promise-type" ? "promise type " : ""}
+                    <EntryLink type={item.block.type} name={item.block.name} />
+                  </span>
+                )}
               </div>
             </div>
           </li>
@@ -359,7 +382,7 @@ function ContentsPanel({ entry, tabs, page, keep }: PanelProps) {
         entry={entry}
         tabs={tabs}
         keep={keep}
-        tab="contents"
+        tab={group}
         page={page}
         total={contents.length}
         shown={paged.shown.length}
@@ -623,7 +646,9 @@ export default function RelatedHosts({
   const counts: Record<Tab, number> = {
     content: 0,
     references: getPolicyRefs(entry).length,
-    contents: getPolicyContents(entry).length,
+    ...(Object.fromEntries(
+      CONTENT_GROUPS.map((g) => [g, getPolicyContentsByGroup(entry)[g].length]),
+    ) as Record<ContentGroup, number>),
     similar: similarCount,
     resources: resourceCount,
     comments: getComments(entry).length,
@@ -639,7 +664,10 @@ export default function RelatedHosts({
   const labels: Record<Tab, string> = {
     content: "Content",
     references: "References",
-    contents: "Contents",
+    blocks: "Blocks",
+    calls: "Calls",
+    variables: "Variables",
+    classes: "Classes",
     versions: "Versions",
     values: "Values",
     paths: "Paths",
@@ -651,7 +679,10 @@ export default function RelatedHosts({
   const testIds: Record<Tab, string> = {
     content: "content-heading",
     references: "references-heading",
-    contents: "contents-heading",
+    blocks: "blocks-heading",
+    calls: "calls-heading",
+    variables: "variables-heading",
+    classes: "classes-heading",
     versions: "versions-heading",
     values: "values-heading",
     paths: "paths-heading",
@@ -705,8 +736,8 @@ export default function RelatedHosts({
           {current === "references" && (
             <ReferencesPanel entry={entry} tabs={tabs} page={page} keep={keep} />
           )}
-          {current === "contents" && (
-            <ContentsPanel entry={entry} tabs={tabs} page={page} keep={keep} />
+          {CONTENT_GROUPS.includes(current as ContentGroup) && (
+            <ContentsPanel entry={entry} tabs={tabs} page={page} keep={keep} group={current as ContentGroup} />
           )}
           {current === "versions" && (
             <VersionsPanel entry={entry} tabs={tabs} page={page} keep={keep} />

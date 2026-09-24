@@ -193,7 +193,24 @@ export interface PolicyContent {
   entry: EntryRef;
   checksum: string;
   line: number;
+  // The bundle or body the item is in, for a file's variables, classes
+  // and calls.
+  block?: PolicyBlockRef;
 }
+
+// The Contents tabs of a file or block: its blocks (a file only), calls
+// (of functions, bundles and bodies), variables and classes.
+export type ContentGroup = "blocks" | "calls" | "variables" | "classes";
+export const CONTENT_GROUPS: ContentGroup[] = ["blocks", "calls", "variables", "classes"];
+const GROUP_OF_TYPE: Partial<Record<EntryType, ContentGroup>> = {
+  bundle: "blocks",
+  body: "blocks",
+  "custom-promise-type": "blocks",
+  call: "calls",
+  "function-call": "calls",
+  variable: "variables",
+  class: "classes",
+};
 
 // Link to a line of a file: the file page with a #L<n> anchor.
 export function fileLineHref(checksum: string, line: number): string {
@@ -434,11 +451,16 @@ function indexPolicy() {
       }
       refs.set(key, [...(refs.get(key) ?? []), { checksum, line, ...extra }]);
     };
-    const contain = (holder: EntryRef, entry: EntryRef, line: number) => {
+    const contain = (holder: EntryRef, entry: EntryRef, line: number, block?: PolicyBlockRef) => {
       const key = entryKey(holder.type, holder.name);
-      contents.set(key, [...(contents.get(key) ?? []), { entry, checksum, line }]);
+      contents.set(key, [...(contents.get(key) ?? []), { entry, checksum, line, block }]);
     };
     const fileRef: EntryRef = { type: "file", name: checksum };
+    // Something inside a block is a content of the block and of the file.
+    const containInBlock = (block: PolicyBlockRef, entry: EntryRef, line: number) => {
+      contain(block, entry, line);
+      contain(fileRef, entry, line, block);
+    };
     for (const b of file.bundles) {
       const ref: EntryRef = { type: "bundle", name: `bundle ${b.type} ${b.name}` };
       add(ref, b.line, b.parameters ? { detail: `parameters ${b.parameters.join(", ")}` } : {});
@@ -458,12 +480,12 @@ function indexPolicy() {
       const bundle = v.block.name.split(" ").pop() ?? v.block.name;
       const ref: EntryRef = { type: "variable", name: `${bundle}.${v.name}` };
       add(ref, v.line, { block: v.block, detail: v.type });
-      contain(v.block, ref, v.line);
+      containInBlock(v.block, ref, v.line);
     }
     for (const c of file.classes) {
       const ref: EntryRef = { type: "class", name: c.name };
       add(ref, c.line, { block: c.block });
-      contain(c.block, ref, c.line);
+      containInBlock(c.block, ref, c.line);
     }
     for (const call of file.calls) {
       const name = stripNamespace(call.name);
@@ -473,11 +495,11 @@ function indexPolicy() {
         const ref: EntryRef = { type: "function-call", name };
         add(ref, call.line, { block: call.block, detail });
         add({ type: "function", name }, call.line, { block: call.block, detail });
-        contain(call.block, ref, call.line);
+        containInBlock(call.block, ref, call.line);
       } else {
         const ref: EntryRef = { type: "call", name };
         add(ref, call.line, { block: call.block, kind: kindOf(call), detail });
-        contain(call.block, ref, call.line);
+        containInBlock(call.block, ref, call.line);
       }
     }
     entriesByFile.set(checksum, own);
@@ -523,6 +545,16 @@ export function getPolicyContents(entry: EntryRef): PolicyContent[] {
   return [...(policy.contents.get(entryKey(entry.type, entry.name)) ?? [])].sort(
     (a, b) => a.checksum.localeCompare(b.checksum) || a.line - b.line,
   );
+}
+
+// The contents of a file or block split into the Contents tabs.
+export function getPolicyContentsByGroup(entry: EntryRef): Record<ContentGroup, PolicyContent[]> {
+  const groups: Record<ContentGroup, PolicyContent[]> = { blocks: [], calls: [], variables: [], classes: [] };
+  for (const item of getPolicyContents(entry)) {
+    const group = GROUP_OF_TYPE[item.entry.type];
+    if (group) groups[group].push(item);
+  }
+  return groups;
 }
 
 function buildIndex() {

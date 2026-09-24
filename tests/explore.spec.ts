@@ -3749,20 +3749,30 @@ test("a bundle page lists where it is defined and what it defines and calls", as
   await expect(ref.getByTestId("file-line-link")).toHaveAttribute("href", `${fileHref(def.checksum)}#L${def.line}`);
   await expect(ref.locator(".host-facts")).toContainText(`Line ${def.line}`);
   await expect(ref.getByTestId("reference-block")).toHaveCount(0);
-  // Contents: its variables, classes and function calls, most of them
-  // variables, each linking to its line.
-  await expect(page.getByTestId("contents-heading")).toHaveText(`Contents (${contents.length})`);
-  await page.getByTestId("contents-heading").click();
-  await expect(page.getByTestId("contents-description")).toHaveText("Defined or called in bundle common def:");
+  // Contents, one tab per kind: its variables, classes and calls, each
+  // linking to its line. A bundle defines no blocks.
+  const vars = Object.values(policyFiles).flatMap((f) => f.vars.filter((v) => v.block.name === "bundle common def"));
+  const classes = Object.values(policyFiles).flatMap((f) => f.classes.filter((c) => c.block.name === "bundle common def"));
+  const calls = Object.values(policyFiles).flatMap((f) => f.calls.filter((c) => c.block.name === "bundle common def"));
+  expect(vars.length + classes.length + calls.length).toBe(contents.length);
+  await expect(page.getByTestId("blocks-heading")).toHaveCount(0);
+  await expect(page.getByTestId("variables-heading")).toHaveText(`Variables (${vars.length})`);
+  await expect(page.getByTestId("calls-heading")).toHaveText(`Calls (${calls.length})`);
+  if (classes.length > 0) await expect(page.getByTestId("classes-heading")).toHaveText(`Classes (${classes.length})`);
+  else await expect(page.getByTestId("classes-heading")).toHaveCount(0);
+  await page.getByTestId("variables-heading").click();
+  await expect(page.getByTestId("variables-description")).toHaveText("Variables defined in bundle common def:");
   const items = page.getByTestId("content-item");
-  await expect(items).toHaveCount(Math.min(PAGE_SIZE, contents.length));
-  const first = [...contents].sort((a, b) => a.line - b.line)[0]!;
+  await expect(items).toHaveCount(Math.min(PAGE_SIZE, vars.length));
+  const first = [...vars].sort((a, b) => a.line - b.line)[0]!;
   await expect(items.first().getByTestId("content-line-link")).toHaveText(`Line ${first.line}`);
   await expect(items.first().locator(".host-facts")).toContainText("def.cf");
-  await expect(items.first().locator(".type-badge")).toHaveText(/^(variable|class|call|function-call)$/);
+  await expect(items.first().locator(".type-badge")).toHaveText("variable");
   // The variables are named bundle.name.
-  const someVar = items.filter({ has: page.locator(".type-badge", { hasText: "variable" }) }).first();
-  await expect(someVar.getByRole("link").first()).toHaveText(/^def\./);
+  await expect(items.first().getByRole("link").first()).toHaveText(/^def\./);
+  await page.getByTestId("calls-heading").click();
+  await expect(page.getByTestId("calls-description")).toHaveText("Calls in bundle common def:");
+  await expect(page.getByTestId("content-item").first().locator(".type-badge")).toHaveText(/^(call|function-call)$/);
   // Following the line link opens the file at that line.
   await page.getByTestId("references-heading").click();
   await ref.getByTestId("file-line-link").click();
@@ -4011,17 +4021,44 @@ test("a policy file lists what it defines, and the policy types have buttons and
   const checksum = hub.files[INPUTS_PROMISES]!;
   const f = policyFiles[checksum]!;
   const defs = [...f.bundles, ...f.bodies].sort((a, b) => a.line - b.line);
-  await page.goto(`${fileHref(checksum)}?tab=contents`);
-  await expect(page.getByTestId("contents-heading")).toHaveText(`Contents (${defs.length})`);
-  await expect(page.getByTestId("contents-description")).toHaveText("Defined in this file:");
+  // Blocks: the bundles and bodies of the file.
+  await page.goto(`${fileHref(checksum)}?tab=blocks`);
+  await expect(page.getByTestId("blocks-heading")).toHaveText(`Blocks (${defs.length})`);
+  await expect(page.getByTestId("blocks-description")).toHaveText("Blocks defined in this file:");
   const items = page.getByTestId("content-item");
   await expect(items).toHaveCount(Math.min(PAGE_SIZE, defs.length));
   await expect(items.first().locator(".type-badge")).toHaveText("body");
   await expect(items.first().getByRole("link").first()).toHaveText("body common control");
   await expect(items.first().getByTestId("content-line-link")).toHaveAttribute("href", `${fileHref(checksum)}#L${defs[0]!.line}`);
-  // Non-policy files have no Contents tab.
+  await expect(items.first().getByTestId("content-block")).toHaveCount(0);
+  // Everything inside the blocks is a content of the file too, in its own
+  // tab, with the block it is in: no need to go via the bundle.
+  await expect(page.getByTestId("calls-heading")).toHaveText(`Calls (${f.calls.length})`);
+  await expect(page.getByTestId("variables-heading")).toHaveText(`Variables (${f.vars.length})`);
+  await expect(page.getByTestId("classes-heading")).toHaveText(`Classes (${f.classes.length})`);
+  await page.getByTestId("variables-heading").click();
+  await expect(page.getByTestId("variables-description")).toHaveText("Variables defined in this file:");
+  const firstVar = [...f.vars].sort((a, b) => a.line - b.line)[0]!;
+  const varItem = page.getByTestId("content-item").first();
+  await expect(varItem.locator(".type-badge")).toHaveText("variable");
+  await expect(varItem.getByRole("link").first()).toHaveText(
+    `${firstVar.block.name.split(" ").pop()}.${firstVar.name}`,
+  );
+  await expect(varItem.getByTestId("content-line-link")).toHaveText(`Line ${firstVar.line}`);
+  await expect(varItem.getByTestId("content-block")).toHaveText(`In ${firstVar.block.name}`);
+  await expect(varItem.getByTestId("content-block").getByRole("link")).toHaveAttribute(
+    "href",
+    `/entry/${firstVar.block.type}/${encodeURIComponent(firstVar.block.name)}`,
+  );
+  await page.getByTestId("calls-heading").click();
+  await expect(page.getByTestId("calls-description")).toHaveText("Calls in this file:");
+  await expect(page.getByTestId("content-item").first().locator(".type-badge")).toHaveText(/^(call|function-call)$/);
+  await expect(page.getByTestId("content-item").first().getByTestId("content-block")).toContainText("In ");
+  // Non-policy files have none of these tabs.
   await page.goto(fileHref(hub.files["/etc/motd"]!));
-  await expect(page.getByTestId("contents-heading")).toHaveCount(0);
+  for (const tab of ["blocks", "calls", "variables", "classes"]) {
+    await expect(page.getByTestId(`${tab}-heading`)).toHaveCount(0);
+  }
 
   // Front page buttons count distinct names.
   const bundles = new Set(Object.values(policyFiles).flatMap((x) => x.bundles.map((b) => `${b.type} ${b.name}`)));

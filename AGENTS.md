@@ -221,8 +221,12 @@ after Values for a variable) listing each place: `def.cf:12` linking to
 the file page with a `#L12` anchor, the line, the bundle or body it is in
 (variables, classes and calls), and a detail (a variable's type, a
 bundle's parameters, the attribute a call is the value of, like `if =>`).
-Bundles, bodies, promise types and policy files have a Contents tab
-listing what they define or call, each row linking to its line. Variables
+Bundles, bodies, promise types and policy files have one tab per kind of
+thing they contain, shown only when not empty: Blocks (a file's bundles,
+bodies and promise types), Calls (function calls and other calls),
+Variables and Classes, each row linking to its line. Everything inside a
+block is also a content of its file, so a file's Variables tab lists the
+variables of all its bundles, each row saying which block it is in. Variables
 and classes have their defining bundle in "See also". Every line of a
 file's content is a `<span class="line" id="L<n>">`, plain files too,
 starting with an empty `<a class="line-number" href="#L<n>"
