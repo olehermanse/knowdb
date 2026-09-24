@@ -88,9 +88,10 @@ live as you type. The popup uses the native HTML popover attribute and a few
 lines of plain JavaScript, so it needs no framework code in the browser.
 Variables are listed as `sys.arch=x86_64 (87 hosts)`: the variable and the
 value link to their entries, and the count of hosts sharing that value
-links to a search for them. Files are listed as the path followed by the
-first 16 digits of the checksum of the file there, linking to the path and
-file entries.
+links to a search for them. Files are listed as file entries, `motd
+(5f2a7c...)` (name and the first 16 digits of the checksum, like the file
+page's title) linking to the file, followed by "at" and the path, linking
+to the path entry.
 
 Every host has a GitHub-style pixel avatar derived from its host key, so
 it stays the same everywhere the host appears. The avatar's colour comes
@@ -126,9 +127,11 @@ row shows it on every host page as a name/value pair, styled like the
 host's basic fields and laid out in four columns, below those fields and
 above the modal buttons: the name is a plain label (not a link, to keep
 the section quiet) and the value is the software's version, `defined` for
-a class, `running` for a service, the variable's value, or the checksum of
-the file at a path, linking to the version, class, service, value or file
-entry. When the host does not have the pinned item, the value reads `(not
+a class, `running` for a service, the variable's value, or the file at a
+path (`motd (5f2a7c...)`), linking to the version, class, service, value
+or file entry. A file row is pinned by its path (`ModalRow.pin`), so the
+pinned value on every host is whatever file is at that path there, and
+the link marked `data-pin-value` in the row is what is shown as the value. When the host does not have the pinned item, the value reads `(not
 installed)` for software, `(not running)` for services, `(not defined)`
 for classes and variables and `(not present)` for paths, in gray
 italics. Which items are pinned is stored in the browser's local

@@ -3374,15 +3374,17 @@ test("a host page lists its files with their checksums in a Files modal", async 
   await expect(dialog.getByRole("heading", { name: `Files on ${hub.hostname}` })).toBeVisible();
   const rows = page.getByTestId("files-modal-list").locator("li[data-list-modal-row]");
   await expect(rows).toHaveCount(paths.length);
-  // Each row: the path linking to its entry and the checksum to the file.
+  // Each row is a file entry: the file (name and checksum, like its page
+  // title) linking to the file, and the path it is at linking to the path.
   const first = rows.first();
-  await expect(first.locator(".type-badge")).toHaveText("path");
+  await expect(first.locator(".type-badge")).toHaveText("file");
   const links = first.locator("a.entry-link");
-  await expect(links.nth(0)).toHaveText(paths[0]!);
-  await expect(links.nth(0)).toHaveAttribute("href", pathHref(paths[0]!));
   const firstSum = hub.files[paths[0]!]!;
-  await expect(links.nth(1)).toHaveText(firstSum.slice(0, 16));
-  await expect(links.nth(1)).toHaveAttribute("href", fileHref(firstSum));
+  await expect(links.nth(0)).toHaveText(`${fileName(paths[0]!)} (${firstSum.slice(0, 16)})`);
+  await expect(links.nth(0)).toHaveAttribute("href", fileHref(firstSum));
+  await expect(first).toContainText(" at ");
+  await expect(links.nth(1)).toHaveText(paths[0]!);
+  await expect(links.nth(1)).toHaveAttribute("href", pathHref(paths[0]!));
   // The filter narrows the list to matching paths.
   await page.getByTestId("files-modal-filter").fill("promises.cf");
   const matching = paths.filter((p) => p.includes("promises.cf"));
@@ -3390,9 +3392,9 @@ test("a host page lists its files with their checksums in a Files modal", async 
   await expect(page.getByTestId("files-modal-shown")).toHaveText(
     `${matching.length} of ${paths.length} files match`,
   );
-  // Following the checksum opens the file.
+  // Following the file opens it.
   await page.getByTestId("files-modal-filter").fill("");
-  await links.nth(1).click();
+  await links.nth(0).click();
   await expect(page).toHaveURL(fileHref(firstSum));
   await expect(page.getByTestId("entry-name")).toContainText(firstSum);
 });
@@ -3621,16 +3623,16 @@ test("a path can be pinned to show the checksum of its file on every host", asyn
     .filter({ has: page.getByRole("link", { name: "/etc/motd", exact: true }) });
   await row.getByTestId("pin-button").click();
   await expect(row.getByTestId("pin-button")).toHaveAttribute("aria-pressed", "true");
-  // Pinned: the path as the name, the checksum (linking to the file) as the value.
+  // Pinned: the path as the name, the file there (linking to it) as the value.
   const pinned = page.getByTestId("pinned-list");
   await expect(pinned.getByTestId("pinned-name")).toHaveText("/etc/motd");
   const value = pinned.getByTestId("pinned-item").getByRole("link");
-  await expect(value).toHaveText(a.files["/etc/motd"]!.slice(0, 16));
+  await expect(value).toHaveText(`motd (${a.files["/etc/motd"]!.slice(0, 16)})`);
   await expect(value).toHaveAttribute("href", fileHref(a.files["/etc/motd"]!));
-  // On another host: its own checksum; on Windows: not present.
+  // On another host: its own file; on Windows: not present.
   await page.goto(`/entry/host/${b.id}`);
   await expect(pinned.getByTestId("pinned-item").getByRole("link")).toHaveText(
-    b.files["/etc/motd"]!.slice(0, 16),
+    `motd (${b.files["/etc/motd"]!.slice(0, 16)})`,
   );
   await page.goto(`/entry/host/${win.id}`);
   await expect(pinned.getByTestId("pinned-missing")).toHaveText("(not present)");

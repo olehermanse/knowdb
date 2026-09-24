@@ -13,6 +13,11 @@ export interface ModalRow {
   extra?: { label: string; href: string };
   separator?: string;
   note?: { label: string; href?: string };
+  // What pinning the row pins, when not the row's own type and label
+  // (a file row is pinned by its path), and which link is shown as the
+  // pinned value (the extra link by default).
+  pin?: { type: string; name: string };
+  pinValue?: "label" | "extra";
 }
 
 // A pin icon (lucide) toggling whether the row is pinned to the host
@@ -116,18 +121,26 @@ export default function ListModal({
                 key={row.key}
                 data-list-modal-row
                 data-label={`${row.label} ${row.extra?.label ?? ""}`.trim().toLowerCase()}
-                data-pin-type={pinnable ? row.type : undefined}
-                data-pin-name={pinnable ? row.label : undefined}
+                data-pin-type={pinnable ? (row.pin?.type ?? row.type) : undefined}
+                data-pin-name={pinnable ? (row.pin?.name ?? row.label) : undefined}
               >
                 <span className="type-badge">{row.type}</span>
                 <span data-pin-content={pinnable ? "" : undefined}>
-                  <Link className="entry-link" href={row.href}>
+                  <Link
+                    className="entry-link"
+                    href={row.href}
+                    data-pin-value={pinnable && row.pinValue === "label" ? "" : undefined}
+                  >
                     {row.label}
                   </Link>
                   {row.extra && (
                     <>
                       {row.separator ?? " "}
-                      <Link className="entry-link" href={row.extra.href}>
+                      <Link
+                        className="entry-link"
+                        href={row.extra.href}
+                        data-pin-value={pinnable && (row.pinValue ?? "extra") === "extra" ? "" : undefined}
+                      >
                         {row.extra.label}
                       </Link>
                     </>

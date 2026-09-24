@@ -9,6 +9,7 @@ import {
   abbreviateChecksum,
   clientsSearchHref,
   conditionHref,
+  fileNameOf,
   describeHost,
   entryHref,
   filterSearchHref,
@@ -309,13 +310,18 @@ function HostLists({ host }: { host: Host }) {
             testId="files-modal"
             pinnable
             rows={Object.entries(host.files ?? {}).map(([path, checksum]) => ({
-              // "/etc/motd 5f2a…": the path and the checksum of the file
-              // there, each linking to its entry.
+              // "motd (5f2a7c…) at /etc/motd": the file (named like its
+              // page title) linking to its entry, and the path it is at
+              // linking to the path entry. Pinned by path, so the pinned
+              // value on every host is the file there.
               key: path,
-              type: "path",
-              label: path,
-              href: entryHref({ type: "path", name: path }),
-              extra: { label: abbreviateChecksum(checksum), href: entryHref({ type: "file", name: checksum }) },
+              type: "file",
+              label: `${fileNameOf(path)} (${abbreviateChecksum(checksum)})`,
+              href: entryHref({ type: "file", name: checksum }),
+              separator: " at ",
+              extra: { label: path, href: entryHref({ type: "path", name: path }) },
+              pin: { type: "path", name: path },
+              pinValue: "label",
             }))}
           />
         </dd>

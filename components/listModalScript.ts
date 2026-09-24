@@ -177,12 +177,14 @@ export const LIST_MODAL_SCRIPT = `
     dd.setAttribute("data-pin-name", name);
     var row = modalRow(type, name);
     if (row) {
-      // The second link of the row is the version or value, if any. A
-      // class or service has none: "defined" / "running" links to the
-      // entry itself instead.
-      var links = row.querySelectorAll("[data-pin-content] > a");
-      if (links.length > 1) {
-        dd.appendChild(links[1].cloneNode(true));
+      // The link marked as the value (the version, value, or for a path
+      // the file there), if any. A class or service has none: "defined" /
+      // "running" links to the entry itself instead.
+      var value = row.querySelector("[data-pin-content] > a[data-pin-value]");
+      if (value) {
+        var clone = value.cloneNode(true);
+        clone.removeAttribute("data-pin-value");
+        dd.appendChild(clone);
       } else {
         var entry = document.createElement("a");
         entry.className = "entry-link";
